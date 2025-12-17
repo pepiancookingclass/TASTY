@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Product } from '@/lib/types';
+import { Product, Chef } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,14 @@ import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 interface ProductCardProps {
   product: Product;
+  chef?: Chef;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, chef }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -70,11 +72,22 @@ export function ProductCard({ product }: ProductCardProps) {
           ))}
         </div>
       </CardContent>
-      <CardFooter className="p-4 flex justify-between items-center">
-        <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
-        <Button onClick={handleAddToCart} size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" /> {language === 'es' ? 'Añadir' : 'Add to Cart'}
-        </Button>
+      <CardFooter className="p-4 flex flex-col items-start space-y-4">
+        {chef && (
+            <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src={chef.profilePictureUrl} alt={chef.name} data-ai-hint={chef.imageHint} />
+                    <AvatarFallback>{chef.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-muted-foreground font-medium">By {chef.name}</span>
+            </div>
+        )}
+        <div className="w-full flex justify-between items-center">
+            <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
+            <Button onClick={handleAddToCart} size="sm">
+            <PlusCircle className="mr-2 h-4 w-4" /> {language === 'es' ? 'Añadir' : 'Add to Cart'}
+            </Button>
+        </div>
       </CardFooter>
     </Card>
   );

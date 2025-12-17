@@ -35,11 +35,13 @@ export function SiteHeader() {
         sweets: 'Sweets',
         savory: 'Savory',
         handmade: 'Handmade',
+        chefs: 'Chefs',
     },
     es: {
         sweets: 'Dulces',
         savory: 'Salados',
         handmade: 'Hecho a Mano',
+        chefs: 'Chefs',
     }
   }
 
@@ -54,9 +56,10 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-4">
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].sweets}</Link>
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].savory}</Link>
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].handmade}</Link>
+              <Link href="/#sweets" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].sweets}</Link>
+              <Link href="/#savory" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].savory}</Link>
+              <Link href="/#handmade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].handmade}</Link>
+              <Link href="/chefs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].chefs}</Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-1">
