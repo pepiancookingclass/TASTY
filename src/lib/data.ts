@@ -319,6 +319,7 @@ export const sampleUser: User = {
     zip: '90210',
     country: 'USA',
   },
+  roles: ['creator'], // TEMPORARY for demo purposes
 };
 
 export const sampleCreator: Creator = {
