@@ -328,4 +328,5 @@ export const sampleCreator: Creator = {
   profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c',
   imageHint: 'creator cooking',
   gender: 'female',
+  skills: ['pastry', 'dessert'],
 };

@@ -36,6 +36,18 @@
             ]
           }
         },
+        "skills": {
+          "type": "array",
+          "description": "A list of skills for creators.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pastry",
+              "savory",
+              "handmade"
+            ]
+          }
+        },
         "address": {
             "type": "object",
             "properties": {

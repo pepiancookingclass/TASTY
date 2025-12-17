@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: {
@@ -65,6 +66,7 @@ export type Creator = {
   profilePictureUrl: string;
   imageHint: string;
   gender: 'male' | 'female';
+  skills?: ('pastry' | 'savory' | 'handmade')[];
 };
 
 export type CartItem = {

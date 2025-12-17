@@ -6,33 +6,89 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useDictionary } from '@/hooks/useDictionary';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { Checkbox } from '@/components/ui/checkbox';
+import { doc, setDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+
+type Skill = 'pastry' | 'savory' | 'handmade';
 
 export default function UserProfilePage() {
   const { user, loading } = useUser();
+  const firestore = useFirestore();
+  const { roles } = useUserRoles();
   const router = useRouter();
   const dict = useDictionary();
+  const { toast } = useToast();
   
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [skills, setSkills] = useState<Skill[]>([]);
+
+  const isCreator = roles.includes('creator');
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
-    if (user) {
+    if (user && firestore) {
         setDisplayName(user.displayName || '');
         setEmail(user.email || '');
+        const userRef = doc(firestore, 'users', user.uid);
+        const getUserData = async () => {
+            const docSnap = await doc(userRef).get();
+            if (docSnap.exists()) {
+                setSkills(docSnap.data().skills || []);
+            }
+        };
+        getUserData();
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, firestore]);
 
+  const handleSkillChange = (skill: Skill, checked: boolean) => {
+    setSkills(prev => 
+      checked ? [...prev, skill] : prev.filter(s => s !== skill)
+    );
+  };
+
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !firestore) return;
+
+    const userRef = doc(firestore, 'users', user.uid);
+    try {
+        await setDoc(userRef, { 
+            name: displayName, 
+            email: email,
+            ...(isCreator && { skills }) 
+        }, { merge: true });
+        toast({
+            title: dict.userProfile.saveSuccessTitle,
+            description: dict.userProfile.saveSuccessDescription,
+        });
+    } catch (error) {
+        console.error("Error updating profile: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to save changes.",
+        });
+    }
+  };
 
   if (loading || !user) {
     return <div className="container flex justify-center items-center h-screen"><p>{dict.loading}</p></div>;
   }
+
+  const skillOptions: {id: Skill, label: keyof typeof dict.creatorSkills}[] = [
+    { id: 'pastry', label: 'pastry' },
+    { id: 'savory', label: 'savory' },
+    { id: 'handmade', label: 'handmade' },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -51,7 +107,7 @@ export default function UserProfilePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSaveChanges}>
             <div className="space-y-6">
               <div>
                 <h3 className="font-headline text-lg mb-4">{dict.userProfile.personalInfo.title}</h3>
@@ -70,6 +126,27 @@ export default function UserProfilePage() {
                   </div>
                 </div>
               </div>
+
+              {isCreator && (
+                <>
+                    <Separator />
+                    <div>
+                        <h3 className="font-headline text-lg mb-4">{dict.userProfile.skills.title}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {skillOptions.map(skill => (
+                                <div key={skill.id} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        id={skill.id} 
+                                        checked={skills.includes(skill.id)}
+                                        onCheckedChange={(checked) => handleSkillChange(skill.id, !!checked)}
+                                    />
+                                    <Label htmlFor={skill.id} className="font-normal">{dict.creatorSkills[skill.label]}</Label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+              )}
 
               <Separator />
 
@@ -100,7 +177,7 @@ export default function UserProfilePage() {
               </div>
               
               <div className="flex justify-end pt-4">
-                  <Button>{dict.userProfile.save}</Button>
+                  <Button type="submit">{dict.userProfile.save}</Button>
               </div>
 
             </div>

@@ -14,9 +14,14 @@ const dictionary = {
   creatorShowcase: {
     headline: 'Meet Our Creators',
     tagline: 'The heart and soul behind our homemade delights.',
-    specialty: 'Specializing in pastries and lovingly baked treats.',
+    specialty: 'Specializing in lovingly crafted treats.',
     viewProfile: 'View Profile',
     productCount: (count: number) => `${count} products`,
+  },
+  creatorSkills: {
+    pastry: 'Pastry & Desserts',
+    savory: 'Savory Dishes',
+    handmade: 'Handmade Crafts',
   },
   promotionsBanner: {
     title: 'Special Offers',
@@ -130,7 +135,12 @@ const dictionary = {
       zip: 'ZIP Code',
       country: 'Country',
     },
+    skills: {
+        title: "My Creator Skills"
+    },
     save: 'Save Changes',
+    saveSuccessTitle: 'Profile Updated',
+    saveSuccessDescription: 'Your changes have been saved successfully.',
   },
   creatorSidebar: {
     title: 'Creator Portal',

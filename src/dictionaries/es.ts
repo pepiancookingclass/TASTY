@@ -14,9 +14,14 @@ const dictionary = {
   creatorShowcase: {
     headline: 'Conoce a Nuestros Creadores',
     tagline: 'El corazón y el alma detrás de nuestras delicias caseras.',
-    specialty: 'Especialista en repostería y delicias horneadas con amor.',
+    specialty: 'Especialista en delicias hechas con amor.',
     viewProfile: 'Ver Perfil',
     productCount: (count: number) => `${count} productos`,
+  },
+  creatorSkills: {
+    pastry: 'Repostería y Postres',
+    savory: 'Platos Salados',
+    handmade: 'Artesanías',
   },
   promotionsBanner: {
     title: 'Ofertas Especiales',
@@ -130,7 +135,12 @@ const dictionary = {
       zip: 'Código Postal',
       country: 'País',
     },
+    skills: {
+      title: 'Mis Habilidades de Creador',
+    },
     save: 'Guardar Cambios',
+    saveSuccessTitle: 'Perfil Actualizado',
+    saveSuccessDescription: 'Tus cambios han sido guardados exitosamente.',
   },
   creatorSidebar: {
     title: 'Portal del Creador',

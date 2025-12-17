@@ -15,7 +15,7 @@ export default function CreatorsPage() {
     // In a real app, you'd fetch all creators
     const creators: Creator[] = [
         sampleCreator,
-        { id: 'creator-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548', imageHint: 'creator portrait', gender: 'male' },
+        { id: 'creator-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548', imageHint: 'creator portrait', gender: 'male', skills: ['savory', 'handmade'] },
     ];
 
     const creatorsWithProducts = creators.map(creator => {
