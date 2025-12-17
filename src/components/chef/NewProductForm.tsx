@@ -13,6 +13,7 @@ import { generateProductDescriptionsAction } from "@/app/actions";
 import { useTransition } from "react";
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   productName: z.string().min(2, { message: "Product name must be at least 2 characters." }),
@@ -86,7 +87,7 @@ export function NewProductForm() {
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline text-2xl">Product Details</CardTitle>
-                <CardDescription>Fill in the basic information about your new product.</CardDescription>
+                <CardDescription>Fill in the information about your new product.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,20 +133,18 @@ export function NewProductForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
-            </CardContent>
-        </Card>
 
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline text-2xl">Product Descriptions</CardTitle>
-                    <Button type="button" variant="outline" onClick={handleGenerateDescriptions} disabled={isPending}>
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                        Generate with AI
-                    </Button>
+                <Separator />
+                
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-medium">Product Descriptions</h3>
+                        <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescriptions} disabled={isPending}>
+                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                            Generate with AI
+                        </Button>
+                    </div>
                 </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
                  <FormField control={form.control} name="englishDescription" render={({ field }) => (
                     <FormItem>
                         <FormLabel>English Description</FormLabel>
