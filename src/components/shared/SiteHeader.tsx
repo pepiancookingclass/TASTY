@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChefHat, Salad, ShoppingCart, User, Crown, Globe, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { ChefHat, Salad, ShoppingCart, User, Crown, Globe, LogOut, LogIn, UserPlus, Menu } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from '@/components/ui/sheet';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
@@ -36,11 +42,53 @@ export function SiteHeader() {
     router.push('/');
   };
 
+  const navLinks = [
+    { href: '/', label: dict.siteHeader.home },
+    { href: '/#sweets', label: dict.siteHeader.sweets },
+    { href: '/#savory', label: dict.siteHeader.savory },
+    { href: '/chefs', label: dict.siteHeader.chefs },
+    { href: '/chef/dashboard', label: dict.siteHeader.chefDashboard },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-        <div className="flex gap-6 md:gap-10 items-center">
+      <div className="container flex h-16 items-center">
+        
+        {/* Mobile Menu */}
+        <div className="md:hidden">
+           <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <div className="flex flex-col gap-4 p-4">
+                 <Link href="/" className="flex items-center space-x-2 mb-4">
+                    <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+                        <ChefHat className="h-6 w-6 text-white" />
+                    </div>
+                    <span className="inline-block font-headline text-2xl font-bold text-primary">
+                      Tasty
+                    </span>
+                  </Link>
+                <nav className="flex flex-col gap-3">
+                  {navLinks.map(link => (
+                     <SheetClose asChild key={link.label}>
+                        <Link href={link.href} className="text-lg font-medium text-foreground transition-colors hover:text-foreground/80">
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                  ))}
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex gap-6 md:gap-10 items-center">
           <Link href="/" className="flex items-center space-x-2">
             <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
                 <ChefHat className="h-6 w-6 text-white" />
@@ -49,27 +97,31 @@ export function SiteHeader() {
               Tasty
             </span>
           </Link>
-          <nav className="hidden md:flex gap-4 items-center">
-            <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-foreground/80">
-              {dict.siteHeader.home}
-            </Link>
-            <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {dict.siteHeader.sweets}
-            </Link>
-            <Link href="/#savory" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {dict.siteHeader.savory}
-            </Link>
-            <Link href="/chefs" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {dict.siteHeader.chefs}
-            </Link>
-             <Link href="/chef/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-                {dict.siteHeader.chefDashboard}
-            </Link>
+          <nav className="flex gap-4 items-center">
+            {navLinks.map(link => (
+              <Link key={link.label} href={link.href} className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
+
+        {/* Center Logo on Mobile */}
+         <div className="flex md:hidden flex-1 justify-center">
+             <Link href="/" className="flex items-center space-x-2">
+                <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+                    <ChefHat className="h-5 w-5 text-white" />
+                </div>
+                <span className="inline-block font-headline text-xl font-bold text-primary">
+                Tasty
+                </span>
+            </Link>
+         </div>
+
+
         <div className="flex flex-1 items-center justify-end space-x-1">
           <nav className="flex items-center space-x-1">
-             <div className="flex items-center gap-1 rounded-md border p-0.5">
+             <div className="hidden sm:flex items-center gap-1 rounded-md border p-0.5">
               <Button
                 variant={language === 'es' ? 'secondary' : 'ghost'}
                 size="sm"
@@ -147,15 +199,15 @@ export function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center gap-2">
-                 <Button variant="ghost" asChild>
+              <div className="hidden sm:flex items-center gap-2">
+                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/signup">
-                    <UserPlus className="mr-2 h-4 w-4" /> {dict.siteHeader.signup}
+                    {dict.siteHeader.signup}
                   </Link>
                 </Button>
-                <Button asChild>
+                <Button size="sm" asChild>
                   <Link href="/login">
-                    <LogIn className="mr-2 h-4 w-4" /> {dict.siteHeader.login}
+                    {dict.siteHeader.login}
                   </Link>
                 </Button>
               </div>
