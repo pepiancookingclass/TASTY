@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { OrderStatus } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useOrders } from '@/hooks/useOrders';
 
 interface OrderStatusSelectorProps {
   orderId: string;
@@ -26,10 +27,10 @@ const orderStatuses: OrderStatus[] = [
 
 export function OrderStatusSelector({ orderId, currentStatus }: OrderStatusSelectorProps) {
   const { toast } = useToast();
+  const { updateOrderStatus } = useOrders();
 
   const handleStatusChange = (newStatus: OrderStatus) => {
-    // In a real app, this would trigger an API call to update the database.
-    console.log(`Updating order ${orderId} to status: ${newStatus}`);
+    updateOrderStatus(orderId, newStatus);
     toast({
         title: "Order Status Updated",
         description: `Order ${orderId} is now "${newStatus}".`,

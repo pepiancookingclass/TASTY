@@ -2,14 +2,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Package, PackageCheck, Percent } from 'lucide-react';
 import { RevenueChart } from '@/components/chef/RevenueChart';
+import { useOrders } from '@/hooks/useOrders';
 
 export default function ChefDashboardPage() {
-  // Mock data for demonstration
+  const { orders } = useOrders();
+
   const stats = {
-    totalRevenue: 4850.75,
-    activeOrders: 12,
-    completedOrders: 234,
-    tastyCommission: 485.08,
+    totalRevenue: orders
+      .filter(o => o.status === 'Entregado')
+      .reduce((sum, o) => sum + o.total, 0),
+    activeOrders: orders.filter(o => o.status === 'En Preparación' || o.status === 'Nuevo').length,
+    completedOrders: orders.filter(o => o.status === 'Entregado').length,
+    tastyCommission: orders
+      .filter(o => o.status === 'Entregado')
+      .reduce((sum, o) => sum + o.total, 0) * 0.1,
   };
 
   const formatCurrency = (amount: number) =>
@@ -27,7 +33,7 @@ export default function ChefDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+            <p className="text-xs text-muted-foreground">From completed orders</p>
           </CardContent>
         </Card>
         <Card>
@@ -37,7 +43,7 @@ export default function ChefDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeOrders}</div>
-            <p className="text-xs text-muted-foreground">Currently being prepared</p>
+            <p className="text-xs text-muted-foreground">New or in preparation</p>
           </CardContent>
         </Card>
         <Card>
@@ -47,7 +53,7 @@ export default function ChefDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{stats.completedOrders}</div>
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
+            <p className="text-xs text-muted-foreground">All-time delivered orders</p>
           </CardContent>
         </Card>
         <Card>
