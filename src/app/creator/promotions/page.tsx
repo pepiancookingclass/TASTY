@@ -1,4 +1,3 @@
-
 'use client';
 import { promotions } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
