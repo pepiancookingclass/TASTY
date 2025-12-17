@@ -37,8 +37,7 @@ export function OrderTable({ orders }: OrderTableProps) {
         <TableRow>
           <TableHead>Order ID</TableHead>
           <TableHead className="hidden sm:table-cell">Customer</TableHead>
-          <TableHead className="hidden lg:table-cell">Order Date</TableHead>
-          <TableHead className="hidden lg:table-cell">Delivery Date</TableHead>
+          <TableHead className="hidden lg:table-cell">Dates</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-center">Status</TableHead>
         </TableRow>
@@ -51,8 +50,14 @@ export function OrderTable({ orders }: OrderTableProps) {
               <div className="text-sm text-muted-foreground sm:hidden">{order.customerName}</div>
             </TableCell>
             <TableCell className="hidden sm:table-cell">{order.customerName}</TableCell>
-            <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(order.orderDate)}</TableCell>
-            <TableCell className="hidden lg:table-cell text-muted-foreground font-semibold">{formatDate(order.deliveryDate)}</TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <div>
+                <span className="font-medium">Pedido:</span> <span className="text-muted-foreground">{formatDate(order.orderDate)}</span>
+              </div>
+              <div>
+              <span className="font-medium">Entrega:</span> <span className="text-muted-foreground">{formatDate(order.deliveryDate)}</span>
+              </div>
+            </TableCell>
             <TableCell className="text-right">{formatPrice(order.total)}</TableCell>
             <TableCell className="text-center">
               <OrderStatusSelector orderId={order.id} currentStatus={order.status} />
