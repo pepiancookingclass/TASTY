@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { useAuth, useFirestore } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, User } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -29,7 +30,7 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
   
-  const handleUserCreation = async (user: User) => {
+  const handleGoogleUserCreation = async (user: User) => {
     if (!firestore || !user) return;
     const userRef = doc(firestore, 'users', user.uid);
     const userDoc = await getDoc(userRef);
@@ -38,11 +39,9 @@ export default function LoginPage() {
         await setDoc(userRef, {
             uid: user.uid,
             email: user.email,
-            name: user.displayName || email.split('@')[0],
+            name: user.displayName,
             photoURL: user.photoURL,
-            // For demonstration, let's make the first registered user a chef.
-            // In a real app, this would be a managed process.
-            roles: ['chef'],
+            roles: ['customer'],
         }, { merge: true });
     }
      router.push('/user/profile');
@@ -53,7 +52,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      await handleUserCreation(result.user);
+      await handleGoogleUserCreation(result.user);
     } catch (error: any) {
       setError(error.message);
       console.error('Error signing in with Google', error);
@@ -65,19 +64,10 @@ export default function LoginPage() {
     if (!auth) return;
     setError(null);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await handleUserCreation(result.user);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/user/profile');
     } catch (error: any) {
-        if (error.code === 'auth/user-not-found') {
-            try {
-                const result = await createUserWithEmailAndPassword(auth, email, password);
-                await handleUserCreation(result.user);
-            } catch (createError: any) {
-                setError(createError.message);
-            }
-        } else {
-             setError(error.message);
-        }
+       setError(error.message);
     }
   };
 
@@ -89,8 +79,8 @@ export default function LoginPage() {
     <div className="container flex justify-center items-center h-[calc(100vh-10rem)]">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">Welcome</CardTitle>
-          <CardDescription>Sign in or create an account to continue</CardDescription>
+          <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
+          <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Button onClick={handleGoogleSignIn} variant="outline">
@@ -119,8 +109,18 @@ export default function LoginPage() {
                 <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Continue with Email</Button>
+            <Button type="submit" className="w-full">Sign In</Button>
           </form>
+
+          <Separator />
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{' '}
+            <Button variant="link" asChild className="p-0 h-auto">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </p>
+
         </CardContent>
       </Card>
     </div>
