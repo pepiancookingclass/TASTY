@@ -11,12 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { generateProductDescriptionsAction } from "@/app/actions";
 import { useTransition } from "react";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   productName_en: z.string().min(2, { message: "Product name must be at least 2 characters." }),
   productName_es: z.string().min(2, { message: "El nombre del producto debe tener al menos 2 caracteres." }),
+  productImage: z.any().refine(files => files?.length > 0, 'La imagen del producto es requerida.'),
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
   productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
@@ -39,6 +40,9 @@ export function NewProductForm() {
       productIngredients_es: "",
     },
   });
+  
+  const imageRef = form.register("productImage");
+
 
   const handleGenerateDescriptions = () => {
     const { productName_en, productType, productIngredients_en, productPrice } = form.getValues();
@@ -108,6 +112,22 @@ export function NewProductForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
+
+                <FormField
+                  control={form.control}
+                  name="productImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Image</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-4">
+                            <Input id="productImage" type="file" {...imageRef} className="flex-1" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
