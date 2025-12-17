@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Product, Chef } from '@/lib/types';
+import { Product, Creator } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProductCard } from './ProductCard';
@@ -9,7 +9,7 @@ import { useDictionary } from '@/hooks/useDictionary';
 
 interface ProductShowcaseProps {
   products: Product[];
-  chefs: Chef[];
+  creators: Creator[];
   title: string;
   id: string;
 }
@@ -21,7 +21,7 @@ type DietaryFilters = {
   isNutFree: boolean;
 };
 
-export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseProps) {
+export function ProductShowcase({ products, creators, title, id }: ProductShowcaseProps) {
   const [filters, setFilters] = useState<DietaryFilters>({
     isGlutenFree: false,
     isVegan: false,
@@ -70,8 +70,8 @@ export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseP
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredProducts.map((product) => {
-            const chef = chefs.find(c => c.id === product.chefId);
-            return <ProductCard key={product.id} product={product} chef={chef} />
+            const creator = creators.find(c => c.id === product.creatorId);
+            return <ProductCard key={product.id} product={product} creator={creator} />
           })}
         </div>
       ) : (

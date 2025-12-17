@@ -31,7 +31,7 @@
             "type": "string",
             "enum": [
               "admin",
-              "chef",
+              "creator",
               "customer"
             ]
           }

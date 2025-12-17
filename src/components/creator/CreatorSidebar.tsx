@@ -13,11 +13,11 @@ const navLinks = [
   { href: '/chef/promotions', label: 'promotions', icon: Tag },
 ];
 
-interface ChefSidebarProps {
+interface CreatorSidebarProps {
   isMobile?: boolean;
 }
 
-export function ChefSidebar({ isMobile = false }: ChefSidebarProps) {
+export function CreatorSidebar({ isMobile = false }: CreatorSidebarProps) {
   const pathname = usePathname();
   const dict = useDictionary();
 
@@ -32,7 +32,7 @@ export function ChefSidebar({ isMobile = false }: ChefSidebarProps) {
         )}
       >
         <Icon className="h-4 w-4" />
-        {dict.chefSidebar[label as keyof typeof dict.chefSidebar]}
+        {dict.creatorSidebar[label as keyof typeof dict.creatorSidebar]}
       </Link>
     );
 
@@ -52,7 +52,7 @@ export function ChefSidebar({ isMobile = false }: ChefSidebarProps) {
       {!isMobile && (
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
            <div className="flex items-center gap-2 font-semibold">
-              <h2 className="font-headline text-2xl font-bold">{dict.chefSidebar.title}</h2>
+              <h2 className="font-headline text-2xl font-bold">{dict.creatorSidebar.title}</h2>
            </div>
         </div>
       )}
@@ -76,7 +76,7 @@ export function ChefSidebar({ isMobile = false }: ChefSidebarProps) {
              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
           >
               <Home className="h-4 w-4" />
-              {dict.chefSidebar.backToStore}
+              {dict.creatorSidebar.backToStore}
           </Link>
         </div>
       )}

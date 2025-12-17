@@ -1,16 +1,16 @@
 'use client';
 import Link from 'next/link';
-import { sampleChef, products } from '@/lib/data';
+import { sampleCreator, products } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { ProductTable } from '@/components/chef/ProductTable';
+import { ProductTable } from '@/components/creator/ProductTable';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useDictionary } from '@/hooks/useDictionary';
 
-export default function ChefProductsPage() {
-  const chefProducts = products.filter(p => p.chefId === sampleChef.id);
+export default function CreatorProductsPage() {
+  const creatorProducts = products.filter(p => p.creatorId === sampleCreator.id);
   const { user, loading } = useUser();
   const router = useRouter();
   const dict = useDictionary();
@@ -19,7 +19,7 @@ export default function ChefProductsPage() {
   //   if (!loading && !user) {
   //     router.push('/login');
   //   }
-  //   // In a real app, you would check if the user has a 'chef' role
+  //   // In a real app, you would check if the user has a 'creator' role
   // }, [user, loading, router]);
 
   // if (loading || !user) {
@@ -30,18 +30,18 @@ export default function ChefProductsPage() {
     <div >
       <div className="flex justify-between items-start mb-8">
         <div>
-            <h1 className="font-headline text-4xl font-bold">{dict.chefProducts.title}</h1>
-            <p className="text-muted-foreground mt-2">{dict.chefProducts.description}</p>
+            <h1 className="font-headline text-4xl font-bold">{dict.creatorProducts.title}</h1>
+            <p className="text-muted-foreground mt-2">{dict.creatorProducts.description}</p>
         </div>
         <Button asChild>
-          <Link href="/chef/products/new">
+          <Link href="/creator/products/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            {dict.chefProducts.addNew}
+            {dict.creatorProducts.addNew}
           </Link>
         </Button>
       </div>
 
-      <ProductTable products={chefProducts} />
+      <ProductTable products={creatorProducts} />
     </div>
   );
 }

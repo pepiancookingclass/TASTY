@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Product, Chef } from '@/lib/types';
+import { Product, Creator } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +14,10 @@ import { useDictionary } from '@/hooks/useDictionary';
 
 interface ProductCardProps {
   product: Product;
-  chef?: Chef;
+  creator?: Creator;
 }
 
-export function ProductCard({ product, chef }: ProductCardProps) {
+export function ProductCard({ product, creator }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -78,13 +78,13 @@ export function ProductCard({ product, chef }: ProductCardProps) {
         </div>
       </CardContent>
       <CardFooter className="p-4 flex flex-col items-start space-y-4">
-        {chef && (
+        {creator && (
             <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                    <AvatarImage src={chef.profilePictureUrl} alt={chef.name} data-ai-hint={chef.imageHint} />
-                    <AvatarFallback>{chef.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={creator.profilePictureUrl} alt={creator.name} data-ai-hint={creator.imageHint} />
+                    <AvatarFallback>{creator.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-muted-foreground font-medium">{dict.productCard.by} {chef.name}</span>
+                <span className="text-xs text-muted-foreground font-medium">{dict.productCard.by} {creator.name}</span>
             </div>
         )}
         <div className="w-full flex justify-between items-center">

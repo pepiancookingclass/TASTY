@@ -1,10 +1,10 @@
 'use client';
 
 import { ProductShowcase } from '@/components/product/ProductShowcase';
-import { products, sampleChef, promotions } from '@/lib/data';
-import type { Chef } from '@/lib/types';
+import { products, sampleCreator, promotions } from '@/lib/data';
+import type { Creator } from '@/lib/types';
 import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
-import { ChefShowcase } from '@/components/chef/ChefShowcase';
+import { CreatorShowcase } from '@/components/creator/CreatorShowcase';
 import { Hero } from '@/components/shared/Hero';
 import { useDictionary } from '@/hooks/useDictionary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +14,10 @@ import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 export default function Home() {
   const dict = useDictionary();
-  // In a real app, you'd fetch multiple chefs
-  const chefs: Chef[] = [
-      sampleChef,
-      { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=1080', imageHint: 'chef portrait', gender: 'male' },
+  // In a real app, you'd fetch multiple creators
+  const creators: Creator[] = [
+      sampleCreator,
+      { id: 'creator-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=1080', imageHint: 'chef portrait', gender: 'male' },
   ]; 
 
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert');
@@ -27,7 +27,7 @@ export default function Home() {
     <div className="space-y-16">
       <Hero />
       <div className="container mx-auto px-4 py-8 space-y-16">
-        <ChefShowcase chefs={chefs} />
+        <CreatorShowcase creators={creators} />
 
         <Card className="mt-16 text-center shadow-lg bg-secondary">
             <CardHeader>
@@ -47,8 +47,8 @@ export default function Home() {
         </Card>
         
         <PromotionsBanner promotions={promotions} />
-        <ProductShowcase products={sweets} chefs={chefs} title={dict.productShowcase.sweets} id="sweets" />
-        <ProductShowcase products={savory} chefs={chefs} title={dict.productShowcase.savory} id="savory" />
+        <ProductShowcase products={sweets} creators={creators} title={dict.productShowcase.sweets} id="sweets" />
+        <ProductShowcase products={savory} creators={creators} title={dict.productShowcase.savory} id="savory" />
       </div>
     </div>
   );

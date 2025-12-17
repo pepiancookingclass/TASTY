@@ -1,8 +1,9 @@
 'use client';
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { useEffect, useState } from 'react';
 
-const data = [
+const generateData = () => [
   { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
   { name: 'Feb', total: Math.floor(Math.random() * 5000) + 1000 },
   { name: 'Mar', total: Math.floor(Math.random() * 5000) + 1000 },
@@ -18,6 +19,13 @@ const data = [
 ];
 
 export function RevenueChart() {
+    const [data, setData] = useState<any[]>([]);
+
+    useEffect(() => {
+        setData(generateData());
+    }, []);
+
+
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>

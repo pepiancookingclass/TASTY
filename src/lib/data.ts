@@ -1,5 +1,5 @@
 
-import type { Product, Promotion, User, Chef } from './types';
+import type { Product, Promotion, User, Creator } from './types';
 
 export const products: Product[] = [
   {
@@ -20,7 +20,7 @@ export const products: Product[] = [
       en: 'Flour, Butter, Yeast, Sugar, Salt',
       es: 'Harina, Mantequilla, Levadura, Azúcar, Sal',
     },
-    chefId: 'chef-001',
+    creatorId: 'creator-001',
     preparationTime: 24,
     dietaryFlags: {
       isGlutenFree: false,
@@ -47,7 +47,7 @@ export const products: Product[] = [
       en: 'Flour, Eggs, Cream, Chocolate, Sugar',
       es: 'Harina, Huevos, Crema, Chocolate, Azúcar',
     },
-    chefId: 'chef-001',
+    creatorId: 'creator-001',
     preparationTime: 8,
     dietaryFlags: {
       isGlutenFree: false,
@@ -64,7 +64,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 8.0,
-    imageUrl: 'https://picsum.photos/seed/sourdough/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08',
     imageHint: 'sourdough bread',
     description: {
       en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
@@ -74,7 +74,7 @@ export const products: Product[] = [
       en: 'Sourdough Starter, Flour, Water, Salt',
       es: 'Masa Madre, Harina, Agua, Sal',
     },
-    chefId: 'chef-002',
+    creatorId: 'creator-002',
     preparationTime: 48,
     dietaryFlags: {
       isGlutenFree: false,
@@ -101,7 +101,7 @@ export const products: Product[] = [
       en: 'Almond Flour, Sugar, Egg Whites, Ganache',
       es: 'Harina de Almendras, Azúcar, Claras de Huevo, Ganache',
     },
-    chefId: 'chef-001',
+    creatorId: 'creator-001',
     preparationTime: 12,
     dietaryFlags: {
       isGlutenFree: true,
@@ -118,7 +118,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 5.0,
-    imageUrl: 'https://picsum.photos/seed/brownie/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e',
     imageHint: 'vegan brownie',
     description: {
       en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
@@ -128,7 +128,7 @@ export const products: Product[] = [
       en: 'Flour, Cocoa Powder, Vegan Butter, Flax Eggs, Sugar',
       es: 'Harina, Cacao en Polvo, Mantequilla Vegana, Huevos de Lino, Azúcar',
     },
-    chefId: 'chef-002',
+    creatorId: 'creator-002',
     preparationTime: 4,
     dietaryFlags: {
       isGlutenFree: false,
@@ -145,7 +145,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 7.5,
-    imageUrl: 'https://picsum.photos/seed/quiche/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1599921865943-38853b3a7b1b',
     imageHint: 'quiche lorraine',
     description: {
       en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
@@ -155,7 +155,7 @@ export const products: Product[] = [
       en: 'Pastry Crust, Bacon, Eggs, Cream, Gruyere Cheese',
       es: 'Masa de hojaldre, Tocino, Huevos, Crema, Queso Gruyere',
     },
-    chefId: 'chef-001',
+    creatorId: 'creator-001',
     preparationTime: 6,
     dietaryFlags: {
       isGlutenFree: false,
@@ -172,7 +172,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 4.0,
-    imageUrl: 'https://picsum.photos/seed/cupcakes/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1587668178277-295251f900ce',
     imageHint: 'cupcakes',
     description: {
       en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
@@ -182,7 +182,7 @@ export const products: Product[] = [
       en: 'Gluten-Free Flour Blend, Sugar, Eggs, Butter, Vanilla',
       es: 'Mezcla de Harina Sin Gluten, Azúcar, Huevos, Mantequilla, Vainilla',
     },
-    chefId: 'chef-002',
+    creatorId: 'creator-002',
     preparationTime: 3,
     dietaryFlags: {
       isGlutenFree: true,
@@ -199,7 +199,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 6.0,
-    imageUrl: 'https://picsum.photos/seed/turnover/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1606891823904-13835697ac54',
     imageHint: 'savory pastry',
     description: {
       en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
@@ -209,7 +209,7 @@ export const products: Product[] = [
       en: 'Puff Pastry, Spinach, Feta Cheese, Onion, Herbs',
       es: 'Masa de hojaldre, espinacas, queso feta, cebolla, hierbas',
     },
-    chefId: 'chef-002',
+    creatorId: 'creator-002',
     preparationTime: 4,
     dietaryFlags: {
       isGlutenFree: false,
@@ -245,7 +245,7 @@ export const promotions: Promotion[] = [
       en: 'Buy any savory item, get a free croissant!',
       es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
     },
-    imageUrl: 'https://picsum.photos/seed/savory/1080/810',
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
     imageHint: 'savory food',
     freeItem: 'prod-001',
   },
@@ -267,8 +267,8 @@ export const sampleUser: User = {
   },
 };
 
-export const sampleChef: Chef = {
-  id: 'chef-001',
+export const sampleCreator: Creator = {
+  id: 'creator-001',
   name: 'Julia Pastry',
   email: 'julia.p@tastyapp.com',
   profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c',

@@ -3,7 +3,7 @@ const dictionary = {
   hero: {
     headline: 'Artisan Flavors, Straight From Home',
     subheadline:
-      'Discover unique, handcrafted dishes made with passion by local chefs.',
+      'Discover unique, handcrafted dishes made with passion by local creators.',
     cta: 'Explore Now',
   },
   specialEvents: {
@@ -11,8 +11,8 @@ const dictionary = {
     description: 'Planning a celebration or need something custom-made? Contact us to discuss your ideas.',
     cta: 'Contact via WhatsApp',
   },
-  chefShowcase: {
-    headline: 'Meet Our Chefs',
+  creatorShowcase: {
+    headline: 'Meet Our Creators',
     tagline: 'The heart and soul behind our homemade delights.',
     specialty: 'Specializing in pastries and lovingly baked treats.',
     viewProfile: 'View Profile',
@@ -64,8 +64,8 @@ const dictionary = {
     home: 'Home',
     sweets: 'Sweets',
     savory: 'Savory',
-    chefs: 'Chefs',
-    chefDashboard: 'Chef Dashboard',
+    creators: 'Creators',
+    creatorDashboard: 'Creator Dashboard',
     changeLanguage: 'Change language',
     shoppingCart: 'Shopping Cart',
     profile: 'Profile',
@@ -130,8 +130,8 @@ const dictionary = {
     },
     save: 'Save Changes',
   },
-  chefSidebar: {
-    title: 'Chef Portal',
+  creatorSidebar: {
+    title: 'Creator Portal',
     dashboard: 'Dashboard',
     orders: 'Orders',
     products: 'Products',
@@ -146,7 +146,7 @@ const dictionary = {
     delivered: 'Delivered',
     cancelled: 'Cancelled',
   },
-  chefDashboard: {
+  creatorDashboard: {
     totalRevenue: {
         title: 'Total Revenue',
         description: 'From completed orders',
@@ -165,7 +165,7 @@ const dictionary = {
     },
     revenueOverview: 'Revenue Overview',
   },
-  chefOrders: {
+  creatorOrders: {
     title: 'Manage Orders',
     description: 'Track and update the status of your customer orders.',
     allOrdersTitle: 'All Orders',
@@ -185,7 +185,7 @@ const dictionary = {
     toastDescription: (orderId: string, newStatus: string) => `Order ${orderId} is now "${newStatus}".`,
     placeholder: 'Update status',
   },
-  chefProducts: {
+  creatorProducts: {
     title: 'My Products',
     description: 'Manage your delicious creations.',
     addNew: 'Add New Product',
@@ -244,7 +244,7 @@ const dictionary = {
     edit: 'Edit',
     delete: 'Delete',
   },
-  chefPromotions: {
+  creatorPromotions: {
     title: 'Manage Promotions',
     discount: {
         title: 'Create Product Discount',

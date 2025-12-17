@@ -3,7 +3,7 @@ const dictionary = {
   hero: {
     headline: 'Sabores Artesanales, Directo de Casa',
     subheadline:
-      'Descubre platillos únicos, hechos a mano con pasión por chefs locales.',
+      'Descubre platillos únicos, hechos a mano con pasión por creadores locales.',
     cta: 'Explora Ahora',
   },
   specialEvents: {
@@ -11,8 +11,8 @@ const dictionary = {
     description: '¿Planeando una celebración o necesitas algo hecho a tu medida? Contáctanos para discutir tus ideas.',
     cta: 'Contactar por WhatsApp',
   },
-  chefShowcase: {
-    headline: 'Conoce a Nuestros Chefs',
+  creatorShowcase: {
+    headline: 'Conoce a Nuestros Creadores',
     tagline: 'El corazón y el alma detrás de nuestras delicias caseras.',
     specialty: 'Especialista en repostería y delicias horneadas con amor.',
     viewProfile: 'Ver Perfil',
@@ -64,8 +64,8 @@ const dictionary = {
     home: 'Inicio',
     sweets: 'Dulces',
     savory: 'Salados',
-    chefs: 'Chefs',
-    chefDashboard: 'Panel de Chef',
+    creators: 'Creadores',
+    creatorDashboard: 'Panel de Creador',
     changeLanguage: 'Cambiar idioma',
     shoppingCart: 'Carrito de Compras',
     profile: 'Perfil',
@@ -130,8 +130,8 @@ const dictionary = {
     },
     save: 'Guardar Cambios',
   },
-  chefSidebar: {
-    title: 'Portal del Chef',
+  creatorSidebar: {
+    title: 'Portal del Creador',
     dashboard: 'Dashboard',
     orders: 'Pedidos',
     products: 'Productos',
@@ -146,7 +146,7 @@ const dictionary = {
     delivered: 'Entregado',
     cancelled: 'Cancelado',
   },
-  chefDashboard: {
+  creatorDashboard: {
     totalRevenue: {
         title: 'Ingresos Totales',
         description: 'De pedidos completados',
@@ -165,7 +165,7 @@ const dictionary = {
     },
     revenueOverview: 'Resumen de Ingresos',
   },
-  chefOrders: {
+  creatorOrders: {
     title: 'Gestionar Pedidos',
     description: 'Rastrea y actualiza el estado de los pedidos de tus clientes.',
     allOrdersTitle: 'Todos los Pedidos',
@@ -185,7 +185,7 @@ const dictionary = {
     toastDescription: (orderId: string, newStatus: string) => `El pedido ${orderId} ahora está "${newStatus}".`,
     placeholder: 'Actualizar estado',
   },
-  chefProducts: {
+  creatorProducts: {
     title: 'Mis Productos',
     description: 'Gestiona tus deliciosas creaciones.',
     addNew: 'Añadir Nuevo Producto',
@@ -244,7 +244,7 @@ const dictionary = {
     edit: 'Editar',
     delete: 'Eliminar',
   },
-  chefPromotions: {
+  creatorPromotions: {
     title: 'Gestionar Promociones',
     discount: {
         title: 'Crear Descuento de Producto',
@@ -301,7 +301,7 @@ const dictionary = {
         title_es: 'Título de la Oferta (Español)',
         title_es_placeholder: 'e.g., Venta de Verano',
         description_en: 'Short Description (English)',
-        description_en_placeholder: 'A brief summary of the offer...',
+        description_en_placeholder: 'Un resumen breve de la oferta...',
         description_es: 'Descripción Corta (Español)',
         description_es_placeholder: 'Un resumen breve de la oferta...',
         type: 'Tipo de Promoción',

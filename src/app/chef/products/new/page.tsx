@@ -1,5 +1,5 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { NewProductForm } from '@/components/chef/NewProductForm';
+import { NewProductForm } from '@/components/creator/NewProductForm';
 
 export default function NewProductPage() {
     return (
@@ -7,7 +7,7 @@ export default function NewProductPage() {
              <Breadcrumb className="mb-8">
                 <BreadcrumbList>
                 <BreadcrumbItem>
-                    <BreadcrumbLink href="/chef/dashboard">Dashboard</BreadcrumbLink>
+                    <BreadcrumbLink href="/creator/dashboard">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

@@ -46,8 +46,8 @@ export function SiteHeader() {
     { href: '/', label: dict.siteHeader.home },
     { href: '/#sweets', label: dict.siteHeader.sweets },
     { href: '/#savory', label: dict.siteHeader.savory },
-    { href: '/chefs', label: dict.siteHeader.chefs },
-    { href: '/chef/dashboard', label: dict.siteHeader.chefDashboard },
+    { href: '/creators', label: dict.siteHeader.creators },
+    { href: '/creator/dashboard', label: dict.siteHeader.creatorDashboard },
   ];
 
   return (

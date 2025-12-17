@@ -1,5 +1,5 @@
 'use client';
-import { ChefSidebar } from '@/components/chef/ChefSidebar';
+import { CreatorSidebar } from '@/components/creator/CreatorSidebar';
 import { OrderProvider } from '@/context/OrderProvider';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { ChefHat } from 'lucide-react';
 
-export default function ChefLayout({
+export default function CreatorLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export default function ChefLayout({
     <OrderProvider>
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <div className="hidden border-r bg-muted/40 md:block">
-            <ChefSidebar />
+            <CreatorSidebar />
         </div>
         <div className="flex flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
@@ -29,7 +29,7 @@ export default function ChefLayout({
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col p-0">
                   <div className="border-b p-4">
-                      <Link href="/chef/dashboard" className="flex items-center space-x-2">
+                      <Link href="/creator/dashboard" className="flex items-center space-x-2">
                           <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
                               <ChefHat className="h-6 w-6 text-white" />
                           </div>
@@ -38,7 +38,7 @@ export default function ChefLayout({
                           </span>
                       </Link>
                   </div>
-                  <ChefSidebar isMobile={true} />
+                  <CreatorSidebar isMobile={true} />
                 </SheetContent>
               </Sheet>
               <div className="w-full flex-1">

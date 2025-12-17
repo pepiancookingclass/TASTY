@@ -16,7 +16,7 @@ export type Product = {
     en: string;
     es: string;
   };
-  chefId: string;
+  creatorId: string;
   preparationTime: number; // in hours
   dietaryFlags: {
     isGlutenFree: boolean;
@@ -58,7 +58,7 @@ export type User = {
   };
 };
 
-export type Chef = {
+export type Creator = {
   id: string;
   name: string;
   email: string;
