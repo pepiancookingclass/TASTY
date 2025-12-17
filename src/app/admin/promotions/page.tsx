@@ -1,10 +1,28 @@
+'use client';
 import { promotions } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { PromotionForm } from '@/components/admin/PromotionForm';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AdminPromotionsPage() {
+  const { user, loading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+    // In a real app, you would also check if the user has an 'admin' role
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="container flex justify-center items-center h-screen"><p>Loading...</p></div>;
+  }
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="font-headline text-4xl font-bold mb-8">Manage Promotions</h1>

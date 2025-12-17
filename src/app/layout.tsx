@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/shared/SiteHeader';
 import { SiteFooter } from '@/components/shared/SiteFooter';
 import { CartProvider } from '@/context/CartProvider';
 import { LanguageProvider } from '@/context/LanguageProvider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Tasty',
@@ -29,16 +30,18 @@ export default function RootLayout({
           'min-h-screen bg-background font-body antialiased'
         )}
       >
-        <LanguageProvider>
-          <CartProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <SiteHeader />
-              <main className="flex-1">{children}</main>
-              <SiteFooter />
-            </div>
-            <Toaster />
-          </CartProvider>
-        </LanguageProvider>
+        <FirebaseClientProvider>
+          <LanguageProvider>
+            <CartProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1">{children}</main>
+                <SiteFooter />
+              </div>
+              <Toaster />
+            </CartProvider>
+          </LanguageProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

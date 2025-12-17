@@ -1,14 +1,36 @@
+'use client';
 import Image from 'next/image';
-import { sampleUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function UserProfilePage() {
-  const user = sampleUser;
+  const { user, loading } = useUser();
+  const router = useRouter();
+  
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+    if (user) {
+        setDisplayName(user.displayName || '');
+        setEmail(user.email || '');
+    }
+  }, [user, loading, router]);
+
+
+  if (loading || !user) {
+    return <div className="container flex justify-center items-center h-screen"><p>Loading...</p></div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -17,11 +39,11 @@ export default function UserProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.profilePictureUrl} alt={user.name} data-ai-hint={user.imageHint} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.photoURL || undefined} alt={user.displayName || ''} />
+              <AvatarFallback>{(user.displayName || 'U').charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="font-headline text-2xl">{user.name}</CardTitle>
+              <CardTitle className="font-headline text-2xl">{user.displayName}</CardTitle>
               <p className="text-muted-foreground">{user.email}</p>
             </div>
           </div>
@@ -34,15 +56,15 @@ export default function UserProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue={user.name} />
+                    <Input id="name" value={displayName} onChange={e => setDisplayName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" defaultValue={user.email} />
+                    <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue={user.phone} />
+                    <Input id="phone" type="tel" placeholder="555-123-4567" />
                   </div>
                 </div>
               </div>
@@ -54,23 +76,23 @@ export default function UserProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="street">Street Address</Label>
-                    <Input id="street" defaultValue={user.address.street} />
+                    <Input id="street" placeholder="123 Main St" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
-                    <Input id="city" defaultValue={user.address.city} />
+                    <Input id="city" placeholder="Foodville"/>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="state">State</Label>
-                    <Input id="state" defaultValue={user.address.state} />
+                    <Input id="state" placeholder="CA" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="zip">ZIP Code</Label>
-                    <Input id="zip" defaultValue={user.address.zip} />
+                    <Input id="zip" placeholder="90210" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
-                    <Input id="country" defaultValue={user.address.country} />
+                    <Input id="country" placeholder="USA" />
                   </div>
                 </div>
               </div>
