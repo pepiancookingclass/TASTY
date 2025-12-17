@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   ChefHat,
-  HeartHandshake,
+  HeartHandmade,
   LayoutDashboard,
   Salad,
   Settings,
@@ -30,13 +30,18 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-        <div className="flex gap-6 md:gap-10">
+        <div className="flex gap-6 md:gap-10 items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <HeartHandshake className="h-8 w-8 text-primary" />
+            <ChefHat className="h-8 w-8 text-primary" />
             <span className="inline-block font-headline text-2xl font-bold">
               Tasty
             </span>
           </Link>
+          <nav className="hidden md:flex gap-4">
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Dulces</Link>
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Salados</Link>
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Hecho a Mano</Link>
+          </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
