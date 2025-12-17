@@ -9,7 +9,7 @@ export default function ChefsPage() {
     // In a real app, you'd fetch all chefs
     const chefs: Chef[] = [
         sampleChef,
-        { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://picsum.photos/seed/303/100/100', imageHint: 'chef portrait', gender: 'male' },
+        { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjaGVmJTIwbWFpbnxlbnwwfHx8fDE3MTc3OTA0MDV8MA&ixlib=rb-4.0.3&q=80&w=1080', imageHint: 'chef portrait', gender: 'male' },
     ];
 
     const chefsWithProducts = chefs.map(chef => {
