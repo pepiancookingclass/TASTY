@@ -71,3 +71,14 @@ export type CartItem = {
   product: Product;
   quantity: number;
 };
+
+export type OrderStatus = 'Nuevo' | 'En Preparación' | 'Listo para Recoger' | 'En Camino' | 'Entregado' | 'Cancelado';
+
+export type Order = {
+    id: string;
+    customerName: string;
+    date: Date;
+    items: CartItem[];
+    status: OrderStatus;
+    total: number;
+}

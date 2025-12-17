@@ -7,7 +7,7 @@ export default function ChefLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex">
+    <div className="flex bg-muted/40 min-h-screen">
       <ChefSidebar />
       <main className="flex-1 p-8">
         {children}
