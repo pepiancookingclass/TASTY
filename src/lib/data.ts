@@ -226,7 +226,7 @@ export const products: Product[] = [
     },
     type: 'handmade',
     price: 25.0,
-    imageUrl: 'https://images.unsplash.com/photo-1621210243697-a721d3c3b0aa',
+    imageUrl: 'https://placehold.co/600x400/d1d5db/374151?text=Knitted+Scarf',
     imageHint: 'knitted scarf',
     description: {
       en: 'A warm and cozy scarf, hand-knitted with soft wool blend yarn.',
@@ -253,7 +253,7 @@ export const products: Product[] = [
     },
     type: 'handmade',
     price: 18.0,
-    imageUrl: 'https://images.unsplash.com/photo-1596464243634-2452252a44c1',
+    imageUrl: 'https://placehold.co/600x400/e0e7ff/4338ca?text=Ceramic+Mug',
     imageHint: 'ceramic mug',
     description: {
       en: 'A unique, wheel-thrown ceramic mug, perfect for your morning coffee.',
