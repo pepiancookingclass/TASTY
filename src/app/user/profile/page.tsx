@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Checkbox } from '@/components/ui/checkbox';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 type Skill = 'pastry' | 'savory' | 'handmade';
@@ -20,7 +20,7 @@ type Skill = 'pastry' | 'savory' | 'handmade';
 export default function UserProfilePage() {
   const { user, loading } = useUser();
   const firestore = useFirestore();
-  const { roles } = useUserRoles();
+  const { roles, loading: rolesLoading } = useUserRoles();
   const router = useRouter();
   const dict = useDictionary();
   const { toast } = useToast();
@@ -80,6 +80,27 @@ export default function UserProfilePage() {
     }
   };
 
+  const handleBecomeCreator = async () => {
+    if (!user || !firestore) return;
+    const userRef = doc(firestore, 'users', user.uid);
+    try {
+        await updateDoc(userRef, {
+            roles: arrayUnion('creator')
+        });
+        toast({
+            title: "You are now a Creator!",
+            description: "The Creator Dashboard is now available in the header.",
+        });
+    } catch (error) {
+         console.error("Error becoming a creator: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not update your role. Please try again.",
+        });
+    }
+  }
+
   if (loading || !user) {
     return <div className="container flex justify-center items-center h-screen"><p>{dict.loading}</p></div>;
   }
@@ -127,25 +148,32 @@ export default function UserProfilePage() {
                 </div>
               </div>
 
-              {isCreator && (
-                <>
-                    <Separator />
-                    <div>
-                        <h3 className="font-headline text-lg mb-4">{dict.userProfile.skills.title}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {skillOptions.map(skill => (
-                                <div key={skill.id} className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id={skill.id} 
-                                        checked={skills.includes(skill.id)}
-                                        onCheckedChange={(checked) => handleSkillChange(skill.id, !!checked)}
-                                    />
-                                    <Label htmlFor={skill.id} className="font-normal">{dict.creatorSkills[skill.label]}</Label>
-                                </div>
-                            ))}
-                        </div>
+              <Separator />
+
+              {rolesLoading ? (
+                  <p>Loading role...</p>
+              ) : isCreator ? (
+                <div>
+                    <h3 className="font-headline text-lg mb-4">{dict.userProfile.skills.title}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {skillOptions.map(skill => (
+                            <div key={skill.id} className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id={skill.id} 
+                                    checked={skills.includes(skill.id)}
+                                    onCheckedChange={(checked) => handleSkillChange(skill.id, !!checked)}
+                                />
+                                <Label htmlFor={skill.id} className="font-normal">{dict.creatorSkills[skill.label]}</Label>
+                            </div>
+                        ))}
                     </div>
-                </>
+                </div>
+              ) : (
+                 <div>
+                    <h3 className="font-headline text-lg mb-2">Join our Creators!</h3>
+                     <p className="text-muted-foreground mb-4">Want to sell your own homemade goods? Become a creator to get access to your own dashboard.</p>
+                     <Button type="button" onClick={handleBecomeCreator}>Become a Creator (For Demo)</Button>
+                </div>
               )}
 
               <Separator />
