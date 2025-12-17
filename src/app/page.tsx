@@ -31,16 +31,16 @@ export default function Home() {
 
         <Card className="mt-16 text-center shadow-lg bg-secondary">
             <CardHeader>
-                <CardTitle className="font-headline text-3xl">¿Eventos o Pedidos Especiales?</CardTitle>
+                <CardTitle className="font-headline text-3xl">{dict.specialEvents.title}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                    ¿Planeando una celebración o necesitas algo hecho a tu medida? Contáctanos para discutir tus ideas.
+                    {dict.specialEvents.description}
                 </p>
                 <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white">
                     <Link href="https://wa.me/50212345678" target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="mr-2 h-6 w-6" />
-                        Contactar por WhatsApp
+                        {dict.specialEvents.cta}
                     </Link>
                 </Button>
             </CardContent>

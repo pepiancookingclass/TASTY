@@ -17,12 +17,14 @@ import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { departments, type Municipality } from '@/lib/guatemala-locations';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function SignupPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -60,15 +62,15 @@ export default function SignupPage() {
             longitude: position.coords.longitude,
           });
           toast({
-            title: "¡Ubicación adquirida!",
-            description: "Tu ubicación actual ha sido guardada.",
+            title: dict.signupPage.locationToastTitle,
+            description: dict.signupPage.locationToastDescription,
           });
           setIsLocating(false);
         },
         (error) => {
           toast({
             variant: "destructive",
-            title: "Error de Geolocalización",
+            title: dict.signupPage.locationErrorTitle,
             description: error.message,
           });
           setIsLocating(false);
@@ -77,8 +79,8 @@ export default function SignupPage() {
     } else {
       toast({
         variant: "destructive",
-        title: "Geolocalización no Soportada",
-        description: "Tu navegador no soporta geolocalización.",
+        title: dict.signupPage.unsupportedError,
+        description: dict.signupPage.unsupportedDescription,
       });
     }
   };
@@ -86,11 +88,11 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) {
-      setError("Firebase no está inicializado.");
+      setError("Firebase not initialized.");
       return;
     }
     if (!selectedDepartment || !selectedMunicipality) {
-        setError("Por favor selecciona tu departamento y ciudad.");
+        setError("Please select your department and city.");
         return;
     }
     setError(null);
@@ -123,41 +125,41 @@ export default function SignupPage() {
     <div className="container mx-auto px-4 py-8 flex justify-center items-center">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">Crear una Cuenta</CardTitle>
-          <CardDescription>Únete a Tasty para ordenar delicias caseras.</CardDescription>
+          <CardTitle className="font-headline text-3xl">{dict.signupPage.title}</CardTitle>
+          <CardDescription>{dict.signupPage.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Nombre Completo</Label>
+                    <Label htmlFor="name">{dict.signupPage.nameLabel}</Label>
                     <Input id="name" required value={name} onChange={e => setName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="email">Correo Electrónico</Label>
+                    <Label htmlFor="email">{dict.signupPage.emailLabel}</Label>
                     <Input id="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
             </div>
              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password">{dict.signupPage.passwordLabel}</Label>
                 <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             
             <Separator />
 
-            <h3 className="font-headline text-lg">Dirección de Entrega</h3>
+            <h3 className="font-headline text-lg">{dict.signupPage.deliveryAddress}</h3>
 
             <div className="space-y-2">
-                <Label htmlFor="street">Dirección (calle, avenida, etc.)</Label>
+                <Label htmlFor="street">{dict.signupPage.streetLabel}</Label>
                 <Input id="street" required value={street} onChange={e => setStreet(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="space-y-2">
-                    <Label htmlFor="department">Departamento</Label>
+                    <Label htmlFor="department">{dict.signupPage.departmentLabel}</Label>
                     <Select onValueChange={handleDepartmentChange} required>
                         <SelectTrigger id="department">
-                            <SelectValue placeholder="Selecciona un departamento" />
+                            <SelectValue placeholder={dict.signupPage.departmentPlaceholder} />
                         </SelectTrigger>
                         <SelectContent>
                             {departments.map(dep => (
@@ -167,10 +169,10 @@ export default function SignupPage() {
                     </Select>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="city">Ciudad</Label>
+                    <Label htmlFor="city">{dict.signupPage.cityLabel}</Label>
                     <Select onValueChange={handleMunicipalityChange} required disabled={!selectedDepartment}>
                         <SelectTrigger id="city">
-                            <SelectValue placeholder="Selecciona una ciudad" />
+                            <SelectValue placeholder={dict.signupPage.cityPlaceholder} />
                         </SelectTrigger>
                         <SelectContent>
                             {municipalities.map(mun => (
@@ -184,29 +186,29 @@ export default function SignupPage() {
             {selectedMunicipality && !selectedMunicipality.hasDelivery && (
                 <Alert variant="default" className="bg-yellow-50 border-yellow-200">
                     <Info className="h-4 w-4 !text-yellow-700" />
-                    <AlertTitle className="text-yellow-800 font-semibold">Cobertura Limitada</AlertTitle>
+                    <AlertTitle className="text-yellow-800 font-semibold">{dict.signupPage.limitedCoverage.title}</AlertTitle>
                     <AlertDescription className="text-yellow-700">
-                        Actualmente no tenemos repartidores en esta ciudad. ¡Pronto expandiremos nuestra cobertura!
+                        {dict.signupPage.limitedCoverage.description}
                     </AlertDescription>
                 </Alert>
             )}
 
             <Button type="button" variant="outline" className="w-full" onClick={handleGeolocation} disabled={isLocating}>
                 <LocateIcon className={`mr-2 h-4 w-4 ${isLocating ? 'animate-pulse' : ''}`} />
-                {geolocation ? "¡Ubicación Guardada!" : "Usar mi Ubicación Actual"}
+                {geolocation ? dict.signupPage.locationSaved : dict.signupPage.useLocation}
             </Button>
             
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
-            <Button type="submit" className="w-full">Crear Cuenta</Button>
+            <Button type="submit" className="w-full">{dict.signupPage.submit}</Button>
           </form>
 
           <Separator className="my-6" />
 
            <p className="text-center text-sm text-muted-foreground">
-            ¿Ya tienes una cuenta?{' '}
+            {dict.signupPage.hasAccount}{' '}
             <Button variant="link" asChild className="p-0 h-auto">
-              <Link href="/login">Inicia sesión</Link>
+              <Link href="/login">{dict.signupPage.loginLink}</Link>
             </Button>
           </p>
 

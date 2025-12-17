@@ -13,12 +13,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const { user, loading } = useUser();
   const router = useRouter();
+  const dict = useDictionary();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,13 +81,13 @@ export default function LoginPage() {
     <div className="container flex justify-center items-center h-[calc(100vh-10rem)]">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="font-headline text-3xl">{dict.loginPage.title}</CardTitle>
+          <CardDescription>{dict.loginPage.description}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Button onClick={handleGoogleSignIn} variant="outline">
             <GoogleIcon className="mr-2 h-5 w-5" />
-            Continue with Google
+            {dict.loginPage.google}
           </Button>
 
           <div className="relative">
@@ -94,30 +96,30 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
+                    {dict.loginPage.or}
                 </span>
             </div>
           </div>
           
           <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{dict.loginPage.emailLabel}</Label>
                 <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{dict.loginPage.passwordLabel}</Label>
                 <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Sign In</Button>
+            <Button type="submit" className="w-full">{dict.loginPage.submit}</Button>
           </form>
 
           <Separator />
 
           <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            {dict.loginPage.noAccount}{' '}
             <Button variant="link" asChild className="p-0 h-auto font-semibold">
-              <Link href="/signup">Sign up</Link>
+              <Link href="/signup">{dict.loginPage.signupLink}</Link>
             </Button>
           </p>
 
