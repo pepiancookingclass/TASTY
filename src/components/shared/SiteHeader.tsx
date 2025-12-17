@@ -28,11 +28,13 @@ export function SiteHeader() {
 
   const navLinks = {
     en: {
+      home: 'Home',
       sweets: 'Sweets',
       savory: 'Savory',
       chefs: 'Chefs',
     },
     es: {
+      home: 'Inicio',
       sweets: 'Dulces',
       savory: 'Salados',
       chefs: 'Chefs',
@@ -53,10 +55,13 @@ export function SiteHeader() {
           <Link href="/" className="flex items-center space-x-2">
             <ChefHat className="h-8 w-8 text-primary" />
             <span className="inline-block font-headline text-2xl font-bold">
-              Tasty Home
+              Tasty
             </span>
           </Link>
-          <nav className="hidden md:flex gap-4">
+          <nav className="hidden md:flex gap-4 items-center">
+            <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              {navLinks[language].home}
+            </Link>
             <Link href="/#sweets" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               {navLinks[language].sweets}
             </Link>
