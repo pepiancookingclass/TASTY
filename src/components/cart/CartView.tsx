@@ -11,11 +11,13 @@ import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useLanguage } from '@/hooks/useLanguage';
 import { addHours, format } from 'date-fns';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export function CartView() {
   const { state, dispatch } = useCart();
   const { items } = state;
   const { language } = useLanguage();
+  const dict = useDictionary();
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
@@ -49,10 +51,10 @@ export function CartView() {
     return (
       <div className="text-center py-16">
         <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-        <h2 className="mt-6 font-headline text-2xl">Your cart is empty</h2>
-        <p className="mt-2 text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+        <h2 className="mt-6 font-headline text-2xl">{dict.cartView.empty.title}</h2>
+        <p className="mt-2 text-muted-foreground">{dict.cartView.empty.description}</p>
         <Button asChild className="mt-6">
-          <Link href="/">Start Shopping</Link>
+          <Link href="/">{dict.cartView.empty.cta}</Link>
         </Button>
       </div>
     );
@@ -103,31 +105,31 @@ export function CartView() {
       <div className="lg:col-span-1">
         <Card className="sticky top-24 shadow-lg">
           <CardHeader>
-            <CardTitle className="font-headline text-2xl">Order Summary</CardTitle>
+            <CardTitle className="font-headline text-2xl">{dict.cartView.orderSummary}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
-              <span>Subtotal</span>
+              <span>{dict.cartView.subtotal}</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Platform Fee (10%)</span>
+              <span>{dict.cartView.platformFee}</span>
               <span>{formatPrice(platformFee)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Delivery Fee</span>
+              <span>{dict.cartView.deliveryFee}</span>
               <span>{formatPrice(deliveryFee)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
+              <span>{dict.cartView.total}</span>
               <span>{formatPrice(total)}</span>
             </div>
              <Separator />
              <div className="space-y-1 text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">Estimated Delivery:</p>
+                <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
                 <p>{formattedDeliveryDate}</p>
-                <p className="text-xs">Based on {maxPreparationTime}hr preparation time.</p>
+                <p className="text-xs">{dict.cartView.preparationTime(maxPreparationTime)}</p>
              </div>
 
           </CardContent>
@@ -135,21 +137,19 @@ export function CartView() {
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" size="lg">
-                      Proceed to Checkout
+                      {dict.cartView.proceedToCheckout}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Heads up!</AlertDialogTitle>
+                    <AlertDialogTitle>{dict.cartView.checkoutModal.title}</AlertDialogTitle>
                     <AlertDialogDescription>
-                       Your order requires up to{' '}
-                        <span className="font-bold">{maxPreparationTime} hours</span> of preparation. The estimated delivery time is{' '}
-                        <span className="font-bold">{formattedDeliveryDate}</span>. Please plan accordingly!
+                       {dict.cartView.checkoutModal.description(maxPreparationTime, formattedDeliveryDate)}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Continue</AlertDialogAction>
+                    <AlertDialogCancel>{dict.cartView.checkoutModal.cancel}</AlertDialogCancel>
+                    <AlertDialogAction>{dict.cartView.checkoutModal.continue}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

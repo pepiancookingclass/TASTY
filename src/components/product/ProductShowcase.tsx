@@ -5,7 +5,7 @@ import { Product, Chef } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProductCard } from './ProductCard';
-import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface ProductShowcaseProps {
   products: Product[];
@@ -28,7 +28,7 @@ export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseP
     isDairyFree: false,
     isNutFree: false,
   });
-  const { language } = useLanguage();
+  const dict = useDictionary();
 
   const handleFilterChange = (filterName: keyof DietaryFilters) => {
     setFilters((prev) => ({ ...prev, [filterName]: !prev[filterName] }));
@@ -45,11 +45,11 @@ export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseP
     });
   }, [products, filters]);
   
-  const filterOptions: { id: keyof DietaryFilters, label: string, es_label: string }[] = [
-      { id: 'isGlutenFree', label: 'Gluten-Free', es_label: 'Sin Gluten' },
-      { id: 'isVegan', label: 'Vegan', es_label: 'Vegano' },
-      { id: 'isDairyFree', label: 'Dairy-Free', es_label: 'Sin Lactosa' },
-      { id: 'isNutFree', label: 'Nut-Free', es_label: 'Sin Nueces' },
+  const filterOptions: { id: keyof DietaryFilters, label: string }[] = [
+      { id: 'isGlutenFree', label: dict.productShowcase.filters.glutenFree },
+      { id: 'isVegan', label: dict.productShowcase.filters.vegan },
+      { id: 'isDairyFree', label: dict.productShowcase.filters.dairyFree },
+      { id: 'isNutFree', label: dict.productShowcase.filters.nutFree },
   ];
 
   return (
@@ -61,7 +61,7 @@ export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseP
                 <div key={option.id} className="flex items-center space-x-2">
                     <Checkbox id={`${id}-${option.id}`} checked={filters[option.id]} onCheckedChange={() => handleFilterChange(option.id)} />
                     <Label htmlFor={`${id}-${option.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {language === 'es' ? option.es_label : option.label}
+                        {option.label}
                     </Label>
                 </div>
             ))}
@@ -77,10 +77,10 @@ export function ProductShowcase({ products, chefs, title, id }: ProductShowcaseP
       ) : (
         <div className="text-center py-16">
             <p className="text-muted-foreground font-headline text-xl">
-              {language === 'es' ? 'No hay productos que coincidan con tus filtros.' : 'No products match your filters.'}
+              {dict.productShowcase.noProductsMatch}
             </p>
             <p className="text-muted-foreground mt-2">
-              {language === 'es' ? '¡Intenta ajustar tu selección para encontrar más delicias!' : 'Try adjusting your selection to find more delights!'}
+              {dict.productShowcase.tryAdjusting}
             </p>
         </div>
       )}

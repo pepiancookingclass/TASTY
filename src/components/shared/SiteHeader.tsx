@@ -19,32 +19,17 @@ import { getAuth, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useRouter } from 'next/navigation';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export function SiteHeader() {
   const { state } = useCart();
-  const { language, toggleLanguage } = useLanguage();
+  const { toggleLanguage } = useLanguage();
   const { user, loading } = useUser();
   const { roles, loading: rolesLoading } = useUserRoles();
   const router = useRouter();
+  const dict = useDictionary();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const navLinks = {
-    en: {
-      home: 'Home',
-      sweets: 'Sweets',
-      savory: 'Savory',
-      chefs: 'Chefs',
-      chefDashboard: 'Chef Dashboard'
-    },
-    es: {
-      home: 'Inicio',
-      sweets: 'Dulces',
-      savory: 'Salados',
-      chefs: 'Chefs',
-      chefDashboard: 'Panel de Chef'
-    },
-  };
-  
   const handleLogout = async () => {
     const auth = getAuth();
     await signOut(auth);
@@ -66,19 +51,19 @@ export function SiteHeader() {
           </Link>
           <nav className="hidden md:flex gap-4 items-center">
             <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-foreground/80">
-              {navLinks[language].home}
+              {dict.siteHeader.home}
             </Link>
             <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {navLinks[language].sweets}
+              {dict.siteHeader.sweets}
             </Link>
             <Link href="/#savory" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {navLinks[language].savory}
+              {dict.siteHeader.savory}
             </Link>
             <Link href="/chefs" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-              {navLinks[language].chefs}
+              {dict.siteHeader.chefs}
             </Link>
              <Link href="/chef/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-                {navLinks[language].chefDashboard}
+                {dict.siteHeader.chefDashboard}
             </Link>
           </nav>
         </div>
@@ -86,7 +71,7 @@ export function SiteHeader() {
           <nav className="flex items-center space-x-1">
             <Button variant="ghost" size="icon" onClick={toggleLanguage}>
               <Globe className="h-5 w-5" />
-              <span className="sr-only">Change language</span>
+              <span className="sr-only">{dict.siteHeader.changeLanguage}</span>
             </Button>
             <Link href="/cart">
               <Button variant="ghost" size="icon">
@@ -103,7 +88,7 @@ export function SiteHeader() {
                     {itemCount}
                   </Badge>
                 )}
-                <span className="sr-only">Shopping Cart</span>
+                <span className="sr-only">{dict.siteHeader.shoppingCart}</span>
               </Button>
             </Link>
             {loading ? null : user ? (
@@ -122,28 +107,28 @@ export function SiteHeader() {
                   <DropdownMenuItem asChild>
                     <Link href="/user/profile">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
+                      <span>{dict.siteHeader.profile}</span>
                     </Link>
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem asChild>
                       <Link href="/chef/dashboard">
                         <ChefHat className="mr-2 h-4 w-4" />
-                        <span>Chef Dashboard</span>
+                        <span>{dict.siteHeader.chefDashboard}</span>
                       </Link>
                     </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
                       <Link href="/admin/promotions">
                         <Crown className="mr-2 h-4 w-4" />
-                        <span>Admin</span>
+                        <span>{dict.siteHeader.admin}</span>
                       </Link>
                     </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>{dict.siteHeader.logout}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -151,12 +136,12 @@ export function SiteHeader() {
               <div className="flex items-center gap-2">
                  <Button variant="ghost" asChild>
                   <Link href="/signup">
-                    <UserPlus className="mr-2 h-4 w-4" /> Sign Up
+                    <UserPlus className="mr-2 h-4 w-4" /> {dict.siteHeader.signup}
                   </Link>
                 </Button>
                 <Button asChild>
                   <Link href="/login">
-                    <LogIn className="mr-2 h-4 w-4" /> Login
+                    <LogIn className="mr-2 h-4 w-4" /> {dict.siteHeader.login}
                   </Link>
                 </Button>
               </div>

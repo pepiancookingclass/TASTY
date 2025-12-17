@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlusCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface ProductCardProps {
   product: Product;
@@ -20,6 +21,7 @@ export function ProductCard({ product, chef }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { language } = useLanguage();
+  const dict = useDictionary();
   const productName = product.name[language];
   const productDescription = product.description[language];
 
@@ -27,8 +29,8 @@ export function ProductCard({ product, chef }: ProductCardProps) {
   const handleAddToCart = () => {
     dispatch({ type: 'ADD_ITEM', payload: product });
     toast({
-      title: language === 'es' ? '¡Añadido al carrito!' : 'Added to cart!',
-      description: language === 'es' ? `${productName} está ahora en tu carrito.` : `${productName} is now in your shopping cart.`,
+      title: dict.productCard.addedToCart,
+      description: dict.productCard.inYourCart(productName),
     });
   };
 
@@ -82,13 +84,13 @@ export function ProductCard({ product, chef }: ProductCardProps) {
                     <AvatarImage src={chef.profilePictureUrl} alt={chef.name} data-ai-hint={chef.imageHint} />
                     <AvatarFallback>{chef.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-muted-foreground font-medium">By {chef.name}</span>
+                <span className="text-xs text-muted-foreground font-medium">{dict.productCard.by} {chef.name}</span>
             </div>
         )}
         <div className="w-full flex justify-between items-center">
             <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
             <Button onClick={handleAddToCart} size="sm">
-            <PlusCircle className="mr-2 h-4 w-4" /> {language === 'es' ? 'Añadir' : 'Add to Cart'}
+            <PlusCircle className="mr-2 h-4 w-4" /> {dict.productCard.addToCart}
             </Button>
         </div>
       </CardFooter>

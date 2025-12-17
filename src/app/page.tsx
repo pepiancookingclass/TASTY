@@ -5,11 +5,11 @@ import { products, sampleChef, promotions } from '@/lib/data';
 import type { Chef } from '@/lib/types';
 import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
 import { ChefShowcase } from '@/components/chef/ChefShowcase';
-import { useLanguage } from '@/hooks/useLanguage';
 import { Hero } from '@/components/shared/Hero';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function Home() {
-  const { language } = useLanguage();
+  const dict = useDictionary();
   // In a real app, you'd fetch multiple chefs
   const chefs: Chef[] = [
       sampleChef,
@@ -19,25 +19,14 @@ export default function Home() {
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert');
   const savory = products.filter(p => p.type === 'savory');
 
-  const content = {
-    en: {
-      sweets: 'Sweets',
-      savory: 'Savory',
-    },
-    es: {
-      sweets: 'Dulces',
-      savory: 'Salados',
-    }
-  }
-
   return (
     <div className="space-y-16">
       <Hero />
       <div className="container mx-auto px-4 py-8 space-y-16">
         <ChefShowcase chefs={chefs} />
         <PromotionsBanner promotions={promotions} />
-        <ProductShowcase products={sweets} chefs={chefs} title={content[language].sweets} id="sweets" />
-        <ProductShowcase products={savory} chefs={chefs} title={content[language].savory} id="savory" />
+        <ProductShowcase products={sweets} chefs={chefs} title={dict.productShowcase.sweets} id="sweets" />
+        <ProductShowcase products={savory} chefs={chefs} title={dict.productShowcase.savory} id="savory" />
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { Promotion } from '@/lib/types';
 import Autoplay from "embla-carousel-autoplay"
 import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface PromotionsBannerProps {
   promotions: Promotion[];
@@ -19,20 +20,12 @@ interface PromotionsBannerProps {
 
 export function PromotionsBanner({ promotions }: PromotionsBannerProps) {
   const { language } = useLanguage();
+  const dict = useDictionary();
   
-  const content = {
-    en: {
-      title: 'Special Offers'
-    },
-    es: {
-      title: 'Ofertas Especiales'
-    }
-  }
-
   return (
     <div className="mb-12">
       <h2 className="font-headline text-3xl font-bold mb-6 text-center">
-        {content[language].title}
+        {dict.promotionsBanner.title}
       </h2>
       <Carousel 
         className="w-full"
