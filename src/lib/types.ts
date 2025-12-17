@@ -1,7 +1,7 @@
 export type Product = {
   id: string;
   name: string;
-  type: 'pastry' | 'dessert' | 'savory';
+  type: 'pastry' | 'dessert' | 'savory' | 'cookie';
   price: number;
   imageUrl: string;
   imageHint: string;
