@@ -38,7 +38,7 @@ export function OrderTable({ orders }: OrderTableProps) {
           <TableHead>Order ID</TableHead>
           <TableHead className="hidden sm:table-cell">Customer</TableHead>
           <TableHead className="hidden lg:table-cell">Order Date</TableHead>
-          <TableHead className="hidden md:table-cell">Delivery Date</TableHead>
+          <TableHead className="hidden lg:table-cell">Delivery Date</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-center">Status</TableHead>
         </TableRow>
@@ -52,7 +52,7 @@ export function OrderTable({ orders }: OrderTableProps) {
             </TableCell>
             <TableCell className="hidden sm:table-cell">{order.customerName}</TableCell>
             <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(order.orderDate)}</TableCell>
-            <TableCell className="hidden md:table-cell text-muted-foreground font-semibold">{formatDate(order.deliveryDate)}</TableCell>
+            <TableCell className="hidden lg:table-cell text-muted-foreground font-semibold">{formatDate(order.deliveryDate)}</TableCell>
             <TableCell className="text-right">{formatPrice(order.total)}</TableCell>
             <TableCell className="text-center">
               <OrderStatusSelector orderId={order.id} currentStatus={order.status} />
