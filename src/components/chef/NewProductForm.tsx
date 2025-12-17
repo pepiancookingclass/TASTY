@@ -15,12 +15,14 @@ import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  productName: z.string().min(2, { message: "Product name must be at least 2 characters." }),
+  productName_en: z.string().min(2, { message: "Product name must be at least 2 characters." }),
+  productName_es: z.string().min(2, { message: "El nombre del producto debe tener al menos 2 caracteres." }),
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
   productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
   productType: z.enum(['pastry', 'dessert', 'savory', 'cookie']),
-  productIngredients: z.string().optional(),
+  productIngredients_en: z.string().optional(),
+  productIngredients_es: z.string().optional(),
 });
 
 export function NewProductForm() {
@@ -30,15 +32,17 @@ export function NewProductForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      productName: "",
+      productName_en: "",
+      productName_es: "",
       productType: "pastry",
-      productIngredients: "",
+      productIngredients_en: "",
+      productIngredients_es: "",
     },
   });
 
   const handleGenerateDescriptions = () => {
-    const { productName, productType, productIngredients, productPrice } = form.getValues();
-    if (!productName || !productType || !productPrice) {
+    const { productName_en, productType, productIngredients_en, productPrice } = form.getValues();
+    if (!productName_en || !productType || !productPrice) {
       toast({
         variant: "destructive",
         title: "Missing Information",
@@ -49,10 +53,9 @@ export function NewProductForm() {
     
     startTransition(async () => {
       const result = await generateProductDescriptionsAction({
-        productName,
+        productName: productName_en, // AI primarily works with english for now
         productType,
-        // The AI flow expects a string, so we pass an empty one if it's undefined
-        productIngredients: productIngredients || '',
+        productIngredients: productIngredients_en || '',
         productPrice,
       });
 
@@ -90,10 +93,18 @@ export function NewProductForm() {
                 <CardDescription>Fill in the information about your new product.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <FormField control={form.control} name="productName" render={({ field }) => (
+                <FormField control={form.control} name="productName_en" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Product Name</FormLabel>
+                        <FormLabel>Product Name (English)</FormLabel>
                         <FormControl><Input placeholder="e.g., Flaky Croissant" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+
+                <FormField control={form.control} name="productName_es" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Product Name (Spanish)</FormLabel>
+                        <FormControl><Input placeholder="e.g., Croissant Hojaldrado" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
@@ -151,11 +162,18 @@ export function NewProductForm() {
                     )} />
                 </div>
                
-                <FormField control={form.control} name="productIngredients" render={({ field }) => (
+                <FormField control={form.control} name="productIngredients_en" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Ingredients (Optional)</FormLabel>
+                        <FormLabel>Ingredients (English, Optional)</FormLabel>
                         <FormControl><Textarea placeholder="List ingredients, separated by commas..." {...field} /></FormControl>
                         <FormDescription>This will be used for dietary flags if provided.</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="productIngredients_es" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Ingredients (Spanish, Optional)</FormLabel>
+                        <FormControl><Textarea placeholder="Lista de ingredientes, separados por comas..." {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />

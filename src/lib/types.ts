@@ -1,6 +1,9 @@
 export type Product = {
   id: string;
-  name: string;
+  name: {
+    en: string;
+    es: string;
+  };
   type: 'pastry' | 'dessert' | 'savory' | 'cookie';
   price: number;
   imageUrl: string;
@@ -9,7 +12,10 @@ export type Product = {
     en: string;
     es: string;
   };
-  ingredients: string[];
+  ingredients: {
+    en: string;
+    es: string;
+  };
   chefId: string;
   preparationTime: number; // in hours
   dietaryFlags: {

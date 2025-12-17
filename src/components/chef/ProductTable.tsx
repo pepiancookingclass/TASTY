@@ -19,12 +19,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface ProductTableProps {
   products: Product[];
 }
 
 export function ProductTable({ products }: ProductTableProps) {
+  const { language } = useLanguage();
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -52,7 +55,7 @@ export function ProductTable({ products }: ProductTableProps) {
           <TableRow key={product.id}>
             <TableCell className="hidden sm:table-cell">
               <Image
-                alt={product.name}
+                alt={product.name[language]}
                 className="aspect-square rounded-md object-cover"
                 height="64"
                 src={product.imageUrl}
@@ -60,7 +63,7 @@ export function ProductTable({ products }: ProductTableProps) {
                 data-ai-hint={product.imageHint}
               />
             </TableCell>
-            <TableCell className="font-medium">{product.name}</TableCell>
+            <TableCell className="font-medium">{product.name[language]}</TableCell>
             <TableCell>
               <Badge variant="outline" className="capitalize">{product.type}</Badge>
             </TableCell>

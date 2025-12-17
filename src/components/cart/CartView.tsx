@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export function CartView() {
   const { state, dispatch } = useCart();
   const { items } = state;
+  const { language } = useLanguage();
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
@@ -55,41 +57,44 @@ export function CartView() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
       <div className="lg:col-span-2 space-y-6">
-        {items.map(({ product, quantity }) => (
-          <Card key={product.id} className="flex items-center p-4">
-            <div className="relative h-24 w-24 rounded-md overflow-hidden mr-4">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                style={{ objectFit: 'cover' }}
-                data-ai-hint={product.imageHint}
-              />
-            </div>
-            <div className="flex-grow">
-              <h3 className="font-headline text-lg">{product.name}</h3>
-              <p className="text-muted-foreground">{formatPrice(product.price)}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
-                className="w-20"
-                aria-label={`Quantity for ${product.name}`}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleRemoveItem(product.id)}
-                aria-label={`Remove ${product.name} from cart`}
-              >
-                <Trash2 className="h-5 w-5 text-destructive" />
-              </Button>
-            </div>
-          </Card>
-        ))}
+        {items.map(({ product, quantity }) => {
+          const productName = product.name[language];
+          return (
+            <Card key={product.id} className="flex items-center p-4">
+              <div className="relative h-24 w-24 rounded-md overflow-hidden mr-4">
+                <Image
+                  src={product.imageUrl}
+                  alt={productName}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  data-ai-hint={product.imageHint}
+                />
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-headline text-lg">{productName}</h3>
+                <p className="text-muted-foreground">{formatPrice(product.price)}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
+                  className="w-20"
+                  aria-label={`Quantity for ${productName}`}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemoveItem(product.id)}
+                  aria-label={`Remove ${productName} from cart`}
+                >
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </Button>
+              </div>
+            </Card>
+          );
+        })}
       </div>
       <div className="lg:col-span-1">
         <Card className="sticky top-24 shadow-lg">

@@ -10,6 +10,7 @@ import { products, sampleChef } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const formSchema = z.object({
   title_en: z.string().min(5, "Title must be at least 5 characters."),
@@ -22,6 +23,7 @@ const formSchema = z.object({
 
 export function FreeItemPromotionForm() {
     const { toast } = useToast();
+    const { language } = useLanguage();
     const chefProducts = products.filter(p => p.chefId === sampleChef.id);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -89,7 +91,7 @@ export function FreeItemPromotionForm() {
                     </FormControl>
                     <SelectContent>
                         {chefProducts.map(product => (
-                            <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                            <SelectItem key={product.id} value={product.id}>{product.name[language]}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -108,7 +110,7 @@ export function FreeItemPromotionForm() {
                     </FormControl>
                     <SelectContent>
                         {chefProducts.map(product => (
-                            <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                            <SelectItem key={product.id} value={product.id}>{product.name[language]}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>

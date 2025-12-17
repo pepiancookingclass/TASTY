@@ -11,6 +11,7 @@ import { products } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sampleChef } from "@/lib/data";
 import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const formSchema = z.object({
   title_en: z.string().min(5, "Title must be at least 5 characters."),
@@ -23,6 +24,7 @@ const formSchema = z.object({
 
 export function DiscountPromotionForm() {
     const { toast } = useToast();
+    const { language } = useLanguage();
     // In a real app, we'd get the current chef's ID
     const chefProducts = products.filter(p => p.chefId === sampleChef.id);
 
@@ -42,7 +44,7 @@ export function DiscountPromotionForm() {
         const selectedProduct = products.find(p => p.id === values.productId);
         toast({
             title: "Discount Created!",
-            description: `A ${values.discountPercentage}% discount for ${selectedProduct?.name} has been saved (simulation).`,
+            description: `A ${values.discountPercentage}% discount for ${selectedProduct?.name[language]} has been saved (simulation).`,
         });
         form.reset();
     }
@@ -94,7 +96,7 @@ export function DiscountPromotionForm() {
                     </FormControl>
                     <SelectContent>
                         {chefProducts.map(product => (
-                            <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                            <SelectItem key={product.id} value={product.id}>{product.name[language]}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>

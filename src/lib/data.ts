@@ -3,7 +3,10 @@ import type { Product, Promotion, User, Chef } from './types';
 export const products: Product[] = [
   {
     id: 'prod-001',
-    name: 'Classic Croissant',
+    name: {
+      en: 'Classic Croissant',
+      es: 'Croissant Clásico',
+    },
     type: 'pastry',
     price: 3.5,
     imageUrl: 'https://picsum.photos/seed/101/600/400',
@@ -12,7 +15,10 @@ export const products: Product[] = [
       en: 'A buttery, flaky, viennoiserie pastry of Austrian origin, named for its historical crescent shape.',
       es: 'Un pastel de hojaldre mantecoso y escamoso de origen austriaco, llamado así por su histórica forma de media luna.',
     },
-    ingredients: ['Flour', 'Butter', 'Yeast', 'Sugar', 'Salt'],
+    ingredients: {
+      en: 'Flour, Butter, Yeast, Sugar, Salt',
+      es: 'Harina, Mantequilla, Levadura, Azúcar, Sal',
+    },
     chefId: 'chef-001',
     preparationTime: 24,
     dietaryFlags: {
@@ -24,7 +30,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-002',
-    name: 'Chocolate Eclair',
+    name: {
+      en: 'Chocolate Eclair',
+      es: 'Éclair de Chocolate',
+    },
     type: 'dessert',
     price: 4.5,
     imageUrl: 'https://picsum.photos/seed/102/600/400',
@@ -33,7 +42,10 @@ export const products: Product[] = [
       en: 'A cream-filled oblong pastry with a rich chocolate topping.',
       es: 'Un pastelito oblongo relleno de crema con una rica cobertura de chocolate.',
     },
-    ingredients: ['Flour', 'Eggs', 'Cream', 'Chocolate', 'Sugar'],
+    ingredients: {
+      en: 'Flour, Eggs, Cream, Chocolate, Sugar',
+      es: 'Harina, Huevos, Crema, Chocolate, Azúcar',
+    },
     chefId: 'chef-001',
     preparationTime: 8,
     dietaryFlags: {
@@ -45,7 +57,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-003',
-    name: 'Artisanal Sourdough',
+    name: {
+      en: 'Artisanal Sourdough',
+      es: 'Pan de Masa Madre Artesanal',
+    },
     type: 'savory',
     price: 8.0,
     imageUrl: 'https://picsum.photos/seed/103/600/400',
@@ -54,7 +69,10 @@ export const products: Product[] = [
       en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
       es: 'Un pan rústico con un sabor ácido, corteza crujiente e interior suave y masticable.',
     },
-    ingredients: ['Sourdough Starter', 'Flour', 'Water', 'Salt'],
+    ingredients: {
+      en: 'Sourdough Starter, Flour, Water, Salt',
+      es: 'Masa Madre, Harina, Agua, Sal',
+    },
     chefId: 'chef-002',
     preparationTime: 48,
     dietaryFlags: {
@@ -66,7 +84,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-004',
-    name: 'Assorted Macarons',
+    name: {
+      en: 'Assorted Macarons',
+      es: 'Macarons Surtidos',
+    },
     type: 'dessert',
     price: 12.0,
     imageUrl: 'https://picsum.photos/seed/104/600/400',
@@ -75,7 +96,10 @@ export const products: Product[] = [
       en: 'A box of six colorful French macarons with various fillings.',
       es: 'Una caja de seis coloridos macarons franceses con varios rellenos.',
     },
-    ingredients: ['Almond Flour', 'Sugar', 'Egg Whites', 'Ganache'],
+    ingredients: {
+      en: 'Almond Flour, Sugar, Egg Whites, Ganache',
+      es: 'Harina de Almendras, Azúcar, Claras de Huevo, Ganache',
+    },
     chefId: 'chef-001',
     preparationTime: 12,
     dietaryFlags: {
@@ -87,7 +111,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-005',
-    name: 'Fudgy Vegan Brownie',
+    name: {
+      en: 'Fudgy Vegan Brownie',
+      es: 'Brownie Vegano Fudgy',
+    },
     type: 'dessert',
     price: 5.0,
     imageUrl: 'https://picsum.photos/seed/105/600/400',
@@ -96,7 +123,10 @@ export const products: Product[] = [
       en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
       es: 'Un brownie de chocolate deliciosamente rico y fudgy, completamente a base de plantas.',
     },
-    ingredients: ['Flour', 'Cocoa Powder', 'Vegan Butter', 'Flax Eggs', 'Sugar'],
+    ingredients: {
+      en: 'Flour, Cocoa Powder, Vegan Butter, Flax Eggs, Sugar',
+      es: 'Harina, Cacao en Polvo, Mantequilla Vegana, Huevos de Lino, Azúcar',
+    },
     chefId: 'chef-002',
     preparationTime: 4,
     dietaryFlags: {
@@ -108,7 +138,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-006',
-    name: 'Quiche Lorraine',
+    name: {
+      en: 'Quiche Lorraine',
+      es: 'Quiche Lorraine',
+    },
     type: 'savory',
     price: 7.5,
     imageUrl: 'https://picsum.photos/seed/106/600/400',
@@ -117,7 +150,10 @@ export const products: Product[] = [
       en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
       es: 'Una clásica tarta salada con un rico relleno de tocino, huevos y crema.',
     },
-    ingredients: ['Pastry Crust', 'Bacon', 'Eggs', 'Cream', 'Gruyere Cheese'],
+    ingredients: {
+      en: 'Pastry Crust, Bacon, Eggs, Cream, Gruyere Cheese',
+      es: 'Masa de hojaldre, Tocino, Huevos, Crema, Queso Gruyere',
+    },
     chefId: 'chef-001',
     preparationTime: 6,
     dietaryFlags: {
@@ -129,7 +165,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-007',
-    name: 'Gluten-Free Cupcakes',
+    name: {
+      en: 'Gluten-Free Cupcakes',
+      es: 'Cupcakes Sin Gluten',
+    },
     type: 'dessert',
     price: 4.0,
     imageUrl: 'https://picsum.photos/seed/107/600/400',
@@ -138,7 +177,10 @@ export const products: Product[] = [
       en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
       es: 'Cupcakes de vainilla ligeros y esponjosos hechos con harina sin gluten.',
     },
-    ingredients: ['Gluten-Free Flour Blend', 'Sugar', 'Eggs', 'Butter', 'Vanilla'],
+    ingredients: {
+      en: 'Gluten-Free Flour Blend, Sugar, Eggs, Butter, Vanilla',
+      es: 'Mezcla de Harina Sin Gluten, Azúcar, Huevos, Mantequilla, Vainilla',
+    },
     chefId: 'chef-002',
     preparationTime: 3,
     dietaryFlags: {
@@ -150,7 +192,10 @@ export const products: Product[] = [
   },
   {
     id: 'prod-008',
-    name: 'Spinach Feta Turnover',
+    name: {
+      en: 'Spinach Feta Turnover',
+      es: 'Empanada de Espinacas y Feta',
+    },
     type: 'savory',
     price: 6.0,
     imageUrl: 'https://picsum.photos/seed/109/600/400',
@@ -159,7 +204,10 @@ export const products: Product[] = [
       en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
       es: 'Hojaldre escamoso relleno de una mezcla salada de espinacas y queso feta.',
     },
-    ingredients: ['Puff Pastry', 'Spinach', 'Feta Cheese', 'Onion', 'Herbs'],
+    ingredients: {
+      en: 'Puff Pastry, Spinach, Feta Cheese, Onion, Herbs',
+      es: 'Masa de hojaldre, espinacas, queso feta, cebolla, hierbas',
+    },
     chefId: 'chef-002',
     preparationTime: 4,
     dietaryFlags: {

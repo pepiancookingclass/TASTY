@@ -20,12 +20,15 @@ export function ProductCard({ product, chef }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { language } = useLanguage();
+  const productName = product.name[language];
+  const productDescription = product.description[language];
+
 
   const handleAddToCart = () => {
     dispatch({ type: 'ADD_ITEM', payload: product });
     toast({
       title: language === 'es' ? '¡Añadido al carrito!' : 'Added to cart!',
-      description: language === 'es' ? `${product.name} está ahora en tu carrito.` : `${product.name} is now in your shopping cart.`,
+      description: language === 'es' ? `${productName} está ahora en tu carrito.` : `${productName} is now in your shopping cart.`,
     });
   };
 
@@ -54,7 +57,7 @@ export function ProductCard({ product, chef }: ProductCardProps) {
         <div className="relative aspect-video">
           <Image
             src={product.imageUrl}
-            alt={product.name}
+            alt={productName}
             fill
             style={{ objectFit: 'cover' }}
             data-ai-hint={product.imageHint}
@@ -62,9 +65,9 @@ export function ProductCard({ product, chef }: ProductCardProps) {
         </div>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <CardTitle className="font-headline text-xl mb-2">{product.name}</CardTitle>
+        <CardTitle className="font-headline text-xl mb-2">{productName}</CardTitle>
         <p className="text-muted-foreground text-sm line-clamp-2">
-          {product.description[language]}
+          {productDescription}
         </p>
          <div className="flex flex-wrap gap-2 mt-3">
           {dietaryBadges.map(badge => (
