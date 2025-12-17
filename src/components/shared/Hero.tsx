@@ -9,14 +9,14 @@ export function Hero() {
 
   const content = {
     en: {
-      headline: 'Homemade Culinary Delights',
-      subheadline: 'Crafted by local chefs, delivered right to your door.',
+      headline: 'Artisan Flavors, Straight From Home',
+      subheadline: 'Discover unique, handcrafted dishes made with passion by local chefs.',
       cta: 'Explore Now',
     },
     es: {
-      headline: 'Delicias Culinarias Hechas en Casa',
+      headline: 'Sabores Artesanales, Directo de Casa',
       subheadline:
-        'Elaborado por chefs locales, entregado directamente en tu puerta.',
+        'Descubre platillos únicos, hechos a mano con pasión por chefs locales.',
       cta: 'Explora Ahora',
     },
   };
