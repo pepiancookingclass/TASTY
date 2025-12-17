@@ -1,3 +1,4 @@
+
 import type { Product, Promotion, User, Chef } from './types';
 
 export const products: Product[] = [
@@ -9,7 +10,7 @@ export const products: Product[] = [
     },
     type: 'pastry',
     price: 3.5,
-    imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a',
     imageHint: 'croissant pastry',
     description: {
       en: 'A buttery, flaky, viennoiserie pastry of Austrian origin, named for its historical crescent shape.',
@@ -36,7 +37,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 4.5,
-    imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62',
     imageHint: 'chocolate eclair',
     description: {
       en: 'A cream-filled oblong pastry with a rich chocolate topping.',
@@ -63,7 +64,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 8.0,
-    imageUrl: 'https://images.unsplash.com/photo-1533086926379-339395138893?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1533086926379-339395138893',
     imageHint: 'sourdough bread',
     description: {
       en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
@@ -90,7 +91,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 12.0,
-    imageUrl: 'https://images.unsplash.com/photo-1558326567-98ae2405596b?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1558326567-98ae2405596b',
     imageHint: 'macarons assortment',
     description: {
       en: 'A box of six colorful French macarons with various fillings.',
@@ -117,7 +118,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 5.0,
-    imageUrl: 'https://images.unsplash.com/photo-1590623821598-622b3149e654?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1590623821598-622b3149e654',
     imageHint: 'vegan brownie',
     description: {
       en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
@@ -144,7 +145,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 7.5,
-    imageUrl: 'https://images.unsplash.com/photo-1582234391373-d533b691cc09?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1582234391373-d533b691cc09',
     imageHint: 'quiche lorraine',
     description: {
       en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
@@ -171,7 +172,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 4.0,
-    imageUrl: 'https://images.unsplash.com/photo-1614707267537-7893e433b516?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1614707267537-7893e433b516',
     imageHint: 'cupcakes',
     description: {
       en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
@@ -198,7 +199,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 6.0,
-    imageUrl: 'https://images.unsplash.com/photo-1565557663234-118585a735d0?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1565557663234-118585a735d0',
     imageHint: 'savory pastry',
     description: {
       en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
@@ -230,7 +231,7 @@ export const promotions: Promotion[] = [
       en: 'Get 15% off all pastries this weekend!',
       es: '¡Obtén un 15% de descuento en toda la repostería este fin de semana!',
     },
-    imageUrl: 'https://images.unsplash.com/photo-1587241321921-91a834d6d191?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1587241321921-91a834d6d191',
     imageHint: 'bakery display',
     discountPercentage: 15,
   },
@@ -244,7 +245,7 @@ export const promotions: Promotion[] = [
       en: 'Buy any savory item, get a free croissant!',
       es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
     },
-    imageUrl: 'https://images.unsplash.com/photo-1541529019-5834-e794-a4b533a1e948?q=80&w=1080',
+    imageUrl: 'https://images.unsplash.com/photo-1541529019-5834-e794-a4b533a1e948',
     imageHint: 'savory food',
     freeItem: 'prod-001',
   },
@@ -255,7 +256,7 @@ export const sampleUser: User = {
   name: 'Alex Doe',
   email: 'alex.doe@example.com',
   phone: '555-123-4567',
-  profilePictureUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1080',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
   imageHint: 'person portrait',
   address: {
     street: '123 Main St',
@@ -270,7 +271,7 @@ export const sampleChef: Chef = {
   id: 'chef-001',
   name: 'Julia Pastry',
   email: 'julia.p@tastyapp.com',
-  profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=1080',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c',
   imageHint: 'chef cooking',
   gender: 'female',
 };
