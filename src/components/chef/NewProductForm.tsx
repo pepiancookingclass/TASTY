@@ -13,15 +13,14 @@ import { generateProductDescriptionsAction } from "@/app/actions";
 import { useTransition } from "react";
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   productName: z.string().min(2, { message: "Product name must be at least 2 characters." }),
-  productType: z.enum(['pastry', 'dessert', 'savory', 'cookie']),
-  productIngredients: z.string().min(5, { message: "Please list at least one ingredient." }),
-  productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
+  productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
+  productType: z.enum(['pastry', 'dessert', 'savory', 'cookie']),
+  productIngredients: z.string().optional(),
 });
 
 export function NewProductForm() {
@@ -39,11 +38,11 @@ export function NewProductForm() {
 
   const handleGenerateDescriptions = () => {
     const { productName, productType, productIngredients, productPrice } = form.getValues();
-    if (!productName || !productType || !productIngredients || !productPrice) {
+    if (!productName || !productType || !productPrice) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please fill in Product Name, Type, Ingredients, and Price before generating descriptions.",
+        description: "Please fill in Product Name, Type, and Price before generating descriptions.",
       });
       return;
     }
@@ -52,7 +51,8 @@ export function NewProductForm() {
       const result = await generateProductDescriptionsAction({
         productName,
         productType,
-        productIngredients,
+        // The AI flow expects a string, so we pass an empty one if it's undefined
+        productIngredients: productIngredients || '',
         productPrice,
       });
 
@@ -90,55 +90,17 @@ export function NewProductForm() {
                 <CardDescription>Fill in the information about your new product.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="productName" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Product Name</FormLabel>
-                            <FormControl><Input placeholder="e.g., Flaky Croissant" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="productPrice" render={({ field }) => (
-                         <FormItem>
-                            <FormLabel>Price</FormLabel>
-                            <FormControl><Input type="number" step="0.01" placeholder="e.g., 3.50" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </div>
-                 <FormField control={form.control} name="productType" render={({ field }) => (
+                <FormField control={form.control} name="productName" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Product Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a product type" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="pastry">Pastry</SelectItem>
-                                <SelectItem value="dessert">Dessert</SelectItem>
-                                <SelectItem value="savory">Savory Item</SelectItem>
-                                <SelectItem value="cookie">Cookie</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="productIngredients" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Ingredients</FormLabel>
-                        <FormControl><Textarea placeholder="List ingredients, separated by commas..." {...field} /></FormControl>
-                        <FormDescription>This will be used to generate descriptions and dietary flags.</FormDescription>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl><Input placeholder="e.g., Flaky Croissant" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
 
-                <Separator />
-                
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                        <h3 className="font-medium">Product Descriptions</h3>
+                        <FormLabel>Product Descriptions</FormLabel>
                         <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescriptions} disabled={isPending}>
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                             Generate with AI
@@ -159,6 +121,45 @@ export function NewProductForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="productPrice" render={({ field }) => (
+                         <FormItem>
+                            <FormLabel>Price</FormLabel>
+                            <FormControl><Input type="number" step="0.01" placeholder="e.g., 3.50" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="productType" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Product Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a product type" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="pastry">Pastry</SelectItem>
+                                    <SelectItem value="dessert">Dessert</SelectItem>
+                                    <SelectItem value="savory">Savory Item</SelectItem>
+                                    <SelectItem value="cookie">Cookie</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                </div>
+               
+                <FormField control={form.control} name="productIngredients" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Ingredients (Optional)</FormLabel>
+                        <FormControl><Textarea placeholder="List ingredients, separated by commas..." {...field} /></FormControl>
+                        <FormDescription>This will be used for dietary flags if provided.</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+
             </CardContent>
         </Card>
         
