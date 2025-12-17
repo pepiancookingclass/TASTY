@@ -51,19 +51,7 @@ export function SiteHeader() {
     { href: '/creators', label: dict.siteHeader.creators },
   ];
 
-  const isCreator = roles.includes('creator');
-
   const CreatorDashboardLink = ({ isMobile = false }: { isMobile?: boolean }) => {
-    if (rolesLoading) {
-      return isMobile 
-        ? <Skeleton className="h-10 w-full" /> 
-        : <Skeleton className="h-5 w-36" />;
-    }
-
-    if (!isCreator) {
-      return null;
-    }
-
     const link = (
       <Link
         href="/creator/dashboard"
