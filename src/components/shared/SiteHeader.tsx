@@ -47,6 +47,7 @@ export function SiteHeader() {
     { href: '/#sweets', label: dict.siteHeader.sweets },
     { href: '/#savory', label: dict.siteHeader.savory },
     { href: '/chefs', label: dict.siteHeader.chefs },
+    { href: '/chef/dashboard', label: dict.siteHeader.chefDashboard },
   ];
 
   return (
@@ -87,9 +88,9 @@ export function SiteHeader() {
                 </nav>
                 <div className="mt-auto border-t p-4">
                     <SheetClose asChild>
-                      <Link href="/chef/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
-                          <ChefHat className="mr-2 h-5 w-5" />
-                          <span>{dict.siteHeader.chefDashboard}</span>
+                      <Link href="/admin/promotions" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
+                          <Crown className="mr-2 h-5 w-5" />
+                          <span>{dict.siteHeader.admin}</span>
                         </Link>
                     </SheetClose>
                 </div>
@@ -188,13 +189,6 @@ export function SiteHeader() {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem asChild>
-                    <Link href="/chef/dashboard">
-                        <ChefHat className="mr-2 h-4 w-4" />
-                        <span>{dict.siteHeader.chefDashboard}</span>
-                    </Link>
-                    </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
                     <Link href="/admin/promotions">
                         <Crown className="mr-2 h-4 w-4" />
                         <span>{dict.siteHeader.admin}</span>
@@ -230,12 +224,6 @@ export function SiteHeader() {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                            <Link href="/chef/dashboard">
-                                <ChefHat className="mr-2 h-4 w-4" />
-                                <span>{dict.siteHeader.chefDashboard}</span>
-                            </Link>
-                        </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                             <Link href="/admin/promotions">
                                 <Crown className="mr-2 h-4 w-4" />
