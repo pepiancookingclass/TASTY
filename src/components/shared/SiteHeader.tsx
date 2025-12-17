@@ -53,8 +53,10 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
         <div className="flex gap-6 md:gap-10 items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <ChefHat className="h-8 w-8 text-primary" />
-            <span className="inline-block font-headline text-2xl font-bold">
+            <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+                <ChefHat className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="inline-block font-headline text-2xl font-bold text-primary">
               Tasty
             </span>
           </Link>
