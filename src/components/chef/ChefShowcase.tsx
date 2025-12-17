@@ -16,14 +16,14 @@ export function ChefShowcase({ chefs, isPage = false }: ChefShowcaseProps) {
     const content = {
         en: {
             headline: 'Meet Our Chefs',
-            tagline: 'The heart and soul behind our handmade delights.',
+            tagline: 'The heart and soul behind our homemade delights.',
             specialty: 'Specializing in pastries and lovingly baked treats.',
             viewProfile: 'View Profile',
             productCount: (count: number) => `${count} products`
         },
         es: {
             headline: 'Conoce a Nuestros Chefs',
-            tagline: 'El corazón y el alma detrás de nuestras delicias hechas a mano.',
+            tagline: 'El corazón y el alma detrás de nuestras delicias caseras.',
             specialty: 'Especialista en repostería y delicias horneadas con amor.',
             viewProfile: 'Ver Perfil',
             productCount: (count: number) => `${count} productos`
@@ -32,6 +32,14 @@ export function ChefShowcase({ chefs, isPage = false }: ChefShowcaseProps) {
 
     return (
         <section>
+            {isPage || (
+                 <div className="text-center mb-12">
+                    <h2 className="font-headline text-3xl font-bold mb-4">{content[language].headline}</h2>
+                    <p className="text-lg text-muted-foreground">
+                        {content[language].tagline}
+                    </p>
+                </div>
+            )}
             {isPage ? (
                  <div className="text-center mb-12">
                     <h1 className="font-headline text-5xl font-bold mb-4">{content[language].headline}</h1>

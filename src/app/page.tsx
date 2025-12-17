@@ -4,8 +4,11 @@ import { ProductShowcase } from '@/components/product/ProductShowcase';
 import { products, sampleChef, promotions } from '@/lib/data';
 import type { Chef } from '@/lib/types';
 import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
+import { ChefShowcase } from '@/components/chef/ChefShowcase';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function Home() {
+  const { language } = useLanguage();
   // In a real app, you'd fetch multiple chefs
   const chefs: Chef[] = [
       sampleChef,
@@ -19,24 +22,19 @@ export default function Home() {
     en: {
       sweets: 'Sweets',
       savory: 'Savory',
-      handmade: 'Handmade Delights'
     },
     es: {
       sweets: 'Dulces',
       savory: 'Salados',
-      handmade: 'Delicias Hechas a Mano'
     }
   }
-  
-  // For now, let's assume all products are "handmade" for this section.
-  const handmadeProducts = products;
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-16">
       <PromotionsBanner promotions={promotions} />
-      <ProductShowcase products={sweets} chefs={chefs} title="Dulces" id="sweets" />
-      <ProductShowcase products={savory} chefs={chefs} title="Salados" id="savory" />
-      <ProductShowcase products={handmadeProducts} chefs={chefs} title="Hecho a Mano" id="handmade" />
+      <ProductShowcase products={sweets} chefs={chefs} title={content[language].sweets} id="sweets" />
+      <ProductShowcase products={savory} chefs={chefs} title={content[language].savory} id="savory" />
+      <ChefShowcase chefs={chefs} />
     </div>
   );
 }

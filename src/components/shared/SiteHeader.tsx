@@ -3,10 +3,7 @@
 import Link from 'next/link';
 import {
   ChefHat,
-  HeartHandmade,
-  LayoutDashboard,
   Salad,
-  Settings,
   ShoppingCart,
   User,
   Crown,
@@ -34,13 +31,11 @@ export function SiteHeader() {
     en: {
         sweets: 'Sweets',
         savory: 'Savory',
-        handmade: 'Handmade',
         chefs: 'Chefs',
     },
     es: {
         sweets: 'Dulces',
         savory: 'Salados',
-        handmade: 'Hecho a Mano',
         chefs: 'Chefs',
     }
   }
@@ -58,7 +53,6 @@ export function SiteHeader() {
           <nav className="hidden md:flex gap-4">
               <Link href="/#sweets" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].sweets}</Link>
               <Link href="/#savory" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].savory}</Link>
-              <Link href="/#handmade" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].handmade}</Link>
               <Link href="/chefs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].chefs}</Link>
           </nav>
         </div>
