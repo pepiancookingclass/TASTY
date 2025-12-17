@@ -65,7 +65,7 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-4 items-center">
-            <Link href="/" className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground">
+            <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-foreground/80">
               {navLinks[language].home}
             </Link>
             <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
@@ -126,23 +126,19 @@ export function SiteHeader() {
                     </Link>
                   </DropdownMenuItem>
                   
-                  {!rolesLoading && roles.includes('chef') && (
-                    <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild>
                       <Link href="/chef/dashboard">
                         <ChefHat className="mr-2 h-4 w-4" />
                         <span>Chef Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
 
-                  {!rolesLoading && roles.includes('admin') && (
-                    <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild>
                       <Link href="/admin/promotions">
                         <Crown className="mr-2 h-4 w-4" />
                         <span>Admin</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
