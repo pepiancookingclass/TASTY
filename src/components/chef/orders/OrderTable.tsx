@@ -37,7 +37,7 @@ export function OrderTable({ orders }: OrderTableProps) {
         <TableRow>
           <TableHead>Order ID</TableHead>
           <TableHead>Customer</TableHead>
-          <TableHead className="hidden md:table-cell">Date</TableHead>
+          <TableHead className="hidden md:table-cell">Delivery Date</TableHead>
            <TableHead className="hidden lg:table-cell">Items</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-center">Status</TableHead>
@@ -48,7 +48,7 @@ export function OrderTable({ orders }: OrderTableProps) {
           <TableRow key={order.id}>
             <TableCell className="font-medium">{order.id}</TableCell>
             <TableCell>{order.customerName}</TableCell>
-            <TableCell className="hidden md:table-cell text-muted-foreground">{formatDate(order.date)}</TableCell>
+            <TableCell className="hidden md:table-cell text-muted-foreground font-semibold">{formatDate(order.deliveryDate)}</TableCell>
             <TableCell className="hidden lg:table-cell">
                 <ul className="text-sm text-muted-foreground">
                     {order.items.map(item => (

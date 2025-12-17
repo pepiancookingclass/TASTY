@@ -77,7 +77,8 @@ export type OrderStatus = 'Nuevo' | 'En Preparación' | 'Listo para Recoger' | '
 export type Order = {
     id: string;
     customerName: string;
-    date: Date;
+    orderDate: Date;
+    deliveryDate: Date;
     items: CartItem[];
     status: OrderStatus;
     total: number;

@@ -10,6 +10,7 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useLanguage } from '@/hooks/useLanguage';
+import { addHours, format } from 'date-fns';
 
 export function CartView() {
   const { state, dispatch } = useCart();
@@ -33,6 +34,9 @@ export function CartView() {
   const total = subtotal + platformFee + deliveryFee;
 
   const maxPreparationTime = Math.max(...items.map(item => item.product.preparationTime), 0);
+  const estimatedDeliveryDate = addHours(new Date(), maxPreparationTime);
+  const formattedDeliveryDate = format(estimatedDeliveryDate, "EEEE, MMM d 'at' h:mm a");
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -119,6 +123,13 @@ export function CartView() {
               <span>Total</span>
               <span>{formatPrice(total)}</span>
             </div>
+             <Separator />
+             <div className="space-y-1 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Estimated Delivery:</p>
+                <p>{formattedDeliveryDate}</p>
+                <p className="text-xs">Based on {maxPreparationTime}hr preparation time.</p>
+             </div>
+
           </CardContent>
           <CardFooter>
             <AlertDialog>
@@ -131,8 +142,9 @@ export function CartView() {
                     <AlertDialogHeader>
                     <AlertDialogTitle>Heads up!</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Our chefs prepare your food with love and care. The items in your cart require up to{' '}
-                        <span className="font-bold">{maxPreparationTime} hours</span> of advance notice. Please plan accordingly!
+                       Your order requires up to{' '}
+                        <span className="font-bold">{maxPreparationTime} hours</span> of preparation. The estimated delivery time is{' '}
+                        <span className="font-bold">{formattedDeliveryDate}</span>. Please plan accordingly!
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

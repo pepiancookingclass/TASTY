@@ -9,7 +9,8 @@ const sampleOrders: Order[] = [
   {
     id: 'ORD-001',
     customerName: 'Alice Johnson',
-    date: new Date('2024-07-28T14:30:00Z'),
+    orderDate: new Date('2024-07-28T14:30:00Z'),
+    deliveryDate: new Date('2024-07-29T14:30:00Z'),
     items: [
       { product: products.find(p => p.id === 'prod-001')!, quantity: 2 },
       { product: products.find(p => p.id === 'prod-002')!, quantity: 1 },
@@ -20,7 +21,8 @@ const sampleOrders: Order[] = [
   {
     id: 'ORD-002',
     customerName: 'Bob Williams',
-    date: new Date('2024-07-28T12:05:00Z'),
+    orderDate: new Date('2024-07-28T12:05:00Z'),
+    deliveryDate: new Date('2024-07-28T18:05:00Z'),
     items: [
       { product: products.find(p => p.id === 'prod-006')!, quantity: 1 },
     ],
@@ -30,7 +32,8 @@ const sampleOrders: Order[] = [
   {
     id: 'ORD-003',
     customerName: 'Charlie Brown',
-    date: new Date('2024-07-27T18:00:00Z'),
+    orderDate: new Date('2024-07-27T18:00:00Z'),
+    deliveryDate: new Date('2024-07-28T12:00:00Z'),
     items: [
       { product: products.find(p => p.id === 'prod-003')!, quantity: 1 },
       { product: products.find(p => p.id === 'prod-005')!, quantity: 2 },
@@ -41,7 +44,8 @@ const sampleOrders: Order[] = [
     {
     id: 'ORD-004',
     customerName: 'Diana Prince',
-    date: new Date('2024-07-28T16:00:00Z'),
+    orderDate: new Date('2024-07-28T16:00:00Z'),
+    deliveryDate: new Date('2024-07-28T20:00:00Z'),
     items: [
       { product: products.find(p => p.id === 'prod-004')!, quantity: 1 },
     ],
