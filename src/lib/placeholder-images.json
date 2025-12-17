@@ -1,3 +1,82 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "croissant",
+      "description": "Flaky croissant",
+      "imageUrl": "https://images.unsplash.com/photo-1606758184328-faab9a86f4d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjcm9pc3NhbnQlMjBwYXN0cnl8ZW58MHx8fHwxNzY1ODIxNzYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "croissant pastry"
+    },
+    {
+      "id": "chocolate-eclair",
+      "description": "Chocolate eclair with cream filling",
+      "imageUrl": "https://images.unsplash.com/photo-1547458784-bdc75d9a6cd9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjaG9jb2xhdGUlMjBlY2xhaXJ8ZW58MHx8fHwxNzY1OTQzNDk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chocolate eclair"
+    },
+    {
+      "id": "sourdough-bread",
+      "description": "Artisanal sourdough bread loaf",
+      "imageUrl": "https://images.unsplash.com/photo-1585478259715-876a6a81fc08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c291cmRvdWdoJTIwYnJlYWR8ZW58MHx8fHwxNzY1ODYxMTI1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sourdough bread"
+    },
+    {
+      "id": "macarons",
+      "description": "Colorful French macarons",
+      "imageUrl": "https://images.unsplash.com/photo-1628474476846-a6f5b5cfc2f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtYWNhcm9ucyUyMGFzc29ydG1lbnR8ZW58MHx8fHwxNzY1OTMzOTcwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "macarons assortment"
+    },
+    {
+      "id": "vegan-brownie",
+      "description": "Fudgy vegan chocolate brownie",
+      "imageUrl": "https://images.unsplash.com/photo-1623428325208-0eb91d86d4b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx2ZWdhbiUyMGJyb3duaWV8ZW58MHx8fHwxNzY1OTQzNDk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vegan brownie"
+    },
+    {
+      "id": "quiche-lorraine",
+      "description": "Classic Quiche Lorraine with bacon and cheese",
+      "imageUrl": "https://images.unsplash.com/photo-1701197159530-80a188e34dfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxxdWljaGUlMjBsb3JyYWluZXxlbnwwfHx8fDE3NjU5NDM0OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "quiche lorraine"
+    },
+    {
+      "id": "gluten-free-cupcakes",
+      "description": "Vanilla gluten-free cupcakes with sprinkles",
+      "imageUrl": "https://images.unsplash.com/photo-1603532648955-039310d9ed75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjdXBjYWtlc3xlbnwwfHx8fDE3NjU5NDM0OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cupcakes"
+    },
+    {
+      "id": "fruit-tart",
+      "description": "A beautiful fruit tart with mixed berries",
+      "imageUrl": "https://images.unsplash.com/photo-1620980776848-84ac10194945?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcnVpdCUyMHRhcnR8ZW58MHx8fHwxNzY1OTQzNDk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fruit tart"
+    },
+    {
+      "id": "spinach-feta-turnover",
+      "description": "Savory turnover with spinach and feta",
+      "imageUrl": "https://images.unsplash.com/photo-1761243743989-726fb70af78d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzYXZvcnklMjBwYXN0cnl8ZW58MHx8fHwxNzY1OTQzNDk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "savory pastry"
+    },
+    {
+      "id": "promotion-banner-1",
+      "description": "Banner for weekend special on pastries",
+      "imageUrl": "https://images.unsplash.com/photo-1728651028766-4ae2bfb49e56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYWtlcnklMjBkaXNwbGF5fGVufDB8fHx8MTc2NTk0MzQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bakery display"
+    },
+    {
+      "id": "promotion-banner-2",
+      "description": "Banner for new savory items",
+      "imageUrl": "https://images.unsplash.com/photo-1707322325935-4c7d6025750b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzYXZvcnklMjBmb29kfGVufDB8fHx8MTc2NTk0MzQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "savory food"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "User profile picture",
+      "imageUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjU4NjUxMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "chef-avatar-1",
+      "description": "Chef profile picture",
+      "imageUrl": "https://images.unsplash.com/photo-1577219492769-b63a779fac28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaGVmJTIwY29va2luZ3xlbnwwfHx8fDE3NjU5MDE4MzF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chef cooking"
+    }
+  ]
 }
