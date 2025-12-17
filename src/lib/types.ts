@@ -72,7 +72,7 @@ export type CartItem = {
   quantity: number;
 };
 
-export type OrderStatus = 'Nuevo' | 'En Preparación' | 'Listo para Recoger' | 'En Camino' | 'Entregado' | 'Cancelado';
+export type OrderStatusKey = 'new' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
 
 export type Order = {
     id: string;
@@ -80,6 +80,6 @@ export type Order = {
     orderDate: Date;
     deliveryDate: Date;
     items: CartItem[];
-    status: OrderStatus;
+    status: OrderStatusKey;
     total: number;
 }

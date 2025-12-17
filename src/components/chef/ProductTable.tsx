@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface ProductTableProps {
   products: Product[];
@@ -27,6 +28,7 @@ interface ProductTableProps {
 
 export function ProductTable({ products }: ProductTableProps) {
   const { language } = useLanguage();
+  const dict = useDictionary();
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -40,19 +42,19 @@ export function ProductTable({ products }: ProductTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[80px]">Image</TableHead>
-            <TableHead>Product Details</TableHead>
-            <TableHead className="hidden md:table-cell">Type</TableHead>
-            <TableHead className="hidden sm:table-cell">Price</TableHead>
+            <TableHead className="w-[80px] hidden sm:table-cell">{dict.productTable.image}</TableHead>
+            <TableHead>{dict.productTable.productDetails}</TableHead>
+            <TableHead className="hidden md:table-cell">{dict.productTable.type}</TableHead>
+            <TableHead className="hidden sm:table-cell">{dict.productTable.price}</TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{dict.productTable.actions}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
-              <TableCell>
+               <TableCell className="hidden sm:table-cell">
                 <Image
                   alt={product.name[language]}
                   className="aspect-square rounded-md object-cover"
@@ -63,12 +65,26 @@ export function ProductTable({ products }: ProductTableProps) {
                 />
               </TableCell>
               <TableCell className="font-medium">
-                <div className="font-semibold">{product.name[language]}</div>
-                <div className="text-sm text-muted-foreground sm:hidden">
-                  {formatPrice(product.price)}
-                </div>
-                 <div className="md:hidden mt-1">
-                    <Badge variant="outline" className="capitalize">{product.type}</Badge>
+                 <div className="flex items-center gap-3">
+                  <div className="sm:hidden">
+                    <Image
+                      alt={product.name[language]}
+                      className="aspect-square rounded-md object-cover"
+                      height="40"
+                      src={product.imageUrl}
+                      width="40"
+                      data-ai-hint={product.imageHint}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-semibold">{product.name[language]}</div>
+                    <div className="text-sm text-muted-foreground sm:hidden">
+                      {formatPrice(product.price)}
+                    </div>
+                    <div className="md:hidden mt-1">
+                        <Badge variant="outline" className="capitalize">{product.type}</Badge>
+                    </div>
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="hidden md:table-cell">
@@ -86,8 +102,8 @@ export function ProductTable({ products }: ProductTableProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem><Pencil className="mr-2 h-4 w-4"/> Edit</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Delete</DropdownMenuItem>
+                    <DropdownMenuItem><Pencil className="mr-2 h-4 w-4"/>{dict.productTable.edit}</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/>{dict.productTable.delete}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

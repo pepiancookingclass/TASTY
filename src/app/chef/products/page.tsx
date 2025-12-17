@@ -7,11 +7,13 @@ import { ProductTable } from '@/components/chef/ProductTable';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function ChefProductsPage() {
   const chefProducts = products.filter(p => p.chefId === sampleChef.id);
   const { user, loading } = useUser();
   const router = useRouter();
+  const dict = useDictionary();
 
   // useEffect(() => {
   //   if (!loading && !user) {
@@ -28,13 +30,13 @@ export default function ChefProductsPage() {
     <div >
       <div className="flex justify-between items-start mb-8">
         <div>
-            <h1 className="font-headline text-4xl font-bold">My Products</h1>
-            <p className="text-muted-foreground mt-2">Manage your delicious creations.</p>
+            <h1 className="font-headline text-4xl font-bold">{dict.chefProducts.title}</h1>
+            <p className="text-muted-foreground mt-2">{dict.chefProducts.description}</p>
         </div>
         <Button asChild>
           <Link href="/chef/products/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Product
+            {dict.chefProducts.addNew}
           </Link>
         </Button>
       </div>

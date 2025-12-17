@@ -7,45 +7,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OrderStatus } from '@/lib/types';
+import { OrderStatusKey } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useOrders } from '@/hooks/useOrders';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface OrderStatusSelectorProps {
   orderId: string;
-  currentStatus: OrderStatus;
+  currentStatus: OrderStatusKey;
 }
 
-const orderStatuses: OrderStatus[] = [
-  'Nuevo',
-  'En Preparación',
-  'Listo para Recoger',
-  'En Camino',
-  'Entregado',
-  'Cancelado',
+const orderStatuses: OrderStatusKey[] = [
+  'new',
+  'preparing',
+  'ready',
+  'out_for_delivery',
+  'delivered',
+  'cancelled',
 ];
 
 export function OrderStatusSelector({ orderId, currentStatus }: OrderStatusSelectorProps) {
   const { toast } = useToast();
   const { updateOrderStatus } = useOrders();
+  const dict = useDictionary();
 
-  const handleStatusChange = (newStatus: OrderStatus) => {
+  const handleStatusChange = (newStatus: OrderStatusKey) => {
     updateOrderStatus(orderId, newStatus);
     toast({
-        title: "Order Status Updated",
-        description: `Order ${orderId} is now "${newStatus}".`,
+        title: dict.orderStatusSelector.toastTitle,
+        description: dict.orderStatusSelector.toastDescription(orderId, dict.orderStatuses[newStatus]),
     });
   };
 
   return (
     <Select defaultValue={currentStatus} onValueChange={handleStatusChange}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Update status" />
+        <SelectValue placeholder={dict.orderStatusSelector.placeholder} />
       </SelectTrigger>
       <SelectContent>
         {orderStatuses.map((status) => (
           <SelectItem key={status} value={status}>
-            {status}
+            {dict.orderStatuses[status]}
           </SelectItem>
         ))}
       </SelectContent>

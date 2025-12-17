@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { sampleChef } from "@/lib/data";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDictionary } from "@/hooks/useDictionary";
 
 const formSchema = z.object({
   title_en: z.string().min(5, "Title must be at least 5 characters."),
@@ -25,7 +26,7 @@ const formSchema = z.object({
 export function DiscountPromotionForm() {
     const { toast } = useToast();
     const { language } = useLanguage();
-    // In a real app, we'd get the current chef's ID
+    const dict = useDictionary();
     const chefProducts = products.filter(p => p.chefId === sampleChef.id);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -43,8 +44,8 @@ export function DiscountPromotionForm() {
         console.log(values);
         const selectedProduct = products.find(p => p.id === values.productId);
         toast({
-            title: "Discount Created!",
-            description: `A ${values.discountPercentage}% discount for ${selectedProduct?.name[language]} has been saved (simulation).`,
+            title: dict.discountForm.toast.title,
+            description: dict.discountForm.toast.description(values.discountPercentage, selectedProduct?.name[language] || ''),
         });
         form.reset();
     }
@@ -55,43 +56,43 @@ export function DiscountPromotionForm() {
         
         <FormField control={form.control} name="title_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Offer Title (English)</FormLabel>
-                <FormControl><Input placeholder="e.g., Weekend Croissant Special" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.title_en.label}</FormLabel>
+                <FormControl><Input placeholder={dict.promotionForm.title_en.placeholder} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
         
         <FormField control={form.control} name="title_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Título de la Oferta (Español)</FormLabel>
-                <FormControl><Input placeholder="e.g., Especial de Croissants del Fin de Semana" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.title_es.label}</FormLabel>
+                <FormControl><Input placeholder={dict.promotionForm.title_es.placeholder} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
         <FormField control={form.control} name="description_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Short Description (English)</FormLabel>
-                <FormControl><Textarea placeholder="A brief summary of the offer..." {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.description_en.label}</FormLabel>
+                <FormControl><Textarea placeholder={dict.promotionForm.description_en.placeholder} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
          <FormField control={form.control} name="description_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Descripción Corta (Español)</FormLabel>
-                <FormControl><Textarea placeholder="Un resumen breve de la oferta..." {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.description_es.label}</FormLabel>
+                <FormControl><Textarea placeholder={dict.promotionForm.description_es.placeholder} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
         <FormField control={form.control} name="productId" render={({ field }) => (
             <FormItem>
-                <FormLabel>Product to Discount</FormLabel>
+                <FormLabel>{dict.discountForm.product.label}</FormLabel>
                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select a product to discount" />
+                            <SelectValue placeholder={dict.discountForm.product.placeholder} />
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -106,13 +107,13 @@ export function DiscountPromotionForm() {
 
         <FormField control={form.control} name="discountPercentage" render={({ field }) => (
             <FormItem>
-                <FormLabel>Discount Percentage</FormLabel>
-                <FormControl><Input type="number" placeholder="e.g., 15" {...field} /></FormControl>
+                <FormLabel>{dict.discountForm.percentage.label}</FormLabel>
+                <FormControl><Input type="number" placeholder={dict.discountForm.percentage.placeholder} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
-        <Button type="submit" className="w-full">Create Discount</Button>
+        <Button type="submit" className="w-full">{dict.discountForm.submit}</Button>
       </form>
     </Form>
   );

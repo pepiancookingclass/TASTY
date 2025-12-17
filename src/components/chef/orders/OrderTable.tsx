@@ -12,6 +12,7 @@ import {
 import { OrderStatusSelector } from './OrderStatusSelector';
 import { useLanguage } from '@/hooks/useLanguage';
 import { format } from 'date-fns';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface OrderTableProps {
   orders: Order[];
@@ -19,6 +20,7 @@ interface OrderTableProps {
 
 export function OrderTable({ orders }: OrderTableProps) {
   const { language } = useLanguage();
+  const dict = useDictionary();
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -35,11 +37,11 @@ export function OrderTable({ orders }: OrderTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Order ID</TableHead>
-          <TableHead className="hidden sm:table-cell">Customer</TableHead>
-          <TableHead className="hidden lg:table-cell">Dates</TableHead>
-          <TableHead className="text-right">Total</TableHead>
-          <TableHead className="text-center">Status</TableHead>
+          <TableHead>{dict.orderTable.orderId}</TableHead>
+          <TableHead className="hidden sm:table-cell">{dict.orderTable.customer}</TableHead>
+          <TableHead className="hidden lg:table-cell">{dict.orderTable.dates}</TableHead>
+          <TableHead className="text-right">{dict.orderTable.total}</TableHead>
+          <TableHead className="text-center">{dict.orderTable.status}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -52,10 +54,10 @@ export function OrderTable({ orders }: OrderTableProps) {
             <TableCell className="hidden sm:table-cell">{order.customerName}</TableCell>
             <TableCell className="hidden lg:table-cell">
               <div>
-                <span className="font-medium">Pedido:</span> <span className="text-muted-foreground">{formatDate(order.orderDate)}</span>
+                <span className="font-medium">{dict.orderTable.ordered}:</span> <span className="text-muted-foreground">{formatDate(order.orderDate)}</span>
               </div>
               <div>
-              <span className="font-medium">Entrega:</span> <span className="text-muted-foreground">{formatDate(order.deliveryDate)}</span>
+              <span className="font-medium">{dict.orderTable.delivery}:</span> <span className="text-muted-foreground">{formatDate(order.deliveryDate)}</span>
               </div>
             </TableCell>
             <TableCell className="text-right">{formatPrice(order.total)}</TableCell>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, ReactNode } from 'react';
-import type { Order, OrderStatus } from '@/lib/types';
+import type { Order, OrderStatusKey } from '@/lib/types';
 import { products } from '@/lib/data';
 
 const sampleOrders: Order[] = [
@@ -14,7 +14,7 @@ const sampleOrders: Order[] = [
       { product: products.find(p => p.id === 'prod-001')!, quantity: 2 },
       { product: products.find(p => p.id === 'prod-002')!, quantity: 1 },
     ],
-    status: 'En Preparación',
+    status: 'preparing',
     total: 11.50,
   },
   {
@@ -25,7 +25,7 @@ const sampleOrders: Order[] = [
     items: [
       { product: products.find(p => p.id === 'prod-006')!, quantity: 1 },
     ],
-    status: 'Listo para Recoger',
+    status: 'ready',
     total: 7.50,
   },
   {
@@ -37,7 +37,7 @@ const sampleOrders: Order[] = [
       { product: products.find(p => p.id === 'prod-003')!, quantity: 1 },
       { product: products.find(p => p.id === 'prod-005')!, quantity: 2 },
     ],
-    status: 'Entregado',
+    status: 'delivered',
     total: 18.00,
   },
     {
@@ -48,7 +48,7 @@ const sampleOrders: Order[] = [
     items: [
       { product: products.find(p => p.id === 'prod-004')!, quantity: 1 },
     ],
-    status: 'Nuevo',
+    status: 'new',
     total: 12.00,
   },
 ];
@@ -56,7 +56,7 @@ const sampleOrders: Order[] = [
 
 type OrderContextType = {
   orders: Order[];
-  updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
+  updateOrderStatus: (orderId: string, newStatus: OrderStatusKey) => void;
 };
 
 export const OrderContext = createContext<OrderContextType | null>(null);
@@ -64,7 +64,7 @@ export const OrderContext = createContext<OrderContextType | null>(null);
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [orders, setOrders] = useState<Order[]>(sampleOrders);
 
-  const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
+  const updateOrderStatus = (orderId: string, newStatus: OrderStatusKey) => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order

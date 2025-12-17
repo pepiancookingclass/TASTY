@@ -6,21 +6,23 @@ import Image from 'next/image';
 import { DiscountPromotionForm } from '@/components/chef/promotions/DiscountPromotionForm';
 import { FreeItemPromotionForm } from '@/components/chef/promotions/FreeItemPromotionForm';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function ChefPromotionsPage() {
   // In a real app, these would be the chef's own promotions
   const chefPromotions = promotions.slice(0,1);
   const { language } = useLanguage();
+  const dict = useDictionary();
 
   return (
     <div>
-      <h1 className="font-headline text-4xl font-bold mb-8">Manage Promotions</h1>
+      <h1 className="font-headline text-4xl font-bold mb-8">{dict.chefPromotions.title}</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card>
               <CardHeader>
-                  <CardTitle className="font-headline text-2xl">Create Product Discount</CardTitle>
-                  <CardDescription>Offer a percentage discount on a specific product.</CardDescription>
+                  <CardTitle className="font-headline text-2xl">{dict.chefPromotions.discount.title}</CardTitle>
+                  <CardDescription>{dict.chefPromotions.discount.description}</CardDescription>
               </CardHeader>
               <CardContent>
                   <DiscountPromotionForm />
@@ -28,8 +30,8 @@ export default function ChefPromotionsPage() {
           </Card>
           <Card>
               <CardHeader>
-                  <CardTitle className="font-headline text-2xl">Create "Free Item" Offer</CardTitle>
-                  <CardDescription>Offer a free item with the purchase of another.</CardDescription>
+                  <CardTitle className="font-headline text-2xl">{dict.chefPromotions.freeItem.title}</CardTitle>
+                  <CardDescription>{dict.chefPromotions.freeItem.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <FreeItemPromotionForm />
@@ -39,7 +41,7 @@ export default function ChefPromotionsPage() {
 
       <Card>
           <CardHeader>
-              <CardTitle className="font-headline text-2xl">Your Current Promotions</CardTitle>
+              <CardTitle className="font-headline text-2xl">{dict.chefPromotions.current.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
               {chefPromotions.map(promo => (
@@ -53,12 +55,12 @@ export default function ChefPromotionsPage() {
                           <Badge variant="default">{promo.discountPercentage}% OFF</Badge>
                       )}
                       {promo.freeItem && (
-                           <Badge variant="secondary">Free Item</Badge>
+                           <Badge variant="secondary">{dict.chefPromotions.current.freeItemBadge}</Badge>
                       )}
                   </div>
               ))}
                {chefPromotions.length === 0 && (
-                  <p className="text-muted-foreground text-center py-8">You haven't created any promotions yet.</p>
+                  <p className="text-muted-foreground text-center py-8">{dict.chefPromotions.current.empty}</p>
               )}
           </CardContent>
       </Card>

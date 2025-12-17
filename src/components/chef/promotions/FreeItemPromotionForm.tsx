@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDictionary } from "@/hooks/useDictionary";
 
 const formSchema = z.object({
   title_en: z.string().min(5, "Title must be at least 5 characters."),
@@ -24,6 +25,7 @@ const formSchema = z.object({
 export function FreeItemPromotionForm() {
     const { toast } = useToast();
     const { language } = useLanguage();
+    const dict = useDictionary();
     const chefProducts = products.filter(p => p.chefId === sampleChef.id);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -39,8 +41,8 @@ export function FreeItemPromotionForm() {
     function onSubmit(values: z.infer<typeof formSchema>) {
         console.log(values);
         toast({
-            title: "Promotion Created!",
-            description: "The new 'Buy X, Get Y' promotion has been saved (simulation).",
+            title: dict.freeItemForm.toast.title,
+            description: dict.freeItemForm.toast.description,
         });
         form.reset();
     }
@@ -50,43 +52,43 @@ export function FreeItemPromotionForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField control={form.control} name="title_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Offer Title (English)</FormLabel>
-                <FormControl><Input placeholder="e.g., Croissant Combo Deal" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.title_en.label}</FormLabel>
+                <FormControl><Input placeholder={dict.freeItemForm.placeholders.title_en} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
         <FormField control={form.control} name="title_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Título de la Oferta (Español)</FormLabel>
-                <FormControl><Input placeholder="e.g., Combo Oferta de Croissant" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.title_es.label}</FormLabel>
+                <FormControl><Input placeholder={dict.freeItemForm.placeholders.title_es} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
         <FormField control={form.control} name="description_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Short Description (English)</FormLabel>
-                <FormControl><Textarea placeholder="e.g., Buy a Quiche, get a free Croissant!" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.description_en.label}</FormLabel>
+                <FormControl><Textarea placeholder={dict.freeItemForm.placeholders.description_en} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
         <FormField control={form.control} name="description_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Descripción Corta (Español)</FormLabel>
-                <FormControl><Textarea placeholder="e.g., ¡Compra una Quiche y llévate un Croissant gratis!" {...field} /></FormControl>
+                <FormLabel>{dict.promotionForm.description_es.label}</FormLabel>
+                <FormControl><Textarea placeholder={dict.freeItemForm.placeholders.description_es} {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
         
         <FormField control={form.control} name="requiredProductId" render={({ field }) => (
             <FormItem>
-                <FormLabel>IF a customer buys...</FormLabel>
+                <FormLabel>{dict.freeItemForm.requiredProduct.label}</FormLabel>
                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select a product" />
+                            <SelectValue placeholder={dict.freeItemForm.requiredProduct.placeholder} />
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -101,11 +103,11 @@ export function FreeItemPromotionForm() {
 
         <FormField control={form.control} name="freeProductId" render={({ field }) => (
             <FormItem>
-                <FormLabel>THEN they get this for free...</FormLabel>
+                <FormLabel>{dict.freeItemForm.freeProduct.label}</FormLabel>
                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select freebie product" />
+                            <SelectValue placeholder={dict.freeItemForm.freeProduct.placeholder} />
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -119,7 +121,7 @@ export function FreeItemPromotionForm() {
         )} />
 
 
-        <Button type="submit" className="w-full">Create Free Item Offer</Button>
+        <Button type="submit" className="w-full">{dict.freeItemForm.submit}</Button>
       </form>
     </Form>
   );

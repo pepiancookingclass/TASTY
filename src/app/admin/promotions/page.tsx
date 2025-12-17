@@ -8,11 +8,13 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function AdminPromotionsPage() {
   const { user, loading } = useUser();
   const router = useRouter();
   const { language } = useLanguage();
+  const dict = useDictionary();
 
   // useEffect(() => {
   //   if (!loading && !user) {
@@ -27,13 +29,13 @@ export default function AdminPromotionsPage() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="font-headline text-4xl font-bold mb-8">Manage Promotions</h1>
+      <h1 className="font-headline text-4xl font-bold mb-8">{dict.adminPromotions.title}</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Create New Offer</CardTitle>
+                    <CardTitle className="font-headline text-2xl">{dict.adminPromotions.createTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <PromotionForm />
@@ -44,7 +46,7 @@ export default function AdminPromotionsPage() {
         <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Current Promotions</CardTitle>
+                    <CardTitle className="font-headline text-2xl">{dict.adminPromotions.currentTitle}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {promotions.map(promo => (
@@ -58,7 +60,7 @@ export default function AdminPromotionsPage() {
                                 <Badge variant="default">{promo.discountPercentage}% OFF</Badge>
                             )}
                             {promo.freeItem && (
-                                 <Badge variant="secondary">Free Item</Badge>
+                                 <Badge variant="secondary">{dict.adminPromotions.freeItemBadge}</Badge>
                             )}
                         </div>
                     ))}
