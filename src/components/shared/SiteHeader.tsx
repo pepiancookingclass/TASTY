@@ -48,8 +48,9 @@ export function SiteHeader() {
     { href: '/#savory', label: dict.siteHeader.savory },
     { href: '/#handmades', label: dict.siteHeader.handmades },
     { href: '/creators', label: dict.siteHeader.creators },
-    { href: '/creator/dashboard', label: dict.siteHeader.creatorDashboard },
   ];
+
+  const isCreator = roles.includes('creator');
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -86,6 +87,13 @@ export function SiteHeader() {
                         </Link>
                       </SheetClose>
                   ))}
+                   {isCreator && (
+                     <SheetClose asChild>
+                        <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted">
+                          {dict.siteHeader.creatorDashboard}
+                        </Link>
+                      </SheetClose>
+                   )}
                 </nav>
                 <div className="mt-auto border-t p-4">
                     <SheetClose asChild>
@@ -116,6 +124,11 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+             {isCreator && (
+              <Link href="/creator/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
+                {dict.siteHeader.creatorDashboard}
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -240,3 +253,5 @@ export function SiteHeader() {
     </header>
   );
 }
+
+    
