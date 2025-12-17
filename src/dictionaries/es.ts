@@ -219,6 +219,7 @@ const dictionary = {
         type_dessert: 'Postre',
         type_savory: 'Plato Salado',
         type_cookie: 'Galleta',
+        type_handmade: 'Hecho a Mano',
         ingredients_en: 'Ingredientes (Inglés, Opcional)',
         ingredients_en_placeholder: 'Lista de ingredientes, separados por comas...',
         ingredients_en_help: 'Esto se usará para las etiquetas dietéticas si se proporciona.',

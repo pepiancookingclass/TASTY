@@ -219,6 +219,7 @@ const dictionary = {
         type_dessert: 'Dessert',
         type_savory: 'Savory Item',
         type_cookie: 'Cookie',
+        type_handmade: 'Handmade',
         ingredients_en: 'Ingredients (English, Optional)',
         ingredients_en_placeholder: 'List ingredients, separated by commas...',
         ingredients_en_help: 'This will be used for dietary flags if provided.',
