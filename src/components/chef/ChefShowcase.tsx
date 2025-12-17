@@ -4,6 +4,7 @@ import { Chef } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { useLanguage } from '@/hooks/useLanguage';
+import { cn } from '@/lib/utils';
 
 interface ChefShowcaseProps {
     chefs: (Chef & { products?: any[] })[];
@@ -52,7 +53,17 @@ export function ChefShowcase({ chefs, isPage = false }: ChefShowcaseProps) {
                 {chefs.map(chef => (
                     <Card key={chef.id} className="text-center flex flex-col">
                         <CardHeader className="items-center">
-                            <Image src={chef.profilePictureUrl} alt={chef.name} width={120} height={120} className="rounded-full aspect-square object-cover border-4 border-secondary" data-ai-hint={chef.imageHint} />
+                            <Image 
+                                src={chef.profilePictureUrl} 
+                                alt={chef.name} 
+                                width={120} 
+                                height={120} 
+                                className={cn(
+                                    "rounded-full aspect-square object-cover border-4",
+                                    chef.gender === 'female' ? 'border-primary' : 'border-blue-400'
+                                )} 
+                                data-ai-hint={chef.imageHint} 
+                            />
                             <CardTitle className="font-headline text-2xl pt-4">{chef.name}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-grow">

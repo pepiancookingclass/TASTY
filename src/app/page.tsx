@@ -12,7 +12,7 @@ export default function Home() {
   // In a real app, you'd fetch multiple chefs
   const chefs: Chef[] = [
       sampleChef,
-      { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://picsum.photos/seed/303/100/100', imageHint: 'chef portrait' },
+      { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://picsum.photos/seed/303/100/100', imageHint: 'chef portrait', gender: 'male' },
   ]; 
 
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert');

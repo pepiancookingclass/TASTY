@@ -52,6 +52,7 @@ export type Chef = {
   email: string;
   profilePictureUrl: string;
   imageHint: string;
+  gender: 'male' | 'female';
 };
 
 export type CartItem = {

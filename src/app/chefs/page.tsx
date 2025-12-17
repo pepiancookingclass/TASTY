@@ -7,9 +7,9 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 
 export default function ChefsPage() {
     // In a real app, you'd fetch all chefs
-    const chefs = [
+    const chefs: Chef[] = [
         sampleChef,
-        { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://picsum.photos/seed/303/100/100', imageHint: 'chef portrait' },
+        { id: 'chef-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://picsum.photos/seed/303/100/100', imageHint: 'chef portrait', gender: 'male' },
     ];
 
     const chefsWithProducts = chefs.map(chef => {

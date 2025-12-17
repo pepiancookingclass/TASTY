@@ -212,4 +212,5 @@ export const sampleChef: Chef = {
   email: 'julia.p@tastyapp.com',
   profilePictureUrl: 'https://picsum.photos/seed/302/100/100',
   imageHint: 'chef cooking',
+  gender: 'female',
 };
