@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -7,10 +8,10 @@ import { useDictionary } from '@/hooks/useDictionary';
 import { SheetClose } from '../ui/sheet';
 
 const navLinks = [
-  { href: '/chef/dashboard', label: 'dashboard', icon: BarChart },
-  { href: '/chef/orders', label: 'orders', icon: ClipboardList },
-  { href: '/chef/products', label: 'products', icon: ShoppingBag },
-  { href: '/chef/promotions', label: 'promotions', icon: Tag },
+  { href: '/creator/dashboard', label: 'dashboard', icon: BarChart },
+  { href: '/creator/orders', label: 'orders', icon: ClipboardList },
+  { href: '/creator/products', label: 'products', icon: ShoppingBag },
+  { href: '/creator/promotions', label: 'promotions', icon: Tag },
 ];
 
 interface CreatorSidebarProps {
