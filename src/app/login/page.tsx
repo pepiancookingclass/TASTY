@@ -6,14 +6,16 @@ import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { useAuth } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth, useFirestore } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, User } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, loading } = useUser();
   const router = useRouter();
 
@@ -26,14 +28,32 @@ export default function LoginPage() {
       router.push('/user/profile');
     }
   }, [user, loading, router]);
+  
+  const handleUserCreation = async (user: User) => {
+    if (!firestore || !user) return;
+    const userRef = doc(firestore, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
 
+    if (!userDoc.exists()) {
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName || email.split('@')[0],
+            photoURL: user.photoURL,
+            // For demonstration, let's make the first registered user a chef.
+            // In a real app, this would be a managed process.
+            roles: ['chef'],
+        }, { merge: true });
+    }
+     router.push('/user/profile');
+  }
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      router.push('/user/profile');
+      const result = await signInWithPopup(auth, provider);
+      await handleUserCreation(result.user);
     } catch (error: any) {
       setError(error.message);
       console.error('Error signing in with Google', error);
@@ -45,13 +65,13 @@ export default function LoginPage() {
     if (!auth) return;
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/user/profile');
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await handleUserCreation(result.user);
     } catch (error: any) {
         if (error.code === 'auth/user-not-found') {
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                router.push('/user/profile');
+                const result = await createUserWithEmailAndPassword(auth, email, password);
+                await handleUserCreation(result.user);
             } catch (createError: any) {
                 setError(createError.message);
             }

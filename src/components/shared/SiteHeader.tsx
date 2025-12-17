@@ -18,11 +18,13 @@ import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useRouter } from 'next/navigation';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
 export function SiteHeader() {
   const { state } = useCart();
   const { language, toggleLanguage } = useLanguage();
   const { user, loading } = useUser();
+  const { roles, loading: rolesLoading } = useUserRoles();
   const router = useRouter();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -61,16 +63,16 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-4 items-center">
-            <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link href="/" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
               {navLinks[language].home}
             </Link>
-            <Link href="/#sweets" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
               {navLinks[language].sweets}
             </Link>
-            <Link href="/#savory" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link href="/#savory" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
               {navLinks[language].savory}
             </Link>
-            <Link href="/chefs" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link href="/chefs" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
               {navLinks[language].chefs}
             </Link>
           </nav>
@@ -118,19 +120,25 @@ export function SiteHeader() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
-                  {/* In a real app, you would conditionally render these based on user roles */}
-                  <DropdownMenuItem asChild>
-                    <Link href="/chef/dashboard">
-                      <ChefHat className="mr-2 h-4 w-4" />
-                      <span>Chef Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/promotions">
-                      <Crown className="mr-2 h-4 w-4" />
-                      <span>Admin</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  
+                  {!rolesLoading && roles.includes('chef') && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/chef/dashboard">
+                        <ChefHat className="mr-2 h-4 w-4" />
+                        <span>Chef Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
+                  {!rolesLoading && roles.includes('admin') && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/promotions">
+                        <Crown className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
