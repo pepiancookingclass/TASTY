@@ -87,7 +87,7 @@ export function SiteHeader() {
                         </Link>
                       </SheetClose>
                   ))}
-                   {isCreator && (
+                   {!rolesLoading && isCreator && (
                      <SheetClose asChild>
                         <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted">
                           {dict.siteHeader.creatorDashboard}
@@ -124,7 +124,7 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
-             {isCreator && (
+             {!rolesLoading && isCreator && (
               <Link href="/creator/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
                 {dict.siteHeader.creatorDashboard}
               </Link>
@@ -253,5 +253,3 @@ export function SiteHeader() {
     </header>
   );
 }
-
-    
