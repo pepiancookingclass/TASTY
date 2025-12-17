@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -39,10 +40,8 @@
             "type": "object",
             "properties": {
                 "street": {"type": "string"},
-                "city": {"type": "string"},
-                "state": {"type": "string"},
-                "zip": {"type": "string"},
-                "country": {"type": "string"}
+                "ciudad": {"type": "string"},
+                "departamento": {"type": "string"}
             }
         },
         "geolocation": {
