@@ -17,7 +17,7 @@ export default function Home() {
   // In a real app, you'd fetch multiple creators
   const creators: Creator[] = [
       sampleCreator,
-      { id: 'creator-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=1080', imageHint: 'chef portrait', gender: 'male' },
+      { id: 'creator-002', name: 'Alain Savory', email: 'alain.s@tastyapp.com', profilePictureUrl: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=1080', imageHint: 'creator portrait', gender: 'male' },
   ]; 
 
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert');
