@@ -116,7 +116,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Button variant="link" asChild className="p-0 h-auto">
+            <Button variant="link" asChild className="p-0 h-auto font-semibold">
               <Link href="/signup">Sign up</Link>
             </Button>
           </p>

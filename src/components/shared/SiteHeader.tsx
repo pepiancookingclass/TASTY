@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChefHat, Salad, ShoppingCart, User, Crown, Globe, LogOut, LogIn } from 'lucide-react';
+import { ChefHat, Salad, ShoppingCart, User, Crown, Globe, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -148,11 +148,18 @@ export function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-               <Button asChild>
-                <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" /> Login
-                </Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                 <Button variant="ghost" asChild>
+                  <Link href="/signup">
+                    <UserPlus className="mr-2 h-4 w-4" /> Sign Up
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/login">
+                    <LogIn className="mr-2 h-4 w-4" /> Login
+                  </Link>
+                </Button>
+              </div>
             )}
           </nav>
         </div>
