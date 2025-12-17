@@ -36,6 +36,9 @@ export function ProductShowcase({ products, creators, title, id }: ProductShowca
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
+      if (product.type === 'handmade') {
+        return true;
+      }
       return (
         (!filters.isGlutenFree || product.dietaryFlags.isGlutenFree) &&
         (!filters.isVegan || product.dietaryFlags.isVegan) &&
@@ -56,16 +59,18 @@ export function ProductShowcase({ products, creators, title, id }: ProductShowca
     <section id={id}>
       <div className="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-6">
         <h2 className="font-headline text-3xl font-bold">{title}</h2>
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
-            {filterOptions.map(option => (
-                <div key={option.id} className="flex items-center space-x-2">
-                    <Checkbox id={`${id}-${option.id}`} checked={filters[option.id]} onCheckedChange={() => handleFilterChange(option.id)} />
-                    <Label htmlFor={`${id}-${option.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {option.label}
-                    </Label>
-                </div>
-            ))}
-        </div>
+        {id !== 'handmades' && (
+          <div className="flex flex-wrap items-center gap-4 md:gap-6">
+              {filterOptions.map(option => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                      <Checkbox id={`${id}-${option.id}`} checked={filters[option.id]} onCheckedChange={() => handleFilterChange(option.id)} />
+                      <Label htmlFor={`${id}-${option.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          {option.label}
+                      </Label>
+                  </div>
+              ))}
+          </div>
+        )}
       </div>
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
