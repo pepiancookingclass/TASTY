@@ -9,9 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { products, sampleChef } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters."),
+  description: z.string().min(10, "Description must be at least 10 characters."),
   requiredProductId: z.string({ required_error: "Please select a product to purchase." }),
   freeProductId: z.string({ required_error: "Please select a free product to offer." }),
 });
@@ -24,6 +26,7 @@ export function FreeItemPromotionForm() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             title: "",
+            description: "",
         },
     });
 
@@ -43,6 +46,14 @@ export function FreeItemPromotionForm() {
             <FormItem>
                 <FormLabel>Offer Title</FormLabel>
                 <FormControl><Input placeholder="e.g., Croissant Combo Deal" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+        <FormField control={form.control} name="description" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Short Description</FormLabel>
+                <FormControl><Textarea placeholder="e.g., Buy a Quiche, get a free Croissant!" {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
