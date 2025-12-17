@@ -53,26 +53,29 @@ export function SiteHeader() {
 
   const isCreator = roles.includes('creator');
 
-  const CreatorDashboardLink = ({ isMobile }: { isMobile?: boolean }) => {
+  const CreatorDashboardLink = ({ isMobile = false }: { isMobile?: boolean }) => {
     if (rolesLoading) {
-      return isMobile
-        ? <Skeleton className="h-12 w-full rounded-md" />
-        : <Skeleton className="h-5 w-36 rounded-md" />;
+      return isMobile 
+        ? <Skeleton className="h-10 w-full" /> 
+        : <Skeleton className="h-5 w-36" />;
     }
-    if (isCreator) {
-      const link = (
-        <Link 
-          href="/creator/dashboard" 
-          className={isMobile 
-            ? "text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted"
-            : "text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"}
-        >
-          {dict.siteHeader.creatorDashboard}
-        </Link>
-      );
-      return isMobile ? <SheetClose asChild>{link}</SheetClose> : link;
+
+    if (!isCreator) {
+      return null;
     }
-    return null;
+
+    const link = (
+      <Link
+        href="/creator/dashboard"
+        className={isMobile 
+          ? "text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted" 
+          : "text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"}
+      >
+        {dict.siteHeader.creatorDashboard}
+      </Link>
+    );
+
+    return isMobile ? <SheetClose asChild>{link}</SheetClose> : link;
   };
 
 
