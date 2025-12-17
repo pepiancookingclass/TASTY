@@ -4,7 +4,7 @@ export type Product = {
     en: string;
     es: string;
   };
-  type: 'pastry' | 'dessert' | 'savory' | 'cookie';
+  type: 'pastry' | 'dessert' | 'savory' | 'cookie' | 'handmade';
   price: number;
   imageUrl: string;
   imageHint: string;

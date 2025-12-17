@@ -64,7 +64,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 8.0,
-    imageUrl: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08',
+    imageUrl: 'https://picsum.photos/seed/sourdough/600/400',
     imageHint: 'sourdough bread',
     description: {
       en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
@@ -118,7 +118,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 5.0,
-    imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e',
+    imageUrl: 'https://picsum.photos/seed/brownie/600/400',
     imageHint: 'vegan brownie',
     description: {
       en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
@@ -145,7 +145,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 7.5,
-    imageUrl: 'https://images.unsplash.com/photo-1599921865943-38853b3a7b1b',
+    imageUrl: 'https://picsum.photos/seed/quiche/600/400',
     imageHint: 'quiche lorraine',
     description: {
       en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
@@ -172,7 +172,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 4.0,
-    imageUrl: 'https://images.unsplash.com/photo-1587668178277-295251f900ce',
+    imageUrl: 'https://picsum.photos/seed/cupcakes/600/400',
     imageHint: 'cupcakes',
     description: {
       en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
@@ -199,7 +199,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 6.0,
-    imageUrl: 'https://images.unsplash.com/photo-1606891823904-13835697ac54',
+    imageUrl: 'https://picsum.photos/seed/spinach/600/400',
     imageHint: 'savory pastry',
     description: {
       en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
@@ -215,6 +215,60 @@ export const products: Product[] = [
       isGlutenFree: false,
       isVegan: false,
       isDairyFree: false,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-009',
+    name: {
+      en: 'Hand-knitted Scarf',
+      es: 'Bufanda Tejida a Mano',
+    },
+    type: 'handmade',
+    price: 25.0,
+    imageUrl: 'https://images.unsplash.com/photo-1621210243697-a721d3c3b0aa',
+    imageHint: 'knitted scarf',
+    description: {
+      en: 'A warm and cozy scarf, hand-knitted with soft wool blend yarn.',
+      es: 'Una bufanda cálida y acogedora, tejida a mano con suave hilo de mezcla de lana.',
+    },
+    ingredients: {
+      en: '80% Wool, 20% Acrylic',
+      es: '80% Lana, 20% Acrílico',
+    },
+    creatorId: 'creator-001',
+    preparationTime: 72,
+    dietaryFlags: {
+      isGlutenFree: true,
+      isVegan: true,
+      isDairyFree: true,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-010',
+    name: {
+      en: 'Handmade Ceramic Mug',
+      es: 'Taza de Cerámica Hecha a Mano',
+    },
+    type: 'handmade',
+    price: 18.0,
+    imageUrl: 'https://images.unsplash.com/photo-1596464243634-2452252a44c1',
+    imageHint: 'ceramic mug',
+    description: {
+      en: 'A unique, wheel-thrown ceramic mug, perfect for your morning coffee.',
+      es: 'Una taza de cerámica única, hecha en torno, perfecta para tu café de la mañana.',
+    },
+    ingredients: {
+      en: 'Stoneware Clay, Glaze',
+      es: 'Arcilla de gres, Esmalte',
+    },
+    creatorId: 'creator-002',
+    preparationTime: 120,
+    dietaryFlags: {
+      isGlutenFree: true,
+      isVegan: true,
+      isDairyFree: true,
       isNutFree: true,
     },
   },
@@ -245,7 +299,7 @@ export const promotions: Promotion[] = [
       en: 'Buy any savory item, get a free croissant!',
       es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
     },
-    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
+    imageUrl: 'https://picsum.photos/seed/savory/600/400',
     imageHint: 'savory food',
     freeItem: 'prod-001',
   },
@@ -272,6 +326,6 @@ export const sampleCreator: Creator = {
   name: 'Julia Pastry',
   email: 'julia.p@tastyapp.com',
   profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c',
-  imageHint: 'chef cooking',
+  imageHint: 'creator cooking',
   gender: 'female',
 };

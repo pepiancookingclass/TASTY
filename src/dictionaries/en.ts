@@ -24,6 +24,7 @@ const dictionary = {
   productShowcase: {
     sweets: 'Sweets',
     savory: 'Savory',
+    handmades: 'Handmades',
     noProductsMatch: 'No products match your filters.',
     tryAdjusting: 'Try adjusting your selection to find more delights!',
     filters: {
@@ -64,6 +65,7 @@ const dictionary = {
     home: 'Home',
     sweets: 'Sweets',
     savory: 'Savory',
+    handmades: 'Handmades',
     creators: 'Creators',
     creatorDashboard: 'Creator Dashboard',
     changeLanguage: 'Change language',

@@ -22,6 +22,7 @@ export default function Home() {
 
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert');
   const savory = products.filter(p => p.type === 'savory');
+  const handmades = products.filter(p => p.type === 'handmade');
 
   return (
     <div className="space-y-16">
@@ -49,6 +50,7 @@ export default function Home() {
         <PromotionsBanner promotions={promotions} />
         <ProductShowcase products={sweets} creators={creators} title={dict.productShowcase.sweets} id="sweets" />
         <ProductShowcase products={savory} creators={creators} title={dict.productShowcase.savory} id="savory" />
+        <ProductShowcase products={handmades} creators={creators} title={dict.productShowcase.handmades} id="handmades" />
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ const dictionary = {
   productShowcase: {
     sweets: 'Dulces',
     savory: 'Salados',
+    handmades: 'Hecho a Mano',
     noProductsMatch: 'No hay productos que coincidan con tus filtros.',
     tryAdjusting: '¡Intenta ajustar tu selección para encontrar más delicias!',
     filters: {
@@ -64,6 +65,7 @@ const dictionary = {
     home: 'Inicio',
     sweets: 'Dulces',
     savory: 'Salados',
+    handmades: 'Hecho a Mano',
     creators: 'Creadores',
     creatorDashboard: 'Panel de Creador',
     changeLanguage: 'Cambiar idioma',
