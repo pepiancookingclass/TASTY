@@ -23,7 +23,7 @@ import { useDictionary } from '@/hooks/useDictionary';
 
 export function SiteHeader() {
   const { state } = useCart();
-  const { toggleLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { user, loading } = useUser();
   const { roles, loading: rolesLoading } = useUserRoles();
   const router = useRouter();
@@ -69,10 +69,24 @@ export function SiteHeader() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-1">
           <nav className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" onClick={toggleLanguage}>
-              <Globe className="h-5 w-5" />
-              <span className="sr-only">{dict.siteHeader.changeLanguage}</span>
-            </Button>
+             <div className="flex items-center gap-1 rounded-md border p-0.5">
+              <Button
+                variant={language === 'es' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setLanguage('es')}
+                className="h-auto px-2 py-0.5 text-xs"
+              >
+                ES
+              </Button>
+              <Button
+                variant={language === 'en' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setLanguage('en')}
+                className="h-auto px-2 py-0.5 text-xs"
+              >
+                EN
+              </Button>
+            </div>
             <Link href="/cart">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />

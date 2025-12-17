@@ -14,7 +14,6 @@ const dictionaries = {
 type LanguageContextType = {
   language: Language;
   dictionary: typeof dictionaryES;
-  toggleLanguage: () => void;
   setLanguage: (lang: Language) => void;
 };
 
@@ -23,14 +22,10 @@ export const LanguageContext = createContext<LanguageContextType | null>(null);
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('es');
 
-  const toggleLanguage = () => {
-    setLanguage(prevLang => (prevLang === 'en' ? 'es' : 'en'));
-  };
-
   const dictionary = dictionaries[language];
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, dictionary }}>
+    <LanguageContext.Provider value={{ language, setLanguage, dictionary }}>
       {children}
     </LanguageContext.Provider>
   );
