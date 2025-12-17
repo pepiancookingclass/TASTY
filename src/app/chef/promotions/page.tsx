@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { DiscountPromotionForm } from '@/components/chef/promotions/DiscountPromotionForm';
 import { FreeItemPromotionForm } from '@/components/chef/promotions/FreeItemPromotionForm';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function ChefPromotionsPage() {
   // In a real app, these would be the chef's own promotions
   const chefPromotions = promotions.slice(0,1);
+  const { language } = useLanguage();
 
   return (
     <div>
@@ -42,10 +44,10 @@ export default function ChefPromotionsPage() {
           <CardContent className="space-y-4">
               {chefPromotions.map(promo => (
                   <div key={promo.id} className="flex items-center gap-4 rounded-lg border p-4">
-                      <Image src={promo.imageUrl} alt={promo.title} width={80} height={80} className="rounded-md aspect-square object-cover" data-ai-hint={promo.imageHint} />
+                      <Image src={promo.imageUrl} alt={promo.title[language]} width={80} height={80} className="rounded-md aspect-square object-cover" data-ai-hint={promo.imageHint} />
                       <div className="flex-grow">
-                          <h3 className="font-bold">{promo.title}</h3>
-                          <p className="text-sm text-muted-foreground">{promo.description}</p>
+                          <h3 className="font-bold">{promo.title[language]}</h3>
+                          <p className="text-sm text-muted-foreground">{promo.description[language]}</p>
                       </div>
                       {promo.discountPercentage && (
                           <Badge variant="default">{promo.discountPercentage}% OFF</Badge>

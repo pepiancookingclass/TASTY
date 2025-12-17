@@ -7,10 +7,12 @@ import { PromotionForm } from '@/components/admin/PromotionForm';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function AdminPromotionsPage() {
   const { user, loading } = useUser();
   const router = useRouter();
+  const { language } = useLanguage();
 
   // useEffect(() => {
   //   if (!loading && !user) {
@@ -47,10 +49,10 @@ export default function AdminPromotionsPage() {
                 <CardContent className="space-y-4">
                     {promotions.map(promo => (
                         <div key={promo.id} className="flex items-center gap-4 rounded-lg border p-4">
-                            <Image src={promo.imageUrl} alt={promo.title} width={80} height={80} className="rounded-md aspect-square object-cover" data-ai-hint={promo.imageHint} />
+                            <Image src={promo.imageUrl} alt={promo.title[language]} width={80} height={80} className="rounded-md aspect-square object-cover" data-ai-hint={promo.imageHint} />
                             <div className="flex-grow">
-                                <h3 className="font-bold">{promo.title}</h3>
-                                <p className="text-sm text-muted-foreground">{promo.description}</p>
+                                <h3 className="font-bold">{promo.title[language]}</h3>
+                                <p className="text-sm text-muted-foreground">{promo.description[language]}</p>
                             </div>
                             {promo.discountPercentage && (
                                 <Badge variant="default">{promo.discountPercentage}% OFF</Badge>

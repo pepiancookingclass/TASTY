@@ -174,16 +174,28 @@ export const products: Product[] = [
 export const promotions: Promotion[] = [
   {
     id: 'promo-001',
-    title: 'Weekend Pastry Special!',
-    description: 'Get 15% off all pastries this weekend!',
+    title: {
+      en: 'Weekend Pastry Special!',
+      es: '¡Especial de Repostería de Fin de Semana!',
+    },
+    description: {
+      en: 'Get 15% off all pastries this weekend!',
+      es: '¡Obtén un 15% de descuento en toda la repostería este fin de semana!',
+    },
     imageUrl: 'https://picsum.photos/seed/201/1200/400',
     imageHint: 'bakery display',
     discountPercentage: 15,
   },
   {
     id: 'promo-002',
-    title: 'Try Our New Savory Items',
-    description: 'Buy any savory item, get a free croissant!',
+    title: {
+      en: 'Try Our New Savory Items',
+      es: 'Prueba Nuestros Nuevos Platos Salados',
+    },
+    description: {
+      en: 'Buy any savory item, get a free croissant!',
+      es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
+    },
     imageUrl: 'https://picsum.photos/seed/202/1200/400',
     imageHint: 'savory food',
     freeItem: 'prod-001',

@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters."),
-  description: z.string().min(10, "Description must be at least 10 characters."),
+  title_en: z.string().min(5, "Title must be at least 5 characters."),
+  title_es: z.string().min(5, "El título debe tener al menos 5 caracteres."),
+  description_en: z.string().min(10, "Description must be at least 10 characters."),
+  description_es: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   requiredProductId: z.string({ required_error: "Please select a product to purchase." }),
   freeProductId: z.string({ required_error: "Please select a free product to offer." }),
 });
@@ -25,8 +27,10 @@ export function FreeItemPromotionForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            title: "",
-            description: "",
+            title_en: "",
+            title_es: "",
+            description_en: "",
+            description_es: "",
         },
     });
 
@@ -42,18 +46,34 @@ export function FreeItemPromotionForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField control={form.control} name="title" render={({ field }) => (
+        <FormField control={form.control} name="title_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Offer Title</FormLabel>
+                <FormLabel>Offer Title (English)</FormLabel>
                 <FormControl><Input placeholder="e.g., Croissant Combo Deal" {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
 
-        <FormField control={form.control} name="description" render={({ field }) => (
+        <FormField control={form.control} name="title_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Short Description</FormLabel>
+                <FormLabel>Título de la Oferta (Español)</FormLabel>
+                <FormControl><Input placeholder="e.g., Combo Oferta de Croissant" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+        <FormField control={form.control} name="description_en" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Short Description (English)</FormLabel>
                 <FormControl><Textarea placeholder="e.g., Buy a Quiche, get a free Croissant!" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+        <FormField control={form.control} name="description_es" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Descripción Corta (Español)</FormLabel>
+                <FormControl><Textarea placeholder="e.g., ¡Compra una Quiche y llévate un Croissant gratis!" {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />

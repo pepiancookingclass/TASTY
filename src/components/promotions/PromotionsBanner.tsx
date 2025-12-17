@@ -54,17 +54,17 @@ export function PromotionsBanner({ promotions }: PromotionsBannerProps) {
                   <div className="relative h-48 md:h-64">
                     <Image
                       src={promo.imageUrl}
-                      alt={promo.title}
+                      alt={promo.title[language]}
                       fill
                       style={{ objectFit: 'cover' }}
                       data-ai-hint={promo.imageHint}
                     />
                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center p-4">
                       <h3 className="font-headline text-2xl md:text-4xl font-bold text-white">
-                        {promo.title}
+                        {promo.title[language]}
                       </h3>
                       <p className="mt-2 text-md md:text-lg text-white">
-                        {promo.description}
+                        {promo.description[language]}
                       </p>
                     </div>
                   </div>

@@ -13,8 +13,10 @@ import { sampleChef } from "@/lib/data";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters."),
-  description: z.string().min(10, "Description must be at least 10 characters."),
+  title_en: z.string().min(5, "Title must be at least 5 characters."),
+  title_es: z.string().min(5, "El título debe tener al menos 5 caracteres."),
+  description_en: z.string().min(10, "Description must be at least 10 characters."),
+  description_es: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   productId: z.string({ required_error: "Please select a product." }),
   discountPercentage: z.coerce.number().min(1, "Discount must be at least 1%.").max(100, "Discount cannot exceed 100%."),
 });
@@ -27,8 +29,10 @@ export function DiscountPromotionForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            title: "",
-            description: "",
+            title_en: "",
+            title_es: "",
+            description_en: "",
+            description_es: "",
         }
     });
 
@@ -47,18 +51,34 @@ export function DiscountPromotionForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         
-        <FormField control={form.control} name="title" render={({ field }) => (
+        <FormField control={form.control} name="title_en" render={({ field }) => (
             <FormItem>
-                <FormLabel>Offer Title</FormLabel>
+                <FormLabel>Offer Title (English)</FormLabel>
                 <FormControl><Input placeholder="e.g., Weekend Croissant Special" {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />
-
-        <FormField control={form.control} name="description" render={({ field }) => (
+        
+        <FormField control={form.control} name="title_es" render={({ field }) => (
             <FormItem>
-                <FormLabel>Short Description</FormLabel>
+                <FormLabel>Título de la Oferta (Español)</FormLabel>
+                <FormControl><Input placeholder="e.g., Especial de Croissants del Fin de Semana" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+        <FormField control={form.control} name="description_en" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Short Description (English)</FormLabel>
                 <FormControl><Textarea placeholder="A brief summary of the offer..." {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+         <FormField control={form.control} name="description_es" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Descripción Corta (Español)</FormLabel>
+                <FormControl><Textarea placeholder="Un resumen breve de la oferta..." {...field} /></FormControl>
                 <FormMessage />
             </FormItem>
         )} />

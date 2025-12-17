@@ -22,8 +22,14 @@ export type Product = {
 
 export type Promotion = {
   id: string;
-  title: string;
-  description: string;
+  title: {
+    en: string;
+    es: string;
+  };
+  description: {
+    en: string;
+    es: string;
+  };
   imageUrl: string;
   imageHint: string;
   discountPercentage?: number;
