@@ -65,14 +65,16 @@ export function SiteHeader() {
             <SheetContent side="left" className="p-0">
               <div className="flex h-full flex-col">
                 <div className="border-b p-4">
-                  <Link href="/" className="flex items-center space-x-2">
-                      <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
-                          <ChefHat className="h-6 w-6 text-white" />
-                      </div>
-                      <span className="inline-block font-headline text-2xl font-bold text-primary">
-                        Tasty
-                      </span>
-                  </Link>
+                  <SheetClose asChild>
+                    <Link href="/" className="flex items-center space-x-2">
+                        <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+                            <ChefHat className="h-6 w-6 text-white" />
+                        </div>
+                        <span className="inline-block font-headline text-2xl font-bold text-primary">
+                          Tasty
+                        </span>
+                    </Link>
+                  </SheetClose>
                 </div>
                 <nav className="flex flex-col gap-1 p-4">
                   {navLinks.map(link => (
