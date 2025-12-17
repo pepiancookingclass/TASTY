@@ -32,9 +32,9 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-16">
       <PromotionsBanner promotions={promotions} />
+      <ChefShowcase chefs={chefs} />
       <ProductShowcase products={sweets} chefs={chefs} title={content[language].sweets} id="sweets" />
       <ProductShowcase products={savory} chefs={chefs} title={content[language].savory} id="savory" />
-      <ChefShowcase chefs={chefs} />
     </div>
   );
 }
