@@ -74,7 +74,7 @@ export default function LoginPage() {
   };
 
   if (loading || user) {
-    return <div className="container flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    return <div className="container flex justify-center items-center h-screen"><p>{dict.loading}</p></div>;
   }
 
   return (

@@ -1,4 +1,5 @@
 const dictionary = {
+  loading: 'Cargando...',
   hero: {
     headline: 'Sabores Artesanales, Directo de Casa',
     subheadline:
@@ -110,6 +111,24 @@ const dictionary = {
     loginLink: 'Inicia sesión',
     locationToastTitle: '¡Ubicación adquirida!',
     locationToastDescription: 'Tu ubicación actual ha sido guardada.',
+  },
+  userProfile: {
+    title: 'Mi Perfil',
+    personalInfo: {
+      title: 'Información Personal',
+      name: 'Nombre Completo',
+      email: 'Correo Electrónico',
+      phone: 'Número de Teléfono',
+    },
+    address: {
+      title: 'Dirección de Entrega',
+      street: 'Dirección',
+      city: 'Ciudad',
+      state: 'Departamento/Estado',
+      zip: 'Código Postal',
+      country: 'País',
+    },
+    save: 'Guardar Cambios',
   },
   chefSidebar: {
     title: 'Portal del Chef',
@@ -300,6 +319,9 @@ const dictionary = {
         error_free_item: 'Por favor, selecciona un artículo gratis.',
     }
   },
+  footer: {
+    text: 'Hecho con ♡ para delicias caseras.'
+  }
 };
 
 export default dictionary;

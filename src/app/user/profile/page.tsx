@@ -9,10 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function UserProfilePage() {
   const { user, loading } = useUser();
   const router = useRouter();
+  const dict = useDictionary();
   
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,12 +31,12 @@ export default function UserProfilePage() {
 
 
   if (loading || !user) {
-    return <div className="container flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    return <div className="container flex justify-center items-center h-screen"><p>{dict.loading}</p></div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="font-headline text-4xl font-bold mb-8">My Profile</h1>
+      <h1 className="font-headline text-4xl font-bold mb-8">{dict.userProfile.title}</h1>
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
@@ -52,18 +54,18 @@ export default function UserProfilePage() {
           <form>
             <div className="space-y-6">
               <div>
-                <h3 className="font-headline text-lg mb-4">Personal Information</h3>
+                <h3 className="font-headline text-lg mb-4">{dict.userProfile.personalInfo.title}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{dict.userProfile.personalInfo.name}</Label>
                     <Input id="name" value={displayName} onChange={e => setDisplayName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">{dict.userProfile.personalInfo.email}</Label>
                     <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">{dict.userProfile.personalInfo.phone}</Label>
                     <Input id="phone" type="tel" placeholder="555-123-4567" />
                   </div>
                 </div>
@@ -72,33 +74,33 @@ export default function UserProfilePage() {
               <Separator />
 
               <div>
-                <h3 className="font-headline text-lg mb-4">Delivery Address</h3>
+                <h3 className="font-headline text-lg mb-4">{dict.userProfile.address.title}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="street">Street Address</Label>
+                    <Label htmlFor="street">{dict.userProfile.address.street}</Label>
                     <Input id="street" placeholder="123 Main St" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{dict.userProfile.address.city}</Label>
                     <Input id="city" placeholder="Foodville"/>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
+                    <Label htmlFor="state">{dict.userProfile.address.state}</Label>
                     <Input id="state" placeholder="CA" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zip">ZIP Code</Label>
+                    <Label htmlFor="zip">{dict.userProfile.address.zip}</Label>
                     <Input id="zip" placeholder="90210" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">{dict.userProfile.address.country}</Label>
                     <Input id="country" placeholder="USA" />
                   </div>
                 </div>
               </div>
               
               <div className="flex justify-end pt-4">
-                  <Button>Save Changes</Button>
+                  <Button>{dict.userProfile.save}</Button>
               </div>
 
             </div>

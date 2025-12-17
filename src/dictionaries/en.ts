@@ -1,4 +1,5 @@
 const dictionary = {
+  loading: 'Loading...',
   hero: {
     headline: 'Artisan Flavors, Straight From Home',
     subheadline:
@@ -110,6 +111,24 @@ const dictionary = {
     loginLink: 'Log in',
     locationToastTitle: 'Location acquired!',
     locationToastDescription: 'Your current location has been saved.',
+  },
+  userProfile: {
+    title: 'My Profile',
+    personalInfo: {
+      title: 'Personal Information',
+      name: 'Full Name',
+      email: 'Email Address',
+      phone: 'Phone Number',
+    },
+    address: {
+      title: 'Delivery Address',
+      street: 'Street Address',
+      city: 'City',
+      state: 'State',
+      zip: 'ZIP Code',
+      country: 'Country',
+    },
+    save: 'Save Changes',
   },
   chefSidebar: {
     title: 'Chef Portal',
@@ -300,6 +319,9 @@ const dictionary = {
         error_free_item: 'Please select a free item.',
     }
   },
+  footer: {
+    text: 'Built with ♡ for homemade delights.'
+  }
 };
 
 export default dictionary;
