@@ -9,7 +9,8 @@ import {
   Settings,
   ShoppingCart,
   User,
-  Crown
+  Crown,
+  Globe,
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
@@ -22,10 +23,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export function SiteHeader() {
   const { state } = useCart();
+  const { language, toggleLanguage } = useLanguage();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const navLinks = {
+    en: {
+        sweets: 'Sweets',
+        savory: 'Savory',
+        handmade: 'Handmade',
+    },
+    es: {
+        sweets: 'Dulces',
+        savory: 'Salados',
+        handmade: 'Hecho a Mano',
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -38,13 +54,17 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-4">
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Dulces</Link>
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Salados</Link>
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Hecho a Mano</Link>
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].sweets}</Link>
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].savory}</Link>
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">{navLinks[language].handmade}</Link>
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <nav className="flex items-center space-x-2">
+        <div className="flex flex-1 items-center justify-end space-x-1">
+          <nav className="flex items-center space-x-1">
+             <Button variant="ghost" size="icon" onClick={toggleLanguage}>
+                <Globe className="h-5 w-5" />
+                <span className="sr-only">Change language</span>
+            </Button>
             <Link href="/cart">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />

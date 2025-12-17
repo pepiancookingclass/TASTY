@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface ProductCardProps {
   product: Product;
@@ -16,12 +17,13 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleAddToCart = () => {
     dispatch({ type: 'ADD_ITEM', payload: product });
     toast({
-      title: 'Added to cart!',
-      description: `${product.name} is now in your shopping cart.`,
+      title: language === 'es' ? '¡Añadido al carrito!' : 'Added to cart!',
+      description: language === 'es' ? `${product.name} está ahora en tu carrito.` : `${product.name} is now in your shopping cart.`,
     });
   };
 
@@ -60,7 +62,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-4 flex-grow">
         <CardTitle className="font-headline text-xl mb-2">{product.name}</CardTitle>
         <p className="text-muted-foreground text-sm line-clamp-2">
-          {product.description.en}
+          {product.description[language]}
         </p>
          <div className="flex flex-wrap gap-2 mt-3">
           {dietaryBadges.map(badge => (
@@ -71,7 +73,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardFooter className="p-4 flex justify-between items-center">
         <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
         <Button onClick={handleAddToCart} size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" /> Add to Cart
+          <PlusCircle className="mr-2 h-4 w-4" /> {language === 'es' ? 'Añadir' : 'Add to Cart'}
         </Button>
       </CardFooter>
     </Card>

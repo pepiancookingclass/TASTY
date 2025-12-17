@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { SiteHeader } from '@/components/shared/SiteHeader';
 import { SiteFooter } from '@/components/shared/SiteFooter';
 import { CartProvider } from '@/context/CartProvider';
+import { LanguageProvider } from '@/context/LanguageProvider';
 
 export const metadata: Metadata = {
   title: 'Tasty',
@@ -28,14 +29,16 @@ export default function RootLayout({
           'min-h-screen bg-background font-body antialiased'
         )}
       >
-        <CartProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <SiteHeader />
-            <main className="flex-1">{children}</main>
-            <SiteFooter />
-          </div>
-          <Toaster />
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <SiteHeader />
+              <main className="flex-1">{children}</main>
+              <SiteFooter />
+            </div>
+            <Toaster />
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
