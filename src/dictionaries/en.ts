@@ -296,7 +296,7 @@ const dictionary = {
       description_es: 'e.g., ¡Compra una Quiche y llévate un Croissant gratis!',
     },
     requiredProduct: { label: 'IF a customer buys...', placeholder: 'Select a product' },
-    freeProduct: { label: 'THEN they get this for free...', placeholder: 'Select freebie product' },
+    freeProduct: { label: 'THEN they get this for free...', placeholder: 'e.g., A free drink' },
     submit: 'Create Free Item Offer',
     toast: {
       title: 'Promotion Created!',

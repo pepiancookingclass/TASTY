@@ -19,7 +19,7 @@ const formSchema = z.object({
   description_en: z.string().min(10, "Description must be at least 10 characters."),
   description_es: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   requiredProductId: z.string({ required_error: "Please select a product to purchase." }),
-  freeProductId: z.string({ required_error: "Please select a free product to offer." }),
+  freeProductText: z.string({ required_error: "Please describe the free item." }).min(3, "Please describe the free item."),
 });
 
 export function FreeItemPromotionForm() {
@@ -35,6 +35,7 @@ export function FreeItemPromotionForm() {
             title_es: "",
             description_en: "",
             description_es: "",
+            freeProductText: "",
         },
     });
 
@@ -101,21 +102,12 @@ export function FreeItemPromotionForm() {
             </FormItem>
         )} />
 
-        <FormField control={form.control} name="freeProductId" render={({ field }) => (
+        <FormField control={form.control} name="freeProductText" render={({ field }) => (
             <FormItem>
                 <FormLabel>{dict.freeItemForm.freeProduct.label}</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder={dict.freeItemForm.freeProduct.placeholder} />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {creatorProducts.map(product => (
-                            <SelectItem key={product.id} value={product.id}>{product.name[language]}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <FormControl>
+                    <Input placeholder={dict.freeItemForm.freeProduct.placeholder} {...field} />
+                </FormControl>
                 <FormMessage />
             </FormItem>
         )} />
