@@ -6,6 +6,7 @@ import type { Chef } from '@/lib/types';
 import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
 import { ChefShowcase } from '@/components/chef/ChefShowcase';
 import { useLanguage } from '@/hooks/useLanguage';
+import { Hero } from '@/components/shared/Hero';
 
 export default function Home() {
   const { language } = useLanguage();
@@ -30,11 +31,14 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-16">
-      <PromotionsBanner promotions={promotions} />
-      <ChefShowcase chefs={chefs} />
-      <ProductShowcase products={sweets} chefs={chefs} title={content[language].sweets} id="sweets" />
-      <ProductShowcase products={savory} chefs={chefs} title={content[language].savory} id="savory" />
+    <div className="space-y-16">
+      <Hero />
+      <div className="container mx-auto px-4 py-8 space-y-16">
+        <ChefShowcase chefs={chefs} />
+        <PromotionsBanner promotions={promotions} />
+        <ProductShowcase products={sweets} chefs={chefs} title={content[language].sweets} id="sweets" />
+        <ProductShowcase products={savory} chefs={chefs} title={content[language].savory} id="savory" />
+      </div>
     </div>
   );
 }
