@@ -34,12 +34,14 @@ export function SiteHeader() {
       sweets: 'Sweets',
       savory: 'Savory',
       chefs: 'Chefs',
+      chefDashboard: 'Chef Dashboard'
     },
     es: {
       home: 'Inicio',
       sweets: 'Dulces',
       savory: 'Salados',
       chefs: 'Chefs',
+      chefDashboard: 'Panel de Chef'
     },
   };
   
@@ -63,17 +65,20 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-4 items-center">
-            <Link href="/" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
+            <Link href="/" className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground">
               {navLinks[language].home}
             </Link>
-            <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
+            <Link href="/#sweets" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
               {navLinks[language].sweets}
             </Link>
-            <Link href="/#savory" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
+            <Link href="/#savory" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
               {navLinks[language].savory}
             </Link>
-            <Link href="/chefs" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground/80">
+            <Link href="/chefs" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
               {navLinks[language].chefs}
+            </Link>
+             <Link href="/chef/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
+                {navLinks[language].chefDashboard}
             </Link>
           </nav>
         </div>
