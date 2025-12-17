@@ -86,14 +86,12 @@ export function SiteHeader() {
                   ))}
                 </nav>
                 <div className="mt-auto border-t p-4">
-                   {user && (
                     <SheetClose asChild>
                       <Link href="/chef/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
                           <ChefHat className="mr-2 h-5 w-5" />
                           <span>{dict.siteHeader.chefDashboard}</span>
                         </Link>
                     </SheetClose>
-                   )}
                 </div>
               </div>
             </SheetContent>
@@ -212,23 +210,40 @@ export function SiteHeader() {
             </DropdownMenu>
             ) : (
              <div className="flex items-center">
-                <Button variant="ghost" size="icon" asChild className="md:hidden">
-                    <Link href="/login">
-                        <User className="h-5 w-5" />
-                    </Link>
-                </Button>
-                <div className="hidden md:flex items-center gap-2">
-                    <Button variant="ghost" size="sm" asChild>
-                    <Link href="/signup">
-                        {dict.siteHeader.signup}
-                    </Link>
-                    </Button>
-                    <Button size="sm" asChild>
-                    <Link href="/login">
-                        {dict.siteHeader.login}
-                    </Link>
-                    </Button>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                         <Button variant="ghost" size="icon" className="relative h-8 w-8">
+                            <User className="h-5 w-5" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                            <Link href="/login">
+                                <LogIn className="mr-2 h-4 w-4" />
+                                <span>{dict.siteHeader.login}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/signup">
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                <span>{dict.siteHeader.signup}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/chef/dashboard">
+                                <ChefHat className="mr-2 h-4 w-4" />
+                                <span>{dict.siteHeader.chefDashboard}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/admin/promotions">
+                                <Crown className="mr-2 h-4 w-4" />
+                                <span>{dict.siteHeader.admin}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
             )}
         </div>
