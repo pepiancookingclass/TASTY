@@ -64,7 +64,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 8.0,
-    imageUrl: 'https://picsum.photos/seed/sourdough/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08',
     imageHint: 'sourdough bread',
     description: {
       en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
@@ -118,7 +118,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 5.0,
-    imageUrl: 'https://picsum.photos/seed/brownie/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1623428325208-0eb91d86d4b5',
     imageHint: 'vegan brownie',
     description: {
       en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
@@ -145,7 +145,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 7.5,
-    imageUrl: 'https://picsum.photos/seed/quiche/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1701197159530-80a188e34dfc',
     imageHint: 'quiche lorraine',
     description: {
       en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
@@ -172,7 +172,7 @@ export const products: Product[] = [
     },
     type: 'dessert',
     price: 4.0,
-    imageUrl: 'https://picsum.photos/seed/cupcakes/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1603532648955-039310d9ed75',
     imageHint: 'cupcakes',
     description: {
       en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
@@ -199,7 +199,7 @@ export const products: Product[] = [
     },
     type: 'savory',
     price: 6.0,
-    imageUrl: 'https://picsum.photos/seed/spinach/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1761243743989-726fb70af78d',
     imageHint: 'savory pastry',
     description: {
       en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
@@ -299,7 +299,7 @@ export const promotions: Promotion[] = [
       en: 'Buy any savory item, get a free croissant!',
       es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
     },
-    imageUrl: 'https://picsum.photos/seed/savory/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1707322325935-4c7d6025750b',
     imageHint: 'savory food',
     freeItem: 'prod-001',
   },
