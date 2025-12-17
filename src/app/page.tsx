@@ -7,6 +7,10 @@ import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
 import { ChefShowcase } from '@/components/chef/ChefShowcase';
 import { Hero } from '@/components/shared/Hero';
 import { useDictionary } from '@/hooks/useDictionary';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 export default function Home() {
   const dict = useDictionary();
@@ -24,6 +28,24 @@ export default function Home() {
       <Hero />
       <div className="container mx-auto px-4 py-8 space-y-16">
         <ChefShowcase chefs={chefs} />
+
+        <Card className="mt-16 text-center shadow-lg bg-secondary">
+            <CardHeader>
+                <CardTitle className="font-headline text-3xl">¿Eventos o Pedidos Especiales?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                    ¿Planeando una celebración o necesitas algo hecho a tu medida? Contáctanos para discutir tus ideas.
+                </p>
+                <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white">
+                    <Link href="https://wa.me/50212345678" target="_blank" rel="noopener noreferrer">
+                        <WhatsAppIcon className="mr-2 h-6 w-6" />
+                        Contactar por WhatsApp
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
+        
         <PromotionsBanner promotions={promotions} />
         <ProductShowcase products={sweets} chefs={chefs} title={dict.productShowcase.sweets} id="sweets" />
         <ProductShowcase products={savory} chefs={chefs} title={dict.productShowcase.savory} id="savory" />
