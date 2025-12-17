@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChefHat, Salad, ShoppingCart, User, Crown, Globe, LogOut, LogIn, UserPlus, Menu } from 'lucide-react';
+import { ChefHat, ShoppingCart, User, Crown, LogOut, LogIn, UserPlus, Menu } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useRouter } from 'next/navigation';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { useDictionary } from '@/hooks/useDictionary';
+import { Skeleton } from '../ui/skeleton';
 
 export function SiteHeader() {
   const { state } = useCart();
@@ -51,6 +52,29 @@ export function SiteHeader() {
   ];
 
   const isCreator = roles.includes('creator');
+
+  const CreatorDashboardLink = ({ isMobile }: { isMobile?: boolean }) => {
+    if (rolesLoading) {
+      return isMobile
+        ? <Skeleton className="h-12 w-full rounded-md" />
+        : <Skeleton className="h-5 w-36 rounded-md" />;
+    }
+    if (isCreator) {
+      const link = (
+        <Link 
+          href="/creator/dashboard" 
+          className={isMobile 
+            ? "text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted"
+            : "text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"}
+        >
+          {dict.siteHeader.creatorDashboard}
+        </Link>
+      );
+      return isMobile ? <SheetClose asChild>{link}</SheetClose> : link;
+    }
+    return null;
+  };
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -87,13 +111,7 @@ export function SiteHeader() {
                         </Link>
                       </SheetClose>
                   ))}
-                   {!rolesLoading && isCreator && (
-                     <SheetClose asChild>
-                        <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted">
-                          {dict.siteHeader.creatorDashboard}
-                        </Link>
-                      </SheetClose>
-                   )}
+                  <CreatorDashboardLink isMobile={true} />
                 </nav>
                 <div className="mt-auto border-t p-4">
                     <SheetClose asChild>
@@ -124,11 +142,7 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
-             {!rolesLoading && isCreator && (
-              <Link href="/creator/dashboard" className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
-                {dict.siteHeader.creatorDashboard}
-              </Link>
-            )}
+            <CreatorDashboardLink />
           </nav>
         </div>
 
