@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { PromotionForm } from '@/components/admin/PromotionForm';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';

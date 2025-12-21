@@ -2,16 +2,29 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, Tag, BarChart, ClipboardList } from 'lucide-react';
+import { Home, ShoppingBag, Tag, BarChart, ClipboardList, Users, Settings, Crown, BarChart3, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDictionary } from '@/hooks/useDictionary';
+import { usePermissions } from '@/hooks/usePermissions';
 import { SheetClose } from '../ui/sheet';
 
-const navLinks = [
+// Enlaces para CREADORES (solo sus propios productos)
+const creatorLinks = [
   { href: '/creator/dashboard', label: 'dashboard', icon: BarChart },
   { href: '/creator/orders', label: 'orders', icon: ClipboardList },
   { href: '/creator/products', label: 'products', icon: ShoppingBag },
+  { href: '/creator/combos', label: 'combos', icon: Gift },
   { href: '/creator/promotions', label: 'promotions', icon: Tag },
+  { href: '/creator/settings', label: 'settings', icon: Settings },
+];
+
+// Enlaces adicionales para ADMIN/AGENT (gestionar todos los creadores)
+const adminLinks = [
+  { href: '/admin/analytics', label: 'analytics', icon: BarChart3 },
+  { href: '/admin/creators', label: 'allCreators', icon: Users },
+  { href: '/admin/products', label: 'allProducts', icon: ShoppingBag },
+  { href: '/admin/offers', label: 'allOffers', icon: Tag },
+  { href: '/admin/settings', label: 'settings', icon: Settings },
 ];
 
 interface CreatorSidebarProps {
@@ -21,6 +34,21 @@ interface CreatorSidebarProps {
 export function CreatorSidebar({ isMobile = false }: CreatorSidebarProps) {
   const pathname = usePathname();
   const dict = useDictionary();
+  const { canAccessAdminPanel, isCreator, isAdmin, isAgent } = usePermissions();
+
+  // Determinar qué enlaces mostrar según el rol
+  const getNavLinks = () => {
+    let links = [...creatorLinks];
+    
+    // Si es admin o agente, agregar enlaces administrativos
+    if (canAccessAdminPanel) {
+      links = [...links, ...adminLinks];
+    }
+    
+    return links;
+  };
+
+  const navLinks = getNavLinks();
 
   const NavLink = ({ href, label, icon: Icon }: { href: string, label: string, icon: React.ElementType}) => {
     const isActive = pathname.startsWith(href);
@@ -53,7 +81,16 @@ export function CreatorSidebar({ isMobile = false }: CreatorSidebarProps) {
       {!isMobile && (
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
            <div className="flex items-center gap-2 font-semibold">
-              <h2 className="font-headline text-2xl font-bold">{dict.creatorSidebar.title}</h2>
+              {canAccessAdminPanel ? (
+                <div className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-yellow-600" />
+                  <h2 className="font-headline text-2xl font-bold">
+                    {isAdmin ? 'Admin Panel' : 'Panel Agente'}
+                  </h2>
+                </div>
+              ) : (
+                <h2 className="font-headline text-2xl font-bold">{dict.creatorSidebar.title}</h2>
+              )}
            </div>
         </div>
       )}

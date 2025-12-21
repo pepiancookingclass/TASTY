@@ -1,79 +1,166 @@
 'use client';
 
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { Order, OrderStatusKey } from '@/lib/types';
-import { products } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/providers/auth-provider';
+import { useToast } from '@/hooks/use-toast';
 
-const sampleOrders: Order[] = [
-  {
-    id: 'ORD-001',
-    customerName: 'Alice Johnson',
-    orderDate: new Date('2024-07-28T14:30:00Z'),
-    deliveryDate: new Date('2024-07-29T14:30:00Z'),
-    items: [
-      { product: products.find(p => p.id === 'prod-001')!, quantity: 2 },
-      { product: products.find(p => p.id === 'prod-002')!, quantity: 1 },
-    ],
-    status: 'preparing',
-    total: 11.50,
-  },
-  {
-    id: 'ORD-002',
-    customerName: 'Bob Williams',
-    orderDate: new Date('2024-07-28T12:05:00Z'),
-    deliveryDate: new Date('2024-07-28T18:05:00Z'),
-    items: [
-      { product: products.find(p => p.id === 'prod-006')!, quantity: 1 },
-    ],
-    status: 'ready',
-    total: 7.50,
-  },
-  {
-    id: 'ORD-003',
-    customerName: 'Charlie Brown',
-    orderDate: new Date('2024-07-27T18:00:00Z'),
-    deliveryDate: new Date('2024-07-28T12:00:00Z'),
-    items: [
-      { product: products.find(p => p.id === 'prod-003')!, quantity: 1 },
-      { product: products.find(p => p.id === 'prod-005')!, quantity: 2 },
-    ],
-    status: 'delivered',
-    total: 18.00,
-  },
-    {
-    id: 'ORD-004',
-    customerName: 'Diana Prince',
-    orderDate: new Date('2024-07-28T16:00:00Z'),
-    deliveryDate: new Date('2024-07-28T20:00:00Z'),
-    items: [
-      { product: products.find(p => p.id === 'prod-004')!, quantity: 1 },
-    ],
-    status: 'new',
-    total: 12.00,
-  },
-];
+// Función para transformar datos de Supabase a Order
+function transformOrderFromDB(orderData: any, orderItems: any[]): Order {
+  return {
+    id: orderData.id,
+    customerName: orderData.customer_name,
+    orderDate: new Date(orderData.created_at),
+    deliveryDate: new Date(orderData.delivery_date),
+    status: orderData.status as OrderStatusKey,
+    total: parseFloat(orderData.total),
+    items: orderItems.map(item => ({
+      product: {
+        id: item.product_id,
+        name: { 
+          en: item.product_name_en || '', 
+          es: item.product_name_es || '' 
+        },
+        type: 'pastry', // Default
+        price: parseFloat(item.unit_price),
+        imageUrl: '',
+        imageHint: '',
+        description: { en: '', es: '' },
+        ingredients: { en: '', es: '' },
+        creatorId: '',
+        preparationTime: 0,
+        dietaryFlags: {
+          isGlutenFree: false,
+          isVegan: false,
+          isDairyFree: false,
+          isNutFree: false,
+        },
+      },
+      quantity: item.quantity,
+    })),
+  };
+}
 
 
 type OrderContextType = {
   orders: Order[];
-  updateOrderStatus: (orderId: string, newStatus: OrderStatusKey) => void;
+  loading: boolean;
+  updateOrderStatus: (orderId: string, newStatus: OrderStatusKey) => Promise<void>;
+  refreshOrders: () => Promise<void>;
 };
 
 export const OrderContext = createContext<OrderContextType | null>(null);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const updateOrderStatus = (orderId: string, newStatus: OrderStatusKey) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
+  // Cargar pedidos del creador desde la base de datos
+  const loadOrders = async () => {
+    if (!user) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Obtener pedidos que incluyen productos del creador
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products!inner (
+              creator_id
+            )
+          )
+        `)
+        .eq('order_items.products.creator_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (orderError) throw orderError;
+
+      // Transformar datos
+      const transformedOrders: Order[] = [];
+      
+      for (const order of orderData || []) {
+        // Obtener items del pedido
+        const { data: items, error: itemsError } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', order.id);
+
+        if (!itemsError && items) {
+          const transformedOrder = transformOrderFromDB(order, items);
+          transformedOrders.push(transformedOrder);
+        }
+      }
+
+      setOrders(transformedOrders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los pedidos"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Actualizar estado de pedido usando la función SQL
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatusKey) => {
+    try {
+      const { error } = await supabase
+        .rpc('update_order_status', {
+          order_uuid: orderId,
+          new_status: newStatus,
+          changed_by_uuid: user?.id
+        });
+
+      if (error) throw error;
+
+      // Actualizar estado local
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+
+      toast({
+        title: "Estado actualizado",
+        description: `El pedido ahora está "${newStatus}"`
+      });
+
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo actualizar el estado del pedido"
+      });
+    }
+  };
+
+  // Cargar pedidos al montar el componente
+  useEffect(() => {
+    loadOrders();
+  }, [user]);
+
   return (
-    <OrderContext.Provider value={{ orders, updateOrderStatus }}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      loading, 
+      updateOrderStatus, 
+      refreshOrders: loadOrders 
+    }}>
       {children}
     </OrderContext.Provider>
   );

@@ -1,15 +1,13 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { useAuth, useFirestore } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, User } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -17,8 +15,7 @@ import Link from 'next/link';
 import { useDictionary } from '@/hooks/useDictionary';
 
 export default function LoginPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const { signIn, signInWithGoogle } = useAuth();
   const { user, loading } = useUser();
   const router = useRouter();
   const dict = useDictionary();
@@ -33,29 +30,9 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
   
-  const handleGoogleUserCreation = async (user: User) => {
-    if (!firestore || !user) return;
-    const userRef = doc(firestore, 'users', user.uid);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-        await setDoc(userRef, {
-            uid: user.uid,
-            email: user.email,
-            name: user.displayName,
-            photoURL: user.photoURL,
-            roles: ['customer'],
-        }, { merge: true });
-    }
-     router.push('/user/profile');
-  }
-
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      await handleGoogleUserCreation(result.user);
+      await signInWithGoogle();
     } catch (error: any) {
       setError(error.message);
       console.error('Error signing in with Google', error);
@@ -64,10 +41,9 @@ export default function LoginPage() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signIn(email, password);
       router.push('/user/profile');
     } catch (error: any) {
        setError(error.message);

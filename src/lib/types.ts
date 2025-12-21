@@ -85,3 +85,56 @@ export type Order = {
     status: OrderStatusKey;
     total: number;
 }
+
+// Tipos para el sistema de combos
+export interface Combo {
+  id: string;
+  name_es: string;
+  name_en?: string;
+  description_es: string;
+  description_en?: string;
+  image_url?: string;
+  category: 'sweet_savory' | 'breakfast' | 'dessert_mix' | 'full_meal' | 'artisan_mix';
+  total_price: number;
+  original_price: number;
+  discount_percentage: number;
+  is_active: boolean;
+  is_featured: boolean;
+  available_from: string;
+  available_until?: string;
+  max_orders?: number;
+  current_orders: number;
+  preparation_time: number;
+  created_at: string;
+  created_by: string;
+  creators_count?: number;
+  products_count?: number;
+}
+
+export interface ComboItem {
+  id: string;
+  combo_id: string;
+  product_id: string;
+  creator_id: string;
+  quantity: number;
+  individual_price: number;
+  creator_percentage: number;
+  product?: Product;
+  creator?: User;
+}
+
+export interface ComboCreator {
+  id: string;
+  combo_id: string;
+  creator_id: string;
+  creator_name: string;
+  creator_avatar?: string;
+  products_count: number;
+  total_contribution: number;
+  revenue_percentage: number;
+}
+
+export interface ComboDetails extends Combo {
+  items: ComboItem[];
+  creators: ComboCreator[];
+}

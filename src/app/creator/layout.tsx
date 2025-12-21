@@ -2,16 +2,53 @@
 import { CreatorSidebar } from '@/components/creator/CreatorSidebar';
 import { OrderProvider } from '@/context/OrderProvider';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { ChefHat } from 'lucide-react';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { useUser } from '@/hooks/useUser';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function CreatorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading: userLoading } = useUser();
+  const { roles, loading: rolesLoading } = useUserRoles();
+  const router = useRouter();
+
+  const isLoading = userLoading || rolesLoading;
+  const canAccess = roles.some(role => ['creator', 'admin', 'agent'].includes(role));
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push('/login');
+      } else if (!canAccess) {
+        router.push('/');
+      }
+    }
+  }, [user, canAccess, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || !canAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <OrderProvider>
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">

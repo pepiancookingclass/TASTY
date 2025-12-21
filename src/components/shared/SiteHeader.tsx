@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChefHat, ShoppingCart, User, Crown, LogOut, LogIn, UserPlus, Menu } from 'lucide-react';
+import { ChefHat, ShoppingCart, User, Crown, LogOut, LogIn, UserPlus, Menu, Package } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,8 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useUser } from '@/firebase';
-import { getAuth, signOut } from 'firebase/auth';
+import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/providers/auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useRouter } from 'next/navigation';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -32,14 +32,14 @@ export function SiteHeader() {
   const { state } = useCart();
   const { language, setLanguage } = useLanguage();
   const { user, loading } = useUser();
+  const { signOut } = useAuth();
   const { roles, loading: rolesLoading } = useUserRoles();
   const router = useRouter();
   const dict = useDictionary();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
+    await signOut();
     router.push('/');
   };
 
@@ -48,10 +48,18 @@ export function SiteHeader() {
     { href: '/#sweets', label: dict.siteHeader.sweets },
     { href: '/#savory', label: dict.siteHeader.savory },
     { href: '/#handmades', label: dict.siteHeader.handmades },
+    { href: '/combos', label: dict.siteHeader.combos },
     { href: '/creators', label: dict.siteHeader.creators },
   ];
 
+  // Solo mostrar panel de creador si el usuario tiene rol de creator, admin o agent
+  const canAccessCreatorPanel = roles.some(role => 
+    ['creator', 'admin', 'agent'].includes(role)
+  );
+
   const CreatorDashboardLink = ({ isMobile = false }: { isMobile?: boolean }) => {
+    if (!canAccessCreatorPanel) return null;
+    
     const link = (
       <Link
         href="/creator/dashboard"
@@ -104,14 +112,16 @@ export function SiteHeader() {
                   ))}
                   <CreatorDashboardLink isMobile={true} />
                 </nav>
-                <div className="mt-auto border-t p-4">
-                    <SheetClose asChild>
-                      <Link href="/admin/promotions" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
-                          <Crown className="mr-2 h-5 w-5" />
-                          <span>{dict.siteHeader.admin}</span>
-                        </Link>
-                    </SheetClose>
-                </div>
+                {roles.some(role => ['admin', 'agent'].includes(role)) && (
+                  <div className="mt-auto border-t p-4">
+                      <SheetClose asChild>
+                        <Link href="/admin/creators" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
+                            <Crown className="mr-2 h-5 w-5" />
+                            <span>{dict.siteHeader.admin}</span>
+                          </Link>
+                      </SheetClose>
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -206,13 +216,21 @@ export function SiteHeader() {
                     <span>{dict.siteHeader.profile}</span>
                     </Link>
                 </DropdownMenuItem>
-                
                 <DropdownMenuItem asChild>
-                    <Link href="/admin/promotions">
-                        <Crown className="mr-2 h-4 w-4" />
-                        <span>{dict.siteHeader.admin}</span>
+                    <Link href="/user/orders">
+                    <Package className="mr-2 h-4 w-4" />
+                    <span>Mis Pedidos</span>
                     </Link>
-                    </DropdownMenuItem>
+                </DropdownMenuItem>
+                
+                {roles.some(role => ['admin', 'agent'].includes(role)) && (
+                  <DropdownMenuItem asChild>
+                      <Link href="/admin/creators">
+                          <Crown className="mr-2 h-4 w-4" />
+                          <span>{dict.siteHeader.admin}</span>
+                      </Link>
+                  </DropdownMenuItem>
+                )}
 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -243,12 +261,14 @@ export function SiteHeader() {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                            <Link href="/admin/promotions">
-                                <Crown className="mr-2 h-4 w-4" />
-                                <span>{dict.siteHeader.admin}</span>
-                            </Link>
-                        </DropdownMenuItem>
+                        {roles.some(role => ['admin', 'agent'].includes(role)) && (
+                          <DropdownMenuItem asChild>
+                              <Link href="/admin/creators">
+                                  <Crown className="mr-2 h-4 w-4" />
+                                  <span>{dict.siteHeader.admin}</span>
+                              </Link>
+                          </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

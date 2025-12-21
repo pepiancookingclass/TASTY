@@ -1,168 +1,112 @@
 'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { products } from "@/lib/data";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useLanguage } from "@/hooks/useLanguage";
-import { useState } from "react";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-
-const formSchema = z.object({
-  title_en: z.string().min(5, "Title must be at least 5 characters."),
-  title_es: z.string().min(5, "El título debe tener al menos 5 caracteres."),
-  description_en: z.string().min(10, "Description must be at least 10 characters."),
-  description_es: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
-  promotionType: z.enum(['discount', 'free_item']),
-  discountPercentage: z.coerce.number().optional(),
-  freeItemId: z.string().optional(),
-});
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export function PromotionForm() {
-    const { toast } = useToast();
-    const { language } = useLanguage();
-    const [promotionType, setPromotionType] = useState('discount');
+  const { toast } = useToast();
+  const dict = useDictionary();
+  
+  const [titleEn, setTitleEn] = useState('');
+  const [titleEs, setTitleEs] = useState('');
+  const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionEs, setDescriptionEs] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            title_en: "",
-            title_es: "",
-            description_en: "",
-            description_es: "",
-            promotionType: 'discount',
-        }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // TODO: Implementar guardado en Supabase
+    toast({
+      title: 'Promoción creada',
+      description: 'La promoción ha sido creada exitosamente.',
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        if (values.promotionType === 'discount' && !values.discountPercentage) {
-            form.setError('discountPercentage', { message: 'Percentage is required for discounts.'});
-            return;
-        }
-        if (values.promotionType === 'free_item' && !values.freeItemId) {
-            form.setError('freeItemId', { message: 'Please select a free item.'});
-            return;
-        }
-
-        console.log(values);
-        toast({
-            title: "Promotion Created!",
-            description: `The new ${values.promotionType} promotion has been saved (simulation).`,
-        });
-        form.reset();
-        setPromotionType('discount');
-    }
+    // Reset form
+    setTitleEn('');
+    setTitleEs('');
+    setDescriptionEn('');
+    setDescriptionEs('');
+    setDiscountPercentage('');
+    setImageUrl('');
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        
-        <FormField control={form.control} name="title_en" render={({ field }) => (
-            <FormItem>
-                <FormLabel>Offer Title (English)</FormLabel>
-                <FormControl><Input placeholder="e.g., Summer Sale" {...field} /></FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
-        
-        <FormField control={form.control} name="title_es" render={({ field }) => (
-            <FormItem>
-                <FormLabel>Título de la Oferta (Español)</FormLabel>
-                <FormControl><Input placeholder="e.g., Venta de Verano" {...field} /></FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
-
-        <FormField control={form.control} name="description_en" render={({ field }) => (
-            <FormItem>
-                <FormLabel>Short Description (English)</FormLabel>
-                <FormControl><Textarea placeholder="A brief summary of the offer..." {...field} /></FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
-
-         <FormField control={form.control} name="description_es" render={({ field }) => (
-            <FormItem>
-                <FormLabel>Descripción Corta (Español)</FormLabel>
-                <FormControl><Textarea placeholder="Un resumen breve de la oferta..." {...field} /></FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
-
-        <FormField
-          control={form.control}
-          name="promotionType"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>Promotion Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={(value) => {
-                      field.onChange(value);
-                      setPromotionType(value);
-                  }}
-                  defaultValue={field.value}
-                  className="flex space-x-4"
-                >
-                  <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="discount" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Discount</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="free_item" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Free Item</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="titleEn">Title (English)</Label>
+        <Input
+          id="titleEn"
+          value={titleEn}
+          onChange={(e) => setTitleEn(e.target.value)}
+          placeholder="Summer Sale"
+          required
         />
-        
-        {promotionType === 'discount' && (
-             <FormField control={form.control} name="discountPercentage" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Discount Percentage (%)</FormLabel>
-                    <FormControl><Input type="number" placeholder="e.g., 20" {...field} /></FormControl>
-                    <FormMessage />
-                </FormItem>
-            )} />
-        )}
+      </div>
 
-        {promotionType === 'free_item' && (
-             <FormField control={form.control} name="freeItemId" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Free Item</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select the free item" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {products.map(product => (
-                                <SelectItem key={product.id} value={product.id}>{product.name[language]}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <FormDescription>The item a customer gets for free.</FormDescription>
-                    <FormMessage />
-                </FormItem>
-            )} />
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="titleEs">Título (Español)</Label>
+        <Input
+          id="titleEs"
+          value={titleEs}
+          onChange={(e) => setTitleEs(e.target.value)}
+          placeholder="Venta de Verano"
+          required
+        />
+      </div>
 
-        <Button type="submit" className="w-full">Create Offer</Button>
-      </form>
-    </Form>
+      <div className="space-y-2">
+        <Label htmlFor="descriptionEn">Description (English)</Label>
+        <Textarea
+          id="descriptionEn"
+          value={descriptionEn}
+          onChange={(e) => setDescriptionEn(e.target.value)}
+          placeholder="Get amazing discounts..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="descriptionEs">Descripción (Español)</Label>
+        <Textarea
+          id="descriptionEs"
+          value={descriptionEs}
+          onChange={(e) => setDescriptionEs(e.target.value)}
+          placeholder="Obtén descuentos increíbles..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="discount">Discount Percentage</Label>
+        <Input
+          id="discount"
+          type="number"
+          min="0"
+          max="100"
+          value={discountPercentage}
+          onChange={(e) => setDiscountPercentage(e.target.value)}
+          placeholder="20"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="imageUrl">Image URL</Label>
+        <Input
+          id="imageUrl"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://..."
+        />
+      </div>
+
+      <Button type="submit" className="w-full">
+        Create Promotion
+      </Button>
+    </form>
   );
 }

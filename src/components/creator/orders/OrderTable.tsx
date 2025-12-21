@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { OrderStatusSelector } from './OrderStatusSelector';
+import { OrderStatusHistory } from './OrderStatusHistory';
 import { useLanguage } from '@/hooks/useLanguage';
 import { format } from 'date-fns';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -23,9 +24,9 @@ export function OrderTable({ orders }: OrderTableProps) {
   const dict = useDictionary();
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-GT', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GTQ',
     }).format(price);
   };
 
@@ -40,8 +41,9 @@ export function OrderTable({ orders }: OrderTableProps) {
           <TableHead>{dict.orderTable.orderId}</TableHead>
           <TableHead className="hidden sm:table-cell">{dict.orderTable.customer}</TableHead>
           <TableHead className="hidden lg:table-cell">{dict.orderTable.dates}</TableHead>
-          <TableHead className="text-right">{dict.orderTable.total}</TableHead>
+          <TableHead className="text-right">Total / Tu parte</TableHead>
           <TableHead className="text-center">{dict.orderTable.status}</TableHead>
+          <TableHead className="text-center">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -60,9 +62,20 @@ export function OrderTable({ orders }: OrderTableProps) {
               <span className="font-medium">{dict.orderTable.delivery}:</span> <span className="text-muted-foreground">{formatDate(order.deliveryDate)}</span>
               </div>
             </TableCell>
-            <TableCell className="text-right">{formatPrice(order.total)}</TableCell>
+            <TableCell className="text-right">
+              <div className="font-medium">{formatPrice(order.total)}</div>
+              <div className="text-sm text-green-600 font-medium">
+                Tu parte: {formatPrice(order.total * 0.9)}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                (Tasty 10%: {formatPrice(order.total * 0.1)})
+              </div>
+            </TableCell>
             <TableCell className="text-center">
               <OrderStatusSelector orderId={order.id} currentStatus={order.status} />
+            </TableCell>
+            <TableCell className="text-center">
+              <OrderStatusHistory orderId={order.id} />
             </TableCell>
           </TableRow>
         ))}

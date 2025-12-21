@@ -1,161 +1,130 @@
+import { Product, Promotion, Creator } from './types';
 
-import type { Product, Promotion, User, Creator } from './types';
+// Creadores - IDs que coinciden con la base de datos
+export const sampleCreator: Creator = {
+  id: 'c0000001-0000-0000-0000-000000000001',
+  name: 'Valentina Dávila',
+  email: 'valentina@tasty.com',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+  imageHint: 'woman portrait pastry chef',
+  gender: 'female',
+  skills: ['pastry'],
+};
 
+export const creatorMariaHerman: Creator = {
+  id: 'c0000002-0000-0000-0000-000000000002',
+  name: 'Maria Herman',
+  email: 'maria.herman@tasty.com',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+  imageHint: 'woman artisan portrait',
+  gender: 'female',
+  skills: ['pastry', 'handmade'],
+};
+
+export const creatorYiwong: Creator = {
+  id: 'c0000003-0000-0000-0000-000000000003',
+  name: 'Yiwong',
+  email: 'yiwong@tasty.com',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+  imageHint: 'man chef portrait',
+  gender: 'male',
+  skills: ['savory'],
+};
+
+// Lista de todos los creadores
+export const creators: Creator[] = [sampleCreator, creatorMariaHerman, creatorYiwong];
+
+// Productos
 export const products: Product[] = [
+  // === VALENTINA DÁVILA - Pastry & Desserts ===
   {
-    id: 'prod-001',
-    name: {
-      en: 'Classic Croissant',
-      es: 'Croissant Clásico',
-    },
-    type: 'pastry',
-    price: 3.5,
-    imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a',
-    imageHint: 'croissant pastry',
-    description: {
-      en: 'A buttery, flaky, viennoiserie pastry of Austrian origin, named for its historical crescent shape.',
-      es: 'Un pastel de hojaldre mantecoso y escamoso de origen austriaco, llamado así por su histórica forma de media luna.',
-    },
-    ingredients: {
-      en: 'Flour, Butter, Yeast, Sugar, Salt',
-      es: 'Harina, Mantequilla, Levadura, Azúcar, Sal',
-    },
-    creatorId: 'creator-001',
-    preparationTime: 24,
-    dietaryFlags: {
-      isGlutenFree: false,
-      isVegan: false,
-      isDairyFree: false,
-      isNutFree: true,
-    },
-  },
-  {
-    id: 'prod-002',
-    name: {
-      en: 'Chocolate Eclair',
-      es: 'Éclair de Chocolate',
-    },
+    id: 'prod-1',
+    name: { en: 'Chocolate Cake', es: 'Pastel de Chocolate' },
     type: 'dessert',
-    price: 4.5,
-    imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62',
-    imageHint: 'chocolate eclair',
+    price: 25.00,
+    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
+    imageHint: 'chocolate cake',
     description: {
-      en: 'A cream-filled oblong pastry with a rich chocolate topping.',
-      es: 'Un pastelito oblongo relleno de crema con una rica cobertura de chocolate.',
+      en: 'Rich and moist chocolate cake with dark chocolate ganache',
+      es: 'Pastel de chocolate húmedo y rico con ganache de chocolate oscuro'
     },
     ingredients: {
-      en: 'Flour, Eggs, Cream, Chocolate, Sugar',
-      es: 'Harina, Huevos, Crema, Chocolate, Azúcar',
+      en: 'Flour, cocoa, eggs, butter, sugar, dark chocolate',
+      es: 'Harina, cacao, huevos, mantequilla, azúcar, chocolate oscuro'
     },
-    creatorId: 'creator-001',
-    preparationTime: 8,
-    dietaryFlags: {
-      isGlutenFree: false,
-      isVegan: false,
-      isDairyFree: false,
-      isNutFree: true,
-    },
-  },
-  {
-    id: 'prod-003',
-    name: {
-      en: 'Artisanal Sourdough',
-      es: 'Pan de Masa Madre Artesanal',
-    },
-    type: 'savory',
-    price: 8.0,
-    imageUrl: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08',
-    imageHint: 'sourdough bread',
-    description: {
-      en: 'A rustic loaf with a tangy flavor, crisp crust, and soft, chewy interior.',
-      es: 'Un pan rústico con un sabor ácido, corteza crujiente e interior suave y masticable.',
-    },
-    ingredients: {
-      en: 'Sourdough Starter, Flour, Water, Salt',
-      es: 'Masa Madre, Harina, Agua, Sal',
-    },
-    creatorId: 'creator-002',
-    preparationTime: 48,
-    dietaryFlags: {
-      isGlutenFree: false,
-      isVegan: true,
-      isDairyFree: true,
-      isNutFree: true,
-    },
-  },
-  {
-    id: 'prod-004',
-    name: {
-      en: 'Assorted Macarons',
-      es: 'Macarons Surtidos',
-    },
-    type: 'dessert',
-    price: 12.0,
-    imageUrl: 'https://images.unsplash.com/photo-1558326567-98ae2405596b',
-    imageHint: 'macarons assortment',
-    description: {
-      en: 'A box of six colorful French macarons with various fillings.',
-      es: 'Una caja de seis coloridos macarons franceses con varios rellenos.',
-    },
-    ingredients: {
-      en: 'Almond Flour, Sugar, Egg Whites, Ganache',
-      es: 'Harina de Almendras, Azúcar, Claras de Huevo, Ganache',
-    },
-    creatorId: 'creator-001',
-    preparationTime: 12,
-    dietaryFlags: {
-      isGlutenFree: true,
-      isVegan: false,
-      isDairyFree: false,
-      isNutFree: false,
-    },
-  },
-  {
-    id: 'prod-005',
-    name: {
-      en: 'Fudgy Vegan Brownie',
-      es: 'Brownie Vegano Fudgy',
-    },
-    type: 'dessert',
-    price: 5.0,
-    imageUrl: 'https://images.unsplash.com/photo-1623428325208-0eb91d86d4b5',
-    imageHint: 'vegan brownie',
-    description: {
-      en: 'A deliciously rich and fudgy chocolate brownie, completely plant-based.',
-      es: 'Un brownie de chocolate deliciosamente rico y fudgy, completamente a base de plantas.',
-    },
-    ingredients: {
-      en: 'Flour, Cocoa Powder, Vegan Butter, Flax Eggs, Sugar',
-      es: 'Harina, Cacao en Polvo, Mantequilla Vegana, Huevos de Lino, Azúcar',
-    },
-    creatorId: 'creator-002',
+    creatorId: 'c0000001-0000-0000-0000-000000000001',
     preparationTime: 4,
     dietaryFlags: {
       isGlutenFree: false,
-      isVegan: true,
-      isDairyFree: true,
+      isVegan: false,
+      isDairyFree: false,
       isNutFree: true,
     },
   },
   {
-    id: 'prod-006',
-    name: {
-      en: 'Quiche Lorraine',
-      es: 'Quiche Lorraine',
-    },
-    type: 'savory',
-    price: 7.5,
-    imageUrl: 'https://images.unsplash.com/photo-1701197159530-80a188e34dfc',
-    imageHint: 'quiche lorraine',
+    id: 'prod-2',
+    name: { en: 'Vanilla Cupcakes', es: 'Cupcakes de Vainilla' },
+    type: 'pastry',
+    price: 3.50,
+    imageUrl: 'https://images.unsplash.com/photo-1519869325930-281384150729?w=400',
+    imageHint: 'vanilla cupcakes with frosting',
     description: {
-      en: 'A classic savory tart with a rich filling of bacon, eggs, and cream.',
-      es: 'Una clásica tarta salada con un rico relleno de tocino, huevos y crema.',
+      en: 'Light vanilla cupcakes with buttercream frosting',
+      es: 'Cupcakes ligeros de vainilla con frosting de buttercream'
     },
     ingredients: {
-      en: 'Pastry Crust, Bacon, Eggs, Cream, Gruyere Cheese',
-      es: 'Masa de hojaldre, Tocino, Huevos, Crema, Queso Gruyere',
+      en: 'Flour, eggs, butter, sugar, vanilla extract, cream',
+      es: 'Harina, huevos, mantequilla, azúcar, extracto de vainilla, crema'
     },
-    creatorId: 'creator-001',
+    creatorId: 'c0000001-0000-0000-0000-000000000001',
+    preparationTime: 2,
+    dietaryFlags: {
+      isGlutenFree: false,
+      isVegan: false,
+      isDairyFree: false,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-3',
+    name: { en: 'Chocolate Chip Cookies', es: 'Galletas con Chispas de Chocolate' },
+    type: 'cookie',
+    price: 2.00,
+    imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400',
+    imageHint: 'chocolate chip cookies',
+    description: {
+      en: 'Crispy outside, chewy inside chocolate chip cookies',
+      es: 'Galletas crujientes por fuera, suaves por dentro con chispas de chocolate'
+    },
+    ingredients: {
+      en: 'Flour, butter, sugar, eggs, chocolate chips',
+      es: 'Harina, mantequilla, azúcar, huevos, chispas de chocolate'
+    },
+    creatorId: 'c0000001-0000-0000-0000-000000000001',
+    preparationTime: 1,
+    dietaryFlags: {
+      isGlutenFree: false,
+      isVegan: false,
+      isDairyFree: false,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-4',
+    name: { en: 'Tres Leches Cake', es: 'Pastel Tres Leches' },
+    type: 'dessert',
+    price: 30.00,
+    imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400',
+    imageHint: 'tres leches cake slice',
+    description: {
+      en: 'Traditional tres leches cake soaked in three types of milk',
+      es: 'Pastel tradicional tres leches bañado en tres tipos de leche'
+    },
+    ingredients: {
+      en: 'Flour, eggs, condensed milk, evaporated milk, cream, vanilla',
+      es: 'Harina, huevos, leche condensada, leche evaporada, crema, vainilla'
+    },
+    creatorId: 'c0000001-0000-0000-0000-000000000001',
     preparationTime: 6,
     dietaryFlags: {
       isGlutenFree: false,
@@ -164,53 +133,123 @@ export const products: Product[] = [
       isNutFree: true,
     },
   },
+
+  // === MARIA HERMAN - Handmade Crafts & Pastry ===
   {
-    id: 'prod-007',
-    name: {
-      en: 'Gluten-Free Cupcakes',
-      es: 'Cupcakes Sin Gluten',
-    },
-    type: 'dessert',
-    price: 4.0,
-    imageUrl: 'https://images.unsplash.com/photo-1603532648955-039310d9ed75',
-    imageHint: 'cupcakes',
+    id: 'prod-5',
+    name: { en: 'Handmade Wool Blanket', es: 'Colcha de Lana Hecha a Mano' },
+    type: 'handmade',
+    price: 150.00,
+    imageUrl: 'https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?w=400',
+    imageHint: 'knitted wool blanket cozy',
     description: {
-      en: 'Light and fluffy vanilla cupcakes made with gluten-free flour.',
-      es: 'Cupcakes de vainilla ligeros y esponjosos hechos con harina sin gluten.',
+      en: 'Beautiful handwoven wool blanket, perfect for cozy nights',
+      es: 'Hermosa colcha de lana tejida a mano, perfecta para noches acogedoras'
     },
     ingredients: {
-      en: 'Gluten-Free Flour Blend, Sugar, Eggs, Butter, Vanilla',
-      es: 'Mezcla de Harina Sin Gluten, Azúcar, Huevos, Mantequilla, Vainilla',
+      en: '100% natural wool, handwoven with traditional techniques',
+      es: '100% lana natural, tejida a mano con técnicas tradicionales'
     },
-    creatorId: 'creator-002',
-    preparationTime: 3,
+    creatorId: 'c0000002-0000-0000-0000-000000000002',
+    preparationTime: 72,
     dietaryFlags: {
       isGlutenFree: true,
       isVegan: false,
-      isDairyFree: false,
+      isDairyFree: true,
       isNutFree: true,
     },
   },
   {
-    id: 'prod-008',
-    name: {
-      en: 'Spinach Feta Turnover',
-      es: 'Empanada de Espinacas y Feta',
-    },
-    type: 'savory',
-    price: 6.0,
-    imageUrl: 'https://images.unsplash.com/photo-1761243743989-726fb70af78d',
-    imageHint: 'savory pastry',
+    id: 'prod-6',
+    name: { en: 'Christmas Ornaments Set', es: 'Set de Adornos Navideños' },
+    type: 'handmade',
+    price: 45.00,
+    imageUrl: 'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=400',
+    imageHint: 'handmade christmas ornaments decorations',
     description: {
-      en: 'Flaky puff pastry filled with a savory mixture of spinach and feta cheese.',
-      es: 'Hojaldre escamoso relleno de una mezcla salada de espinacas y queso feta.',
+      en: 'Set of 6 handcrafted Christmas ornaments, each unique',
+      es: 'Set de 6 adornos navideños hechos a mano, cada uno único'
     },
     ingredients: {
-      en: 'Puff Pastry, Spinach, Feta Cheese, Onion, Herbs',
-      es: 'Masa de hojaldre, espinacas, queso feta, cebolla, hierbas',
+      en: 'Fabric, beads, thread, natural materials',
+      es: 'Tela, cuentas, hilo, materiales naturales'
     },
-    creatorId: 'creator-002',
-    preparationTime: 4,
+    creatorId: 'c0000002-0000-0000-0000-000000000002',
+    preparationTime: 24,
+    dietaryFlags: {
+      isGlutenFree: true,
+      isVegan: true,
+      isDairyFree: true,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-7',
+    name: { en: 'Artisan Crochet Basket', es: 'Canasta de Crochet Artesanal' },
+    type: 'handmade',
+    price: 35.00,
+    imageUrl: 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=400',
+    imageHint: 'handmade woven basket',
+    description: {
+      en: 'Handmade crochet storage basket, perfect for home decor',
+      es: 'Canasta de almacenamiento de crochet hecha a mano, perfecta para decoración del hogar'
+    },
+    ingredients: {
+      en: 'Cotton rope, natural dyes',
+      es: 'Cuerda de algodón, tintes naturales'
+    },
+    creatorId: 'c0000002-0000-0000-0000-000000000002',
+    preparationTime: 12,
+    dietaryFlags: {
+      isGlutenFree: true,
+      isVegan: true,
+      isDairyFree: true,
+      isNutFree: true,
+    },
+  },
+  {
+    id: 'prod-8',
+    name: { en: 'French Macarons Box', es: 'Caja de Macarons Franceses' },
+    type: 'pastry',
+    price: 28.00,
+    imageUrl: 'https://images.unsplash.com/photo-1569864358642-9d1684040f43?w=400',
+    imageHint: 'french macarons colorful',
+    description: {
+      en: 'Box of 12 assorted French macarons in various flavors',
+      es: 'Caja de 12 macarons franceses surtidos en varios sabores'
+    },
+    ingredients: {
+      en: 'Almond flour, egg whites, sugar, butter, natural flavors',
+      es: 'Harina de almendra, claras de huevo, azúcar, mantequilla, sabores naturales'
+    },
+    creatorId: 'c0000002-0000-0000-0000-000000000002',
+    preparationTime: 6,
+    dietaryFlags: {
+      isGlutenFree: true,
+      isVegan: false,
+      isDairyFree: false,
+      isNutFree: false,
+    },
+  },
+
+  // === YIWONG - Savory Dishes ===
+  {
+    id: 'prod-9',
+    name: { en: 'Truffle Mushroom Pasta', es: 'Pasta con Trufa y Hongos' },
+    type: 'savory',
+    price: 22.00,
+    imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400',
+    imageHint: 'truffle mushroom pasta gourmet',
+    description: {
+      en: 'Fresh homemade pasta with truffle oil and wild mushrooms',
+      es: 'Pasta fresca hecha en casa con aceite de trufa y hongos silvestres'
+    },
+    ingredients: {
+      en: 'Fresh pasta, truffle oil, wild mushrooms, parmesan, cream, garlic',
+      es: 'Pasta fresca, aceite de trufa, hongos silvestres, parmesano, crema, ajo'
+    },
+    creatorId: 'c0000003-0000-0000-0000-000000000003',
+    preparationTime: 2,
     dietaryFlags: {
       isGlutenFree: false,
       isVegan: false,
@@ -219,115 +258,101 @@ export const products: Product[] = [
     },
   },
   {
-    id: 'prod-009',
-    name: {
-      en: 'Hand-knitted Scarf',
-      es: 'Bufanda Tejida a Mano',
-    },
-    type: 'handmade',
-    price: 25.0,
-    imageUrl: 'https://placehold.co/600x400/d1d5db/374151?text=Knitted+Scarf',
-    imageHint: 'knitted scarf',
+    id: 'prod-10',
+    name: { en: 'Artisan Wood-Fired Pizza', es: 'Pizza Artesanal al Horno de Leña' },
+    type: 'savory',
+    price: 18.00,
+    imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400',
+    imageHint: 'wood fired pizza artisan',
     description: {
-      en: 'A warm and cozy scarf, hand-knitted with soft wool blend yarn.',
-      es: 'Una bufanda cálida y acogedora, tejida a mano con suave hilo de mezcla de lana.',
+      en: 'Traditional Neapolitan pizza baked in wood-fired oven',
+      es: 'Pizza napolitana tradicional horneada en horno de leña'
     },
     ingredients: {
-      en: '80% Wool, 20% Acrylic',
-      es: '80% Lana, 20% Acrílico',
+      en: 'Italian flour, San Marzano tomatoes, fresh mozzarella, basil, olive oil',
+      es: 'Harina italiana, tomates San Marzano, mozzarella fresca, albahaca, aceite de oliva'
     },
-    creatorId: 'creator-001',
-    preparationTime: 72,
+    creatorId: 'c0000003-0000-0000-0000-000000000003',
+    preparationTime: 3,
     dietaryFlags: {
-      isGlutenFree: true,
-      isVegan: true,
-      isDairyFree: true,
+      isGlutenFree: false,
+      isVegan: false,
+      isDairyFree: false,
       isNutFree: true,
     },
   },
   {
-    id: 'prod-010',
-    name: {
-      en: 'Handmade Ceramic Mug',
-      es: 'Taza de Cerámica Hecha a Mano',
-    },
-    type: 'handmade',
-    price: 18.0,
-    imageUrl: 'https://placehold.co/600x400/e0e7ff/4338ca?text=Ceramic+Mug',
-    imageHint: 'ceramic mug',
+    id: 'prod-11',
+    name: { en: 'Beef Wellington', es: 'Beef Wellington' },
+    type: 'savory',
+    price: 45.00,
+    imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400',
+    imageHint: 'beef wellington gourmet',
     description: {
-      en: 'A unique, wheel-thrown ceramic mug, perfect for your morning coffee.',
-      es: 'Una taza de cerámica única, hecha en torno, perfecta para tu café de la mañana.',
+      en: 'Classic Beef Wellington with mushroom duxelles and puff pastry',
+      es: 'Clásico Beef Wellington con duxelles de hongos y hojaldre'
     },
     ingredients: {
-      en: 'Stoneware Clay, Glaze',
-      es: 'Arcilla de gres, Esmalte',
+      en: 'Beef tenderloin, puff pastry, mushrooms, prosciutto, dijon mustard',
+      es: 'Lomo de res, hojaldre, hongos, prosciutto, mostaza Dijon'
     },
-    creatorId: 'creator-002',
-    preparationTime: 120,
+    creatorId: 'c0000003-0000-0000-0000-000000000003',
+    preparationTime: 5,
     dietaryFlags: {
-      isGlutenFree: true,
-      isVegan: true,
-      isDairyFree: true,
+      isGlutenFree: false,
+      isVegan: false,
+      isDairyFree: false,
       isNutFree: true,
     },
   },
 ];
 
+// Promociones
 export const promotions: Promotion[] = [
   {
-    id: 'promo-001',
-    title: {
-      en: 'Weekend Pastry Special!',
-      es: '¡Especial de Repostería de Fin de Semana!',
-    },
+    id: 'promo-1',
+    title: { en: 'Weekend Special', es: 'Especial de Fin de Semana' },
     description: {
-      en: 'Get 15% off all pastries this weekend!',
-      es: '¡Obtén un 15% de descuento en toda la repostería este fin de semana!',
+      en: 'Get 20% off on all desserts this weekend!',
+      es: '¡Obtén 20% de descuento en todos los postres este fin de semana!'
     },
-    imageUrl: 'https://images.unsplash.com/photo-1587241321921-91a834d6d191',
-    imageHint: 'bakery display',
-    discountPercentage: 15,
+    imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400',
+    imageHint: 'desserts promotion',
+    discountPercentage: 20,
   },
   {
-    id: 'promo-002',
-    title: {
-      en: 'Try Our New Savory Items',
-      es: 'Prueba Nuestros Nuevos Platos Salados',
-    },
+    id: 'promo-2',
+    title: { en: 'Free Cookie Friday', es: 'Viernes de Galleta Gratis' },
     description: {
-      en: 'Buy any savory item, get a free croissant!',
-      es: '¡Compra cualquier plato salado y llévate un croissant gratis!',
+      en: 'Get a free cookie with any purchase over $15',
+      es: 'Obtén una galleta gratis con cualquier compra mayor a $15'
     },
-    imageUrl: 'https://images.unsplash.com/photo-1707322325935-4c7d6025750b',
-    imageHint: 'savory food',
-    freeItem: 'prod-001',
+    imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400',
+    imageHint: 'cookies promotion',
+    freeItem: 'prod-3',
   },
 ];
 
-export const sampleUser: User = {
-  id: 'user-001',
-  name: 'Alex Doe',
-  email: 'alex.doe@example.com',
-  phone: '555-123-4567',
-  profilePictureUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
-  imageHint: 'person portrait',
-  address: {
-    street: '123 Main St',
-    city: 'Foodville',
-    state: 'CA',
-    zip: '90210',
-    country: 'USA',
-  },
-  roles: ['creator'], // TEMPORARY for demo purposes
-};
+// Helper para obtener productos por tipo
+export const getProductsByType = (type: Product['type']) => 
+  products.filter(p => p.type === type);
 
-export const sampleCreator: Creator = {
-  id: 'creator-001',
-  name: 'Julia Pastry',
-  email: 'julia.p@tastyapp.com',
-  profilePictureUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c',
-  imageHint: 'creator cooking',
-  gender: 'female',
-  skills: ['pastry', 'dessert'],
-};
+// Helper para obtener productos dulces (pastry, dessert, cookie)
+export const getSweetProducts = () => 
+  products.filter(p => ['pastry', 'dessert', 'cookie'].includes(p.type));
+
+// Helper para obtener productos salados
+export const getSavoryProducts = () => 
+  products.filter(p => p.type === 'savory');
+
+// Helper para obtener productos handmade
+export const getHandmadeProducts = () => 
+  products.filter(p => p.type === 'handmade');
+
+// Helper para obtener productos por creador
+export const getProductsByCreator = (creatorId: string) =>
+  products.filter(p => p.creatorId === creatorId);
+
+// Helper para obtener un creador por ID
+export const getCreatorById = (id: string) =>
+  creators.find(c => c.id === id);

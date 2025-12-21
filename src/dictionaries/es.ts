@@ -71,6 +71,7 @@ const dictionary = {
     sweets: 'Dulces',
     savory: 'Salados',
     handmades: 'Hecho a Mano',
+    combos: 'Combos',
     creators: 'Creadores',
     creatorDashboard: 'Panel de Creador',
     changeLanguage: 'Cambiar idioma',
@@ -147,8 +148,15 @@ const dictionary = {
     dashboard: 'Dashboard',
     orders: 'Pedidos',
     products: 'Productos',
+    combos: 'Combos',
     promotions: 'Promociones',
+    settings: 'Configuración',
     backToStore: 'Volver a la Tienda',
+    // Enlaces administrativos
+    analytics: 'Analytics',
+    allCreators: 'Todos los Creadores',
+    allProducts: 'Todos los Productos',
+    allOffers: 'Todas las Ofertas',
   },
   orderStatuses: {
     new: 'Nuevo',

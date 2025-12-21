@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Package, PackageCheck, Percent } from 'lucide-react';
 import { RevenueChart } from '@/components/creator/RevenueChart';
+import { OrderStatusStats } from '@/components/creator/OrderStatusStats';
 import { useOrders } from '@/hooks/useOrders';
 import { useDictionary } from '@/hooks/useDictionary';
 
@@ -9,19 +10,20 @@ export default function CreatorDashboardPage() {
   const { orders } = useOrders();
   const dict = useDictionary();
 
+  const totalOrderValue = orders
+    .filter(o => o.status === 'delivered')
+    .reduce((sum, o) => sum + o.total, 0);
+
   const stats = {
-    totalRevenue: orders
-      .filter(o => o.status === 'delivered')
-      .reduce((sum, o) => sum + o.total, 0),
+    totalRevenue: totalOrderValue * 0.9, // El creador recibe 90%
+    totalOrderValue: totalOrderValue, // Valor total de pedidos
     activeOrders: orders.filter(o => o.status === 'preparing' || o.status === 'new').length,
     completedOrders: orders.filter(o => o.status === 'delivered').length,
-    tastyCommission: orders
-      .filter(o => o.status === 'delivered')
-      .reduce((sum, o) => sum + o.total, 0) * 0.1,
+    tastyCommission: totalOrderValue * 0.1, // Tasty se queda con 10%
   };
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(amount);
 
   return (
     <div>
@@ -34,8 +36,9 @@ export default function CreatorDashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">{dict.creatorDashboard.totalRevenue.description}</p>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">Tus ganancias (90% de {formatCurrency(stats.totalOrderValue)})</p>
+            <p className="text-xs text-red-500">Comisión Tasty: {formatCurrency(stats.tastyCommission)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -69,6 +72,8 @@ export default function CreatorDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <OrderStatusStats />
 
       <Card>
         <CardHeader>
