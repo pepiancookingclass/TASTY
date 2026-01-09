@@ -1,13 +1,10 @@
 {
-  "analytics": {
-    "enable": true
-  },
-  "speedInsights": {
-    "enable": true
-  },
   "functions": {
     "app/api/analytics/route.ts": {
       "maxDuration": 10
     }
   }
 }
+
+
+
