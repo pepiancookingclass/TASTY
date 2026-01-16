@@ -9,8 +9,8 @@ ADD COLUMN IF NOT EXISTS creator_latitude DECIMAL(10, 8),
 ADD COLUMN IF NOT EXISTS creator_longitude DECIMAL(11, 8),
 ADD COLUMN IF NOT EXISTS creator_address TEXT,
 ADD COLUMN IF NOT EXISTS creator_delivery_radius INTEGER DEFAULT 20, -- km máximo de entrega
-ADD COLUMN IF NOT EXISTS creator_base_delivery_fee DECIMAL(8, 2) DEFAULT 15.00,
-ADD COLUMN IF NOT EXISTS creator_per_km_fee DECIMAL(8, 2) DEFAULT 2.00;
+ADD COLUMN IF NOT EXISTS creator_base_delivery_fee DECIMAL(8, 2) DEFAULT 25.00,
+ADD COLUMN IF NOT EXISTS creator_per_km_fee DECIMAL(8, 2) DEFAULT 3.00;
 
 -- 2. Agregar tabla para ubicaciones temporales del creador
 CREATE TABLE IF NOT EXISTS creator_temporary_locations (
@@ -120,9 +120,9 @@ BEGIN
   LIMIT 1;
 
   IF NOT FOUND OR creator_location.latitude IS NULL THEN
-    -- Sin ubicación del creador, usar tarifa base
+    -- Sin ubicación del creador, usar tarifa base Q25
     RETURN QUERY SELECT 
-      15.00::DECIMAL(8, 2) as delivery_fee,
+      25.00::DECIMAL(8, 2) as delivery_fee,
       0.00::DECIMAL(8, 2) as distance_km,
       'Ubicación no configurada'::TEXT as creator_location,
       false as is_within_radius;
@@ -257,3 +257,7 @@ PRÓXIMOS PASOS:
 3. Actualizar checkout para usar nuevas funciones
 4. Probar con múltiples creadores
 */
+
+
+
+

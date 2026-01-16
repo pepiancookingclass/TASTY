@@ -165,3 +165,7 @@ COMMENT ON FUNCTION get_order_items_complete IS 'Obtiene los items de un pedido 
 COMMENT ON FUNCTION can_user_cancel_order IS 'Verifica si un usuario puede cancelar su pedido (48h + validaciones)';
 COMMENT ON FUNCTION cancel_user_order IS 'Cancela un pedido del usuario con todas las validaciones';
 COMMENT ON FUNCTION get_cancellation_hours_remaining IS 'Obtiene las horas restantes para poder cancelar un pedido';
+
+
+
+

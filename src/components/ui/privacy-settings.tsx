@@ -37,11 +37,11 @@ export function PrivacySettings() {
 
   // Cargar estado de privacidad
   const loadPrivacyStatus = async () => {
-    if (!user) return;
+    if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
-        .rpc('get_user_privacy_status', { user_uuid: user.id });
+        .rpc('get_user_privacy_status', { user_id: user.id });
 
       if (error) throw error;
       
@@ -67,7 +67,7 @@ export function PrivacySettings() {
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .rpc('delete_user_location_data', { user_uuid: user.id });
+        .rpc('delete_user_personal_data', { user_id: user.id });
 
       if (error) throw error;
 

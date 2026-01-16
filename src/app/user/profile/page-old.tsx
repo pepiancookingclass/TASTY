@@ -317,38 +317,26 @@ export default function UserProfilePage() {
     if (!authUser) return;
     
     try {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('roles')
-        .eq('id', authUser.id)
-        .single();
-      
-      const currentRoles = userData?.roles || [];
-      
-      if (!currentRoles.includes('creator')) {
-        const { error } = await supabase
-          .from('users')
-          .upsert({
-            id: authUser.id,
-            roles: [...currentRoles, 'creator']
-          });
-        
-        if (error) throw error;
-      }
-      
-      toast({
-        title: "¡Ahora eres un Creador!",
-        description: "El Panel de Creador ahora está disponible en el menú.",
+      // Llamar a la función SQL para procesar la solicitud
+      const { error } = await supabase.rpc('process_creator_application', {
+        user_uuid: authUser.id
       });
       
-      // Recargar la página para actualizar los roles
+      if (error) throw error;
+      
+      toast({
+        title: "📋 ¡Solicitud Enviada!",
+        description: "Tu solicitud para ser creador está siendo revisada. Te contactaremos en 24-48 horas.",
+      });
+      
+      // Recargar la página para actualizar el estado
       window.location.reload();
     } catch (error) {
-      console.error("Error becoming a creator: ", error);
+      console.error("Error submitting creator application: ", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo actualizar tu rol. Intenta de nuevo.",
+        description: "No se pudo enviar tu solicitud. Intenta de nuevo.",
       });
     }
   }

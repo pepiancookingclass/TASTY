@@ -138,3 +138,7 @@ $$;
 -- 5. HÍBRIDO: save_data = true + auto_delete = true
 --    = se guarda temporalmente, se elimina después de entrega
 -- =====================================================
+
+
+
+

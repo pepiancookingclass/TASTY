@@ -296,3 +296,7 @@ PRÓXIMOS PASOS:
 3. Probar con nuevo registro
 4. Verificar logs: SELECT * FROM email_logs;
 */
+
+
+
+

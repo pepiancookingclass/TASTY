@@ -365,3 +365,7 @@ PRÓXIMO PASO:
 2. Probar: SELECT test_welcome_emails('ruajhostal@gmail.com', 'Rua Test', false);
 3. Verificar emails en bandeja de entrada
 */
+
+
+
+

@@ -29,7 +29,7 @@ import { useDictionary } from '@/hooks/useDictionary';
 import { Skeleton } from '../ui/skeleton';
 
 export function SiteHeader() {
-  const { state } = useCart();
+  const { state, isLoaded } = useCart();
   const { language, setLanguage } = useLanguage();
   const { user, loading } = useUser();
   const { signOut } = useAuth();
@@ -182,7 +182,7 @@ export function SiteHeader() {
             <Link href="/cart">
             <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
-                {itemCount > 0 && (
+                {isLoaded && itemCount > 0 && (
                 <Badge
                     variant="default"
                     className="absolute top-2 right-1 h-4 w-4 justify-center rounded-full p-0 text-xs"

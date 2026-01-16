@@ -14,9 +14,11 @@ import { useDictionary } from '@/hooks/useDictionary';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Loader2, Check, X, MapPin } from 'lucide-react';
+import { Camera, Loader2, Check, X, MapPin, ChefHat } from 'lucide-react';
 import { PrivacySettings } from '@/components/ui/privacy-settings';
 import { MultiImageUpload } from '@/components/ui/multi-image-upload';
+import { LocationSelector } from '@/components/ui/location-selector';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 type Skill = 'pastry' | 'savory' | 'handmade';
 
@@ -62,7 +64,6 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   // Preview state para foto
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -71,6 +72,21 @@ export default function UserProfilePage() {
   // Estados para dropdowns de ubicación
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [availableMunicipalities, setAvailableMunicipalities] = useState<string[]>([]);
+
+  // ✅ COPIADO DEL CHECKOUT: Estados para ubicación del creador
+  const { location: creatorGPSLocation, error: locationError, loading: isGettingLocationGPS, getLocation } = useGeolocation();
+  const [creatorManualLocation, setCreatorManualLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const [creatorDeliveryConfig, setCreatorDeliveryConfig] = useState({
+    latitude: null as number | null,
+    longitude: null as number | null,
+    address: '',
+    deliveryRadius: 25,
+    baseFee: 25.00,
+    perKmFee: 3.00
+  });
+  
+  const finalCreatorLocation = creatorGPSLocation || creatorManualLocation;
 
   const isCreator = roles.includes('creator');
 
@@ -112,6 +128,24 @@ export default function UserProfilePage() {
           
           console.warn('📝 DATOS CARGADOS:', JSON.stringify(newFormData, null, 2));
           setFormData(newFormData);
+          
+          // ✅ CARGAR CONFIGURACIÓN DE DELIVERY DEL CREADOR
+          if (isCreator && userData) {
+            setCreatorDeliveryConfig({
+              latitude: userData.creator_latitude,
+              longitude: userData.creator_longitude,
+              address: userData.creator_address || '',
+              deliveryRadius: userData.creator_delivery_radius || 25,
+              baseFee: userData.creator_base_delivery_fee || 25.00,
+              perKmFee: userData.creator_per_km_fee || 3.00
+            });
+            console.log('🚚 Profile: Configuración delivery cargada:', {
+              lat: userData.creator_latitude,
+              lng: userData.creator_longitude,
+              address: userData.creator_address,
+              radius: userData.creator_delivery_radius
+            });
+          }
           
           // Configurar departamento y municipios si ya hay datos
           if (userData.address_state) {
@@ -252,6 +286,47 @@ export default function UserProfilePage() {
     }
   };
 
+  // ✅ COPIADO DEL CHECKOUT: Funciones para ubicación del creador
+  const handleCreatorLocationSelected = (location: { lat: number; lng: number }) => {
+    console.log('📍 Profile: Ubicación del creador seleccionada:', location);
+    setCreatorDeliveryConfig(prev => ({
+      ...prev,
+      latitude: location.lat,
+      longitude: location.lng,
+      address: `Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}`
+    }));
+    setCreatorManualLocation(location);
+    setShowLocationSelector(false);
+    
+    toast({
+      title: '✅ Ubicación configurada',
+      description: 'Tu ubicación de entrega ha sido guardada correctamente',
+    });
+  };
+
+  const handleGetCreatorLocation = () => {
+    console.log('📍 Profile: Obteniendo ubicación GPS del creador...');
+    getLocation();
+  };
+
+  // Efecto para actualizar ubicación cuando se obtiene GPS
+  useEffect(() => {
+    if (creatorGPSLocation && isCreator) {
+      console.log('📍 Profile: GPS obtenido para creador:', creatorGPSLocation);
+      setCreatorDeliveryConfig(prev => ({
+        ...prev,
+        latitude: creatorGPSLocation.lat,
+        longitude: creatorGPSLocation.lng,
+        address: `Ubicación GPS: ${creatorGPSLocation.lat.toFixed(6)}, ${creatorGPSLocation.lng.toFixed(6)}`
+      }));
+      
+      toast({
+        title: '✅ Ubicación GPS obtenida',
+        description: 'Tu ubicación actual ha sido configurada para entregas',
+      });
+    }
+  }, [creatorGPSLocation, isCreator]);
+
   // Guardar cambios
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,9 +349,18 @@ export default function UserProfilePage() {
         address_country: formData.country,
         ...(isCreator && { 
           skills: formData.skills, 
-          workspace_photos: formData.workspacePhotos 
+          workspace_photos: formData.workspacePhotos,
+          // ✅ GUARDAR CONFIGURACIÓN DE DELIVERY
+          creator_latitude: creatorDeliveryConfig.latitude,
+          creator_longitude: creatorDeliveryConfig.longitude,
+          creator_address: creatorDeliveryConfig.address,
+          creator_delivery_radius: creatorDeliveryConfig.deliveryRadius,
+          creator_base_delivery_fee: creatorDeliveryConfig.baseFee,
+          creator_per_km_fee: creatorDeliveryConfig.perKmFee
         })
       };
+
+      console.log('💾 Profile: Guardando datos del creador:', dataToSave);
 
       const { error } = await supabase
         .from('users')
@@ -297,6 +381,34 @@ export default function UserProfilePage() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleBecomeCreator = async () => {
+    if (!authUser) return;
+    
+    try {
+      // Llamar a la función SQL para procesar la solicitud
+      const { error } = await supabase.rpc('process_creator_application', {
+        user_uuid: authUser.id
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "📋 ¡Solicitud Enviada!",
+        description: "Tu solicitud para ser creador está siendo revisada. Te contactaremos en 24-48 horas.",
+      });
+      
+      // Recargar la página para actualizar el estado
+      window.location.reload();
+    } catch (error) {
+      console.error("Error submitting creator application: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar tu solicitud. Intenta de nuevo.",
+      });
     }
   };
 
@@ -521,6 +633,31 @@ export default function UserProfilePage() {
                     </>
                   )}
 
+                  {/* Opción para convertirse en Creador */}
+                  {!isCreator && (
+                    <>
+                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg border border-primary/20">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                            <ChefHat className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-headline text-lg mb-2">¡Únete a nuestros Creadores!</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Vende tus productos artesanales, recibe 90% de las ganancias y forma parte de la comunidad TASTY.
+                            </p>
+                            <Button onClick={handleBecomeCreator} className="bg-primary hover:bg-primary/90">
+                              <ChefHat className="w-4 h-4 mr-2" />
+                              Solicitar ser Creador
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
+                    </>
+                  )}
+
                   {/* Dirección de Entrega */}
                   <div>
                     <h3 className="font-headline text-lg mb-4">Dirección de Entrega</h3>
@@ -582,6 +719,134 @@ export default function UserProfilePage() {
                     </div>
                   </div>
 
+                  {/* ✅ NUEVA SECCIÓN: Configuración de Entregas para Creadores */}
+                  {isCreator && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h3 className="font-headline text-lg mb-4">📍 Dirección de tu Lugar Creador</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Configura desde dónde salen tus pedidos para calcular entregas correctamente
+                        </p>
+                        
+                        {/* Botones de ubicación - COPIADOS DEL CHECKOUT */}
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Button 
+                              onClick={handleGetCreatorLocation}
+                              disabled={isGettingLocationGPS}
+                              className="w-full"
+                              size="lg"
+                              variant="default"
+                            >
+                              {isGettingLocationGPS ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Obteniendo ubicación...
+                                </>
+                              ) : (
+                                <>
+                                  <MapPin className="mr-2 h-4 w-4" />
+                                  📍 Usar mi ubicación actual
+                                </>
+                              )}
+                            </Button>
+                            
+                            <Button 
+                              onClick={() => {
+                                console.log('🗺️ Profile: Abriendo LocationSelector para creador...');
+                                setShowLocationSelector(true);
+                              }}
+                              className="w-full"
+                              size="lg"
+                              variant="outline"
+                            >
+                              <MapPin className="mr-2 h-4 w-4" />
+                              📌 Seleccionar en mapa
+                            </Button>
+                          </div>
+                          
+                          {locationError && (
+                            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
+                              ❌ {locationError}
+                              <p className="mt-2 text-xs">
+                                💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Mostrar ubicación configurada */}
+                          {(creatorDeliveryConfig.latitude && creatorDeliveryConfig.longitude) && (
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                                  <MapPin className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-green-800">
+                                    📍 Ubicación de entrega configurada
+                                  </h4>
+                                  <p className="text-sm text-green-700">
+                                    Lat: {creatorDeliveryConfig.latitude.toFixed(6)}, Lng: {creatorDeliveryConfig.longitude.toFixed(6)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Configuración de delivery */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div className="space-y-2">
+                              <Label>📏 Radio de Entrega (km)</Label>
+                              <Input 
+                                type="number" 
+                                value={creatorDeliveryConfig.deliveryRadius} 
+                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
+                                  ...prev,
+                                  deliveryRadius: parseInt(e.target.value) || 25
+                                }))}
+                                placeholder="25"
+                                disabled={isSaving}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>💰 Tarifa Base (Q)</Label>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                value={creatorDeliveryConfig.baseFee} 
+                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
+                                  ...prev,
+                                  baseFee: parseFloat(e.target.value) || 25.00
+                                }))}
+                                placeholder="25.00"
+                                disabled={isSaving}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>🚗 Por km extra (Q)</Label>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                value={creatorDeliveryConfig.perKmFee} 
+                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
+                                  ...prev,
+                                  perKmFee: parseFloat(e.target.value) || 3.00
+                                }))}
+                                placeholder="3.00"
+                                disabled={isSaving}
+                              />
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-gray-600">
+                            💡 Los primeros 3km están incluidos en la tarifa base. El sistema calculará automáticamente el costo de entrega basado en la distancia desde tu ubicación.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   {/* Botón Guardar */}
                   <div className="flex justify-end pt-4">
                     <Button type="submit" disabled={isSaving}>
@@ -604,6 +869,21 @@ export default function UserProfilePage() {
           <PrivacySettings />
         </div>
       </div>
+      
+      {/* ✅ MODAL LOCATION SELECTOR - COPIADO DEL CHECKOUT */}
+      {showLocationSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <LocationSelector
+              onLocationSelected={handleCreatorLocationSelected}
+              onCancel={() => {
+                console.log('❌ Profile: LocationSelector cancelado');
+                setShowLocationSelector(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

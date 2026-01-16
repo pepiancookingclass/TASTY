@@ -108,3 +108,7 @@ UNION ALL
 SELECT 'TEST 2: Resend Config' as test, check_resend_config() as result  
 UNION ALL
 SELECT 'TEST 3: Edge Function' as test, check_edge_function() as result;
+
+
+
+

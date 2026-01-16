@@ -22,3 +22,7 @@ ORDER BY p.proname;
 
 -- 3. Verificar versión de la extensión http
 SELECT extname, extversion FROM pg_extension WHERE extname = 'http';
+
+
+
+

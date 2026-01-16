@@ -43,3 +43,7 @@ INSERT INTO users (
     name = EXCLUDED.name,
     email = EXCLUDED.email,
     updated_at = NOW();
+
+
+
+

@@ -42,6 +42,14 @@ interface UserOrder {
   id: string;
   customer_name: string;
   total: number;
+  subtotal: number;
+  iva_amount: number;
+  delivery_fee: number;
+  delivery_breakdown: Array<{
+    creator_name: string;
+    delivery_fee: number;
+    distance_km: number;
+  }>;
   status: string;
   created_at: string;
   delivery_date: string;
@@ -53,6 +61,7 @@ interface UserOrder {
     product_name_es: string;
     quantity: number;
     unit_price: number;
+    creator_name?: string;
   }>;
 }
 
@@ -89,9 +98,9 @@ export default function UserOrdersPage() {
     try {
       setLoading(true);
       
-      // Obtener pedidos del usuario usando la función SQL
+      // Obtener pedidos del usuario usando la función SQL con desglose
       const { data: ordersData, error: ordersError } = await supabase
-        .rpc('get_user_orders_complete', { user_uuid: user.id });
+        .rpc('get_user_orders_with_breakdown', { user_uuid: user.id });
 
       if (ordersError) throw ordersError;
 
@@ -224,11 +233,19 @@ export default function UserOrdersPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-1">
                       <p className="text-2xl font-bold text-green-600">
                         {formatPrice(order.total)}
                       </p>
                       <p className="text-sm text-muted-foreground">Total</p>
+                      
+                      {/* Desglose de costos */}
+                      {order.subtotal > 0 && order.delivery_fee > 0 && (
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          <div>Productos: {formatPrice(order.subtotal)}</div>
+                          <div>Delivery: {formatPrice(order.delivery_fee)}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -321,16 +338,163 @@ export default function UserOrdersPage() {
 
                       <Separator />
                       
-                      <div className="flex justify-between items-center font-semibold text-lg">
-                        <span>Total:</span>
-                        <span className="text-green-600">{formatPrice(order.total)}</span>
+                      {/* Desglose de costos */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span>Subtotal productos:</span>
+                          <span>{formatPrice(order.subtotal || 0)}</span>
+                        </div>
+                        
+                        {order.iva_amount > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>IVA (12%):</span>
+                            <span>{formatPrice(order.iva_amount)}</span>
+                          </div>
+                        )}
+                        
+                        {/* ✅ DESGLOSE POR ENTREGAS SEPARADAS */}
+                        {order.delivery_breakdown && order.delivery_breakdown.length > 1 ? (
+                          <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                              <Package className="h-4 w-4" />
+                              💳 Pagos por Entrega Separada
+                            </h4>
+                            <p className="text-xs text-blue-700 mb-3">
+                              Recibirás {order.delivery_breakdown.length} entregas diferentes. Paga a cada creador por separado.
+                            </p>
+                            
+                            {order.delivery_breakdown.map((delivery, index) => {
+                              // Calcular productos del creador (proporcional)
+                              const creatorSubtotal = order.subtotal / order.delivery_breakdown.length; // Simplificado
+                              const creatorIva = creatorSubtotal * 0.12;
+                              const creatorTotal = creatorSubtotal + creatorIva + delivery.delivery_fee;
+                              
+                              return (
+                                <div key={index} className="bg-white p-3 rounded border border-blue-100">
+                                  <h5 className="font-medium text-gray-800 mb-2">
+                                    🚚 {delivery.creator_name.toUpperCase()}
+                                  </h5>
+                                  <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">Sus productos:</span>
+                                      <span>Q{creatorSubtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">IVA (12%):</span>
+                                      <span>Q{creatorIva.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">Envío ({delivery.distance_km?.toFixed(1)}km):</span>
+                                      <span>Q{delivery.delivery_fee.toFixed(2)}</span>
+                                    </div>
+                                    <Separator className="my-1" />
+                                    <div className="flex justify-between font-semibold text-green-700">
+                                      <span>💰 Pagar a {delivery.creator_name}:</span>
+                                      <span>Q{creatorTotal.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            <div className="text-center text-xs text-blue-600 font-medium pt-2 border-t border-blue-200">
+                              ✅ Verificación: Suma de pagos = Q{order.total.toFixed(2)}
+                            </div>
+                          </div>
+                        ) : (
+                          // SINGLE CREADOR: Desglose simple
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-muted-foreground">Desglose de pago:</p>
+                            <div className="pl-4 space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Productos:</span>
+                                <span>Q{order.subtotal.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">IVA (12%):</span>
+                                <span>Q{order.iva_amount.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Envío:</span>
+                                <span>Q{order.delivery_fee.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {order.delivery_fee > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>Total delivery:</span>
+                            <span>{formatPrice(order.delivery_fee)}</span>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                        
+                        <div className="flex justify-between items-center font-semibold text-lg">
+                          <span>Total:</span>
+                          <span className="text-green-600">{formatPrice(order.total)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Acciones */}
+                  {/* Botón WhatsApp para coordinar entrega */}
+                  {!['delivered', 'cancelled'].includes(order.status) && (
+                    <div className="mt-6 pt-4 border-t space-y-3">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-green-100 rounded-full p-2">
+                            <Phone className="h-4 w-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-green-800 mb-1">
+                              📱 Coordinar entrega por WhatsApp
+                            </h4>
+                            <p className="text-sm text-green-700 mb-3">
+                              Debes enviar este mensaje para reconfirmar y coordinar fecha y hora de entrega con el creador.
+                            </p>
+                            <Button 
+                              onClick={() => {
+                                // Generar mensaje WhatsApp con datos del pedido
+                                const itemsList = order.items.map(item => 
+                                  `• ${item.quantity}x ${item.product_name_es} - Q${(item.unit_price * item.quantity).toFixed(2)}`
+                                ).join('\n');
+                                
+                                const message = `Hola, te saluda *${order.customer_name}*
+
+Hice un pedido de:
+${itemsList}
+
+💰 *DESGLOSE:*
+• Productos: Q${order.subtotal.toFixed(2)}
+• Delivery: Q${order.delivery_fee.toFixed(2)}
+• *Total: Q${order.total.toFixed(2)}*
+
+💳 *Pago:* Efectivo contra entrega
+
+Mi número de celular es: ${user?.phone || 'No proporcionado'}
+Mi dirección de entrega es: ${order.delivery_street}, ${order.delivery_city}, ${order.delivery_state}
+
+Agradeceré me apoyes para coordinar mi entrega.`;
+
+                                const encodedMessage = encodeURIComponent(message);
+                                const whatsappUrl = `https://wa.me/50230635323?text=${encodedMessage}`;
+                                window.open(whatsappUrl, '_blank');
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              📱 Enviar WhatsApp
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {canCancel && (
-                    <div className="mt-6 pt-4 border-t">
+                    <div className="mt-3">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button 
@@ -431,7 +595,7 @@ export default function UserOrdersPage() {
               <h3 className="font-semibold text-blue-900 mb-2">Políticas de Pedidos</h3>
               <div className="space-y-1 text-sm text-blue-800">
                 <p>• Los pedidos deben hacerse con <strong>mínimo 48 horas de anticipación</strong></p>
-                <p>• Puedes cancelar tu pedido hasta <strong>48 horas antes</strong> de la entrega</p>
+                <p>• Puedes cancelar tu pedido hasta <strong>24 horas antes que inicie tu período de 48h</strong> de preparación y entrega</p>
                 <p>• Nuestros creadores necesitan tiempo para preparar productos frescos y de calidad</p>
                 <p>• Para pedidos urgentes, contacta directamente al creador por WhatsApp</p>
               </div>

@@ -142,3 +142,7 @@ COMMENT ON FUNCTION get_user_orders_with_items IS 'Obtiene todos los pedidos de 
 COMMENT ON FUNCTION get_order_items_detailed IS 'Obtiene los items de un pedido con precios calculados';
 COMMENT ON FUNCTION can_user_cancel_order IS 'Verifica si un usuario puede cancelar su pedido (48h + validaciones)';
 COMMENT ON FUNCTION cancel_user_order IS 'Cancela un pedido del usuario con todas las validaciones';
+
+
+
+

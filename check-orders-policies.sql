@@ -8,3 +8,7 @@ SELECT
 FROM pg_policies 
 WHERE tablename IN ('orders', 'order_items')
 ORDER BY tablename, cmd;
+
+
+
+

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/providers/auth-provider';
 import { useUser } from '@/hooks/useUser';
@@ -21,7 +21,9 @@ import { useToast } from '@/hooks/use-toast';
 import { createOrder } from '@/lib/services/orders';
 import { useRouter } from 'next/navigation';
 import { DeliveryMap } from '@/components/ui/delivery-map';
+import { LocationSelector } from '@/components/ui/location-selector';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { supabase } from '@/lib/supabase';
 
 // Datos de Guatemala (mismo que en perfil)
 const GUATEMALA_DEPARTMENTS = {
@@ -70,20 +72,36 @@ export default function CheckoutPage() {
   );
 
   // Estados para delivery dinámico
-  const [deliveryFee, setDeliveryFee] = useState(15.0);
+  const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
+  const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
   const { location: userLocation, error: locationError, loading: isGettingLocation, getLocation } = useGeolocation();
+  
+  // Estado para delivery breakdown
+  const [deliveryBreakdown, setDeliveryBreakdown] = useState<Array<{
+    creator_id: string;
+    creator_name: string;
+    delivery_fee: number;
+    distance_km: number;
+  }>>([]);
+  
+  // Estado para ubicación manual
+  const [manualLocation, setManualLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const finalLocation = userLocation || manualLocation;
 
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const platformFee = subtotal * 0.1;
-  const total = subtotal + platformFee + deliveryFee;
+  const ivaRate = 0.12; // 12% IVA
+  const ivaAmount = subtotal * ivaRate;
+  const subtotalWithIva = subtotal + ivaAmount;
+  const total = subtotalWithIva + (deliveryFee || 0);
 
   const maxPreparationTime = Math.max(...items.map(item => item.product.preparationTime), 0);
   
   // Política de 48 horas: la entrega debe ser mínimo 48 horas después del pedido
   const minimumDeliveryTime = 48; // horas
-  const earliestDeliveryDate = addHours(new Date(), minimumDeliveryTime);
-  const estimatedDeliveryDate = addHours(earliestDeliveryDate, maxPreparationTime);
+  const estimatedDeliveryDate = addHours(new Date(), minimumDeliveryTime);
   const formattedDeliveryDate = format(estimatedDeliveryDate, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
 
   const formatPrice = (price: number) => {
@@ -106,7 +124,181 @@ export default function CheckoutPage() {
   // Callback para actualizar tarifa de delivery
   const handleDeliveryFeeCalculated = (fee: number, distance?: number) => {
     setDeliveryFee(fee);
+    setIsCalculatingDelivery(false);
   };
+
+  // Efecto para calcular delivery cuando se selecciona ubicación
+  useEffect(() => {
+    console.log('🔄 Checkout: useEffect delivery ejecutándose con:', {
+      finalLocation: !!finalLocation,
+      department: deliveryData.department,
+      municipality: deliveryData.municipality,
+      shouldCalculate: !!(finalLocation && deliveryData.department && deliveryData.municipality)
+    });
+    
+    if (finalLocation && deliveryData.department && deliveryData.municipality) {
+      console.log('✅ Checkout: Condiciones cumplidas, iniciando cálculo de delivery...');
+      console.log('📍 Checkout: Usando ubicación:', manualLocation ? 'MANUAL' : 'GPS');
+      setIsCalculatingDelivery(true);
+      
+      // ✅ NUEVO: Usar función SQL que valida radio de entrega
+      setTimeout(async () => {
+        try {
+          console.log('💰 Checkout: Calculando delivery con validación de distancia para ubicación:', finalLocation);
+          console.log('🛒 Checkout: Items en carrito:', items.length);
+          console.log('🏪 Checkout: Productos por creador:', items.map(item => ({
+            productName: item.product.name,
+            creatorId: item.product.creatorId,
+            quantity: item.quantity
+          })));
+          
+          // Obtener creadores únicos del carrito
+          const creatorIds = [...new Set(items.map(item => item.product.creatorId))];
+          console.log('👥 Checkout: Creadores únicos encontrados:', creatorIds);
+          console.log('📍 Checkout: Ubicación final del cliente:', {
+            lat: finalLocation.lat,
+            lng: finalLocation.lng,
+            source: userLocation ? 'GPS' : 'Manual'
+          });
+          
+          let totalDeliveryFee = 0;
+          let allCreatorsWithinRange = true;
+          const deliveryResults = [];
+          
+          // Calcular delivery por cada creador usando función SQL
+          for (const creatorId of creatorIds) {
+            console.log(`🚚 Checkout: Calculando delivery para creador ${creatorId}`);
+            console.log(`📍 Checkout: Ubicación cliente:`, { lat: finalLocation.lat, lng: finalLocation.lng });
+            
+            const { data, error } = await supabase
+              .rpc('calculate_creator_delivery_fee', {
+                creator_uuid: creatorId,
+                client_latitude: finalLocation.lat,
+                client_longitude: finalLocation.lng
+              });
+
+            console.log(`🔍 Checkout: Respuesta SQL para creador ${creatorId}:`, { data, error });
+
+            if (error) {
+              console.error(`❌ Checkout: Error calculando delivery para creador ${creatorId}:`, error);
+              console.error(`❌ Checkout: Detalles del error:`, {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+              });
+              throw error;
+            }
+
+            if (!data || data.length === 0) {
+              console.error(`❌ Checkout: No se recibieron datos para creador ${creatorId}`);
+              throw new Error(`No se pudo calcular delivery para creador ${creatorId}`);
+            }
+
+            const deliveryInfo = data[0];
+            deliveryResults.push({ creatorId, ...deliveryInfo });
+            
+            console.log(`📊 Checkout: Resultado delivery creador ${creatorId}:`, {
+              delivery_fee: deliveryInfo.delivery_fee,
+              distance_km: deliveryInfo.distance_km,
+              creator_location: deliveryInfo.creator_location,
+              is_within_radius: deliveryInfo.is_within_radius
+            });
+            
+            // Verificar si el creador tiene ubicación configurada
+            if (deliveryInfo.creator_location === 'Ubicación no configurada') {
+              console.log(`⚠️ Checkout: Creador ${creatorId} NO TIENE UBICACIÓN CONFIGURADA`);
+              console.log(`💡 Checkout: Usando tarifa base de Q${deliveryInfo.delivery_fee} (sin validación de distancia)`);
+              totalDeliveryFee += parseFloat(deliveryInfo.delivery_fee);
+            } else if (!deliveryInfo.is_within_radius) {
+              console.log(`🚫 Checkout: Creador ${creatorId} FUERA DE RANGO`);
+              console.log(`📏 Checkout: Distancia: ${deliveryInfo.distance_km}km`);
+              console.log(`📍 Checkout: Ubicación creador: ${deliveryInfo.creator_location}`);
+              console.log(`🎯 Checkout: Radio máximo: 20km`);
+              allCreatorsWithinRange = false;
+            } else {
+              console.log(`✅ Checkout: Creador ${creatorId} DENTRO DEL RANGO`);
+              console.log(`💰 Checkout: Fee: Q${deliveryInfo.delivery_fee}`);
+              console.log(`📏 Checkout: Distancia: ${deliveryInfo.distance_km}km`);
+              totalDeliveryFee += parseFloat(deliveryInfo.delivery_fee);
+            }
+          }
+          
+          if (!allCreatorsWithinRange) {
+            console.log('🚫 Checkout: ENTREGA NO DISPONIBLE - Uno o más creadores están fuera de rango');
+            console.log('📊 Checkout: DETALLES COMPLETOS DE ENTREGA:', {
+              totalCreators: creatorIds.length,
+              allCreatorsWithinRange,
+              totalDeliveryFee,
+              deliveryResults: deliveryResults.map(r => ({
+                creatorId: r.creatorId,
+                distance_km: r.distance_km,
+                delivery_fee: r.delivery_fee,
+                is_within_radius: r.is_within_radius,
+                creator_location: r.creator_location
+              }))
+            });
+            console.log('🎯 Checkout: CREADORES FUERA DE RANGO:', 
+              deliveryResults.filter(r => !r.is_within_radius).map(r => ({
+                creatorId: r.creatorId,
+                distance: r.distance_km + 'km',
+                maxRadius: '20km',
+                location: r.creator_location
+              }))
+            );
+            setDeliveryFee(0);
+            setDeliveryError('❌ Entrega no disponible en tu ubicación. Los creadores de tus productos no entregan a esa distancia.');
+          } else {
+            console.log(`✅ Checkout: ENTREGA DISPONIBLE - Total: Q${totalDeliveryFee}`);
+            console.log('📊 Checkout: DETALLES ENTREGA EXITOSA:', {
+              totalCreators: creatorIds.length,
+              totalDeliveryFee,
+              deliveryResults: deliveryResults.map(r => ({
+                creatorId: r.creatorId,
+                distance_km: r.distance_km,
+                delivery_fee: r.delivery_fee,
+                creator_location: r.creator_location
+              }))
+            });
+            setDeliveryFee(totalDeliveryFee);
+            setDeliveryError(null);
+            
+            // Guardar desglose de delivery
+            setDeliveryBreakdown(deliveryResults.map(r => ({
+              creator_id: r.creatorId,
+              creator_name: r.creator_name || 'Creador',
+              delivery_fee: parseFloat(r.delivery_fee),
+              distance_km: parseFloat(r.distance_km)
+            })));
+          }
+          
+          setIsCalculatingDelivery(false);
+        } catch (error) {
+          console.error('❌ Checkout: Error calculando delivery:', error);
+          console.error('🔍 Checkout: Detalles del error:', {
+            message: (error as Error).message,
+            stack: (error as Error).stack,
+            finalLocation,
+            creatorIds: [...new Set(items.map(item => item.product.creatorId))],
+            deliveryData: {
+              department: deliveryData.department,
+              municipality: deliveryData.municipality
+            }
+          });
+          setDeliveryFee(0);
+          setDeliveryError('Error calculando costo de entrega. Intenta de nuevo.');
+          setIsCalculatingDelivery(false);
+        }
+      }, 1500);
+    } else {
+      console.log('⏸️ Checkout: Condiciones NO cumplidas para cálculo delivery:', {
+        finalLocation: !!finalLocation,
+        manualLocation: !!manualLocation,
+        department: !!deliveryData.department,
+        municipality: !!deliveryData.municipality
+      });
+    }
+  }, [finalLocation, manualLocation, deliveryData.department, deliveryData.municipality]);
 
   // Agrupar productos por creador
   const itemsByCreator = items.reduce((acc, item) => {
@@ -140,11 +332,11 @@ export default function CheckoutPage() {
     }
 
     // Validar geolocalización (requerida para cálculo exacto de delivery)
-    if (!userLocation) {
+    if (!finalLocation) {
       toast({
         variant: "destructive",
         title: "Ubicación requerida",
-        description: "Por favor permite el acceso a tu ubicación para calcular el costo exacto de delivery.",
+        description: "Por favor selecciona tu ubicación para calcular el costo exacto de delivery.",
       });
       return;
     }
@@ -168,29 +360,44 @@ export default function CheckoutPage() {
         },
         paymentMethod: paymentMethod,
         // Opciones de privacidad
-        userLocation: userLocation,
+        userLocation: finalLocation,
         saveLocationData: saveLocationData,
-        autoDeleteAfterDelivery: autoDeleteAfterDelivery
+        autoDeleteAfterDelivery: autoDeleteAfterDelivery,
+        // Desglose de delivery
+        deliveryBreakdown: deliveryBreakdown
       });
 
       if (result.order) {
-        // Limpiar carrito
+        // ✅ LIMPIAR CARRITO COMPLETAMENTE
         dispatch({ type: 'CLEAR_CART' });
         
-        // Mostrar mensaje de confirmación con WhatsApp
-        const confirmMessage = `¡Pedido #${result.order.id.slice(0, 8)} creado exitosamente!\n\n${result.customerMessage}\n\n¿Enviar confirmación a nuestro agente?`;
-        
-        if (confirm(confirmMessage)) {
-          // Abrir WhatsApp al agente
-          window.open(result.whatsappUrl, '_blank');
+        // ✅ LIMPIAR TAMBIÉN STORAGE MANUALMENTE
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('tasty-cart');
+          sessionStorage.removeItem('tasty-cart-backup');
+          console.log('🧹 Checkout: Carrito limpiado completamente (React + localStorage + sessionStorage)');
         }
+        
+        // ✅ LIMPIAR CARRITO EN BD TAMBIÉN (tabla correcta: user_carts)
+        try {
+          await supabase
+            .from('user_carts')
+            .delete()
+            .eq('user_id', authUser.id);
+          console.log('🗄️ Checkout: Carrito limpiado en BD (user_carts)');
+        } catch (error) {
+          console.error('❌ Error limpiando carrito en BD:', error);
+        }
+        
+        // ✅ MARCAR QUE EL CARRITO FUE LIMPIADO INTENCIONALMENTE
+        sessionStorage.setItem('tasty-cart-cleared', 'true');
         
         toast({
           title: "¡Pedido realizado!",
-          description: `Tu pedido #${result.order.id.slice(0, 8)} ha sido creado exitosamente.`,
+          description: `Tu pedido #${result.order.id.slice(0, 8)} ha sido creado. Ve a "Mis Pedidos" para enviar el WhatsApp de coordinación.`,
         });
         
-        router.push('/user/profile');
+        router.push('/user/orders');
       } else {
         throw new Error('Error al crear la orden');
       }
@@ -205,6 +412,25 @@ export default function CheckoutPage() {
       setIsProcessing(false);
     }
   };
+
+  // Modal de selección de ubicación
+  if (showLocationSelector) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <LocationSelector
+          onLocationSelected={(location) => {
+            console.log('📍 Checkout: Ubicación seleccionada desde LocationSelector:', location);
+            setManualLocation(location);
+            setShowLocationSelector(false);
+          }}
+          onCancel={() => {
+            console.log('❌ Checkout: LocationSelector cancelado');
+            setShowLocationSelector(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -320,6 +546,22 @@ export default function CheckoutPage() {
                     rows={3}
                   />
                 </div>
+                
+                {/* Botón Guardar Dirección */}
+                <div className="pt-4 border-t">
+                  <Button 
+                    onClick={() => {
+                      console.log('✅ Checkout: Dirección confirmada por usuario:', deliveryData);
+                      toast({
+                        title: "✅ Dirección guardada exitosamente",
+                        description: `${deliveryData.street}, ${deliveryData.municipality}, ${deliveryData.department}`,
+                      });
+                    }}
+                    disabled={!deliveryData.name || !deliveryData.phone || !deliveryData.department || !deliveryData.municipality || !deliveryData.street}
+                  >
+                    Guardar Cambios
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -333,7 +575,7 @@ export default function CheckoutPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {!userLocation ? (
+              {!finalLocation ? (
                 <div className="space-y-4">
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <div className="flex items-start gap-3">
@@ -347,28 +589,52 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   
-                  <Button 
-                    onClick={getLocation}
-                    disabled={isGettingLocation}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isGettingLocation ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Obteniendo ubicación...
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="mr-2 h-4 w-4" />
-                        Permitir acceso a mi ubicación
-                      </>
-                    )}
-                  </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button 
+                      onClick={() => {
+                        console.log('📍 Checkout: Botón "Usar mi ubicación actual" presionado');
+                        console.log('📍 Checkout: Estado actual de geolocalización:', { userLocation, locationError, isGettingLocation });
+                        getLocation();
+                      }}
+                      disabled={isGettingLocation}
+                      className="w-full"
+                      size="lg"
+                      variant="default"
+                    >
+                      {isGettingLocation ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Obteniendo ubicación...
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="mr-2 h-4 w-4" />
+                          📍 Usar mi ubicación actual
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => {
+                        console.log('🗺️ Checkout: Botón "Seleccionar en mapa" presionado');
+                        console.log('🗺️ Checkout: Abriendo LocationSelector...');
+                        setShowLocationSelector(true);
+                      }}
+                      className="w-full"
+                      size="lg"
+                      variant="outline"
+                    >
+                      <MapPin className="mr-2 h-4 w-4" />
+                      📌 Seleccionar en mapa
+                    </Button>
+                  </div>
                   
                   {locationError && (
                     <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
                       ❌ {locationError}
+                      <p className="mt-2 text-xs">
+                        💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -380,10 +646,17 @@ export default function CheckoutPage() {
                         <MapPin className="h-4 w-4 text-green-600" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-green-800">✅ Ubicación confirmada</h4>
+                        <h4 className="font-medium text-green-800">
+                          {userLocation ? '📍 Ubicación GPS confirmada' : '📌 Ubicación manual seleccionada'}
+                        </h4>
                         <p className="text-sm text-green-700">
-                          Lat: {userLocation.lat.toFixed(6)}, Lng: {userLocation.lng.toFixed(6)}
+                          Lat: {finalLocation.lat.toFixed(6)}, Lng: {finalLocation.lng.toFixed(6)}
                         </p>
+                        {manualLocation && (
+                          <p className="text-xs text-green-600 mt-1">
+                            💡 Ubicación aproximada - Centro de Guatemala City
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -498,7 +771,7 @@ export default function CheckoutPage() {
                       const productName = product.name[language];
                       return (
                         <div key={product.id} className="flex items-center gap-3">
-                          <div className="relative h-12 w-12 rounded overflow-hidden">
+                          <div className="relative h-16 w-16 rounded overflow-hidden flex-shrink-0">
                             <Image
                               src={product.imageUrl}
                               alt={productName}
@@ -513,7 +786,7 @@ export default function CheckoutPage() {
                             </p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              <span>{product.preparationTime}h</span>
+                              <span>Preparación: {product.preparationTime}h</span>
                             </div>
                           </div>
                           <p className="text-sm font-medium">
@@ -530,22 +803,66 @@ export default function CheckoutPage() {
 
               {/* Totales */}
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
+                <div className="flex justify-between">
+                  <span>Productos</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Comisión de plataforma (10%)</span>
-                  <span>{formatPrice(platformFee)}</span>
+                  <span>I.V.A. (12%)</span>
+                  <span>{formatPrice(ivaAmount)}</span>
                 </div>
+                <div className="flex justify-between text-sm font-medium">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(subtotalWithIva)}</span>
+                </div>
+                <Separator />
                 <div className="flex justify-between text-sm">
                   <span>Costo de entrega</span>
-                  <span>{formatPrice(deliveryFee)}</span>
+                  <span>
+                    {isCalculatingDelivery ? (
+                      <span className="text-amber-600">Calculando...</span>
+                    ) : deliveryFee !== null ? (
+                      <span>{formatPrice(deliveryFee)} <span className="text-xs text-muted-foreground">(estimado)</span></span>
+                    ) : (
+                      <span className="text-muted-foreground">Q 25.00 + ajuste por distancia</span>
+                    )}
+                  </span>
+                </div>
+                {/* Explicación de delivery múltiple */}
+                {Object.keys(itemsByCreator).length > 1 && (
+                  <div className="text-xs text-muted-foreground mt-2 p-3 bg-amber-50 border border-amber-200 rounded">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-amber-800 mb-1">
+                          🚚 Delivery múltiple - {Object.keys(itemsByCreator).length} creadores diferentes
+                        </p>
+                        <p className="text-amber-700">
+                          Tus productos vienen de <strong>{Object.keys(itemsByCreator).length} ubicaciones diferentes</strong>, 
+                          por lo que requieren entregas separadas. Cada creador tiene su propia tarifa de delivery 
+                          basada en su ubicación y distancia hacia ti.
+                        </p>
+                        <p className="text-amber-600 mt-1 text-xs">
+                          💡 Ejemplo: Creador A (Q31.15) + Creador B (Q37.30) = Q68.45 total
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground mt-2 p-2 bg-blue-50 rounded">
+                  💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación.
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>
+                    {deliveryFee !== null ? (
+                      formatPrice(total)
+                    ) : (
+                      <span className="text-muted-foreground">Pendiente</span>
+                    )}
+                  </span>
                 </div>
               </div>
 
@@ -558,9 +875,16 @@ export default function CheckoutPage() {
                   Entrega estimada
                 </div>
                 <p className="text-sm text-muted-foreground">{formattedDeliveryDate}</p>
-                <p className="text-xs text-muted-foreground">
-                  Tiempo de preparación: {maxPreparationTime} horas (mínimo 48h de anticipación)
-                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                  <p className="text-xs text-blue-700">
+                    ⏰ <strong>Política de entrega:</strong> Mínimo 48 horas de anticipación para garantizar la frescura de tus productos.
+                  </p>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                  <p className="text-xs text-blue-700">
+                    📞 <strong>Nota importante:</strong> Al finalizar tu pedido te daremos el número de WhatsApp de servicio al cliente para que coordines tu día y hora de entrega específica.
+                  </p>
+                </div>
               </div>
 
               <Separator />
@@ -573,15 +897,35 @@ export default function CheckoutPage() {
                 </h4>
                 <div className="space-y-1 text-xs text-amber-700">
                   <p>• <strong>Entrega mínima:</strong> 48 horas de anticipación</p>
-                  <p>• <strong>Cancelación:</strong> Hasta 48 horas antes de la entrega</p>
+                  <p>• <strong>Cancelación:</strong> Hasta 24 horas antes que inicie tu período de 48h de preparación y entrega</p>
                   <p>• <strong>Productos frescos:</strong> Preparados especialmente para ti</p>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-            <Button 
-              onClick={handlePlaceOrder}
-              disabled={isProcessing || !userLocation}
+            <Button
+              onClick={() => {
+                console.log('🛒 Checkout: INTENTANDO HACER PEDIDO - Estado actual:', {
+                  isProcessing,
+                  finalLocation: !!finalLocation,
+                  finalLocationData: finalLocation,
+                  deliveryFee,
+                  deliveryError,
+                  manualLocation: !!manualLocation,
+                  manualLocationData: manualLocation
+                });
+                if (!finalLocation) {
+                  console.log('❌ Checkout: PEDIDO BLOQUEADO - No hay finalLocation');
+                  toast({
+                    title: "❌ Ubicación requerida",
+                    description: "Selecciona tu ubicación en el mapa para continuar",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                handlePlaceOrder();
+              }}
+              disabled={isProcessing || !finalLocation || deliveryFee === null || deliveryError !== null}
               className="w-full bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-50"
               size="lg"
             >
@@ -590,19 +934,44 @@ export default function CheckoutPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Procesando pedido...
                 </>
-              ) : !userLocation ? (
+              ) : !finalLocation ? (
                 <>
                   <MapPin className="mr-2 h-4 w-4" />
                   Ubicación requerida para continuar
+                </>
+              ) : deliveryFee === null ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Calculando delivery...
+                </>
+              ) : deliveryError ? (
+                <>
+                  🚫 Entrega no disponible
                 </>
               ) : (
                 `Confirmar Pedido - ${formatPrice(total)}`
               )}
             </Button>
             
-            {!userLocation && (
+            {!finalLocation && (
               <p className="text-xs text-center text-muted-foreground mt-2">
-                💡 Permite el acceso a tu ubicación arriba para habilitar el botón de pedido
+                💡 Selecciona tu ubicación arriba para habilitar el botón de pedido
+              </p>
+            )}
+            
+            {deliveryError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                <p className="text-sm text-red-700 font-medium">
+                  {deliveryError}
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  💡 Intenta con una ubicación más cercana a la capital o contacta a los creadores directamente.
+                </p>
+              </div>
+            )}
+            {finalLocation && deliveryFee === null && (
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                ⏳ Calculando costo de delivery según tu ubicación...
               </p>
             )}
             </CardFooter>

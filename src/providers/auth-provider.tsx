@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastEvent, setLastEvent] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,20 +32,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // ✅ VALIDACIÓN: Evitar múltiples ejecuciones del mismo evento
+        const eventKey = `${event}-${session?.user?.id || 'no-user'}-${Date.now()}`;
+        if (lastEvent === eventKey) {
+          console.log('⚠️ AuthProvider: Evento duplicado ignorado:', event);
+          return;
+        }
+        setLastEvent(eventKey);
+        
         if (event === 'SIGNED_IN') {
-          router.push('/dashboard');
+          // ✅ CORREGIDO: Solo redirigir si hay returnUrl específica
+          const returnUrl = sessionStorage.getItem('returnUrl');
+          if (returnUrl && returnUrl !== window.location.pathname) {
+            console.log('🔄 AuthProvider: Login exitoso, redirigiendo a:', returnUrl);
+            sessionStorage.removeItem('returnUrl');
+            router.push(returnUrl);
+          } else {
+            console.log('🔄 AuthProvider: Login exitoso, manteniéndose en página actual');
+          }
         } else if (event === 'SIGNED_OUT') {
+          console.log('👋 AuthProvider: Usuario deslogueado, redirigiendo a login');
           router.push('/login');
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    return data;
   };
 
   const signUp = async (email: string, password: string, name: string) => {

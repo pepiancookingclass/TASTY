@@ -23,3 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_email_logs_sent_at ON email_logs(sent_at);
 
 -- Verificar que se creó
 SELECT 'Tabla email_logs creada exitosamente' as resultado;
+
+
+
+

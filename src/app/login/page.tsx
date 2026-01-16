@@ -26,7 +26,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/user/profile');
+      // ✅ CORREGIDO: Usar returnUrl si existe
+      const returnUrl = sessionStorage.getItem('returnUrl') || '/user/profile';
+      console.log('🔄 LoginPage: Usuario ya logueado, redirigiendo a:', returnUrl);
+      sessionStorage.removeItem('returnUrl');
+      router.push(returnUrl);
     }
   }, [user, loading, router]);
   
@@ -41,12 +45,16 @@ export default function LoginPage() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📝 LoginPage: Form submitted with email:', email);
     setError(null);
     try {
+      console.log('🔄 LoginPage: Calling signIn...');
       await signIn(email, password);
-      router.push('/user/profile');
+      console.log('✅ LoginPage: SignIn successful, redirecting...');
+      // ✅ CORREGIDO: AuthProvider maneja el redirect automáticamente
     } catch (error: any) {
-       setError(error.message);
+      console.error('❌ LoginPage: SignIn failed:', error);
+      setError(error.message);
     }
   };
 

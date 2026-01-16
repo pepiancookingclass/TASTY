@@ -71,12 +71,12 @@ export function ProductCard({ product, creator }: ProductCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden h-full transform hover:scale-105 transition-transform duration-300 ease-in-out shadow-md hover:shadow-xl">
       <CardHeader className="p-0">
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-square overflow-hidden">
           <Image
             src={product.imageUrl}
             alt={productName}
             fill
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            style={{ objectFit: 'contain', objectPosition: 'center' }}
             data-ai-hint={product.imageHint}
             className="transition-transform duration-300 hover:scale-110"
           />

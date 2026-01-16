@@ -20,3 +20,7 @@ SELECT
 FROM pg_tables 
 WHERE tablename IN ('users', 'products', 'orders', 'order_items')
 ORDER BY tablename;
+
+
+
+

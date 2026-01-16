@@ -6,3 +6,7 @@ ORDER BY ordinal_position;
 
 -- Ver algunos registros de ejemplo para entender la estructura
 SELECT * FROM products LIMIT 3;
+
+
+
+

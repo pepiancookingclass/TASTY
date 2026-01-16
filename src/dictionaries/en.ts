@@ -149,6 +149,14 @@ const dictionary = {
     products: 'Products',
     promotions: 'Promotions',
     backToStore: 'Back to Store',
+    // Admin links
+    analytics: 'Analytics',
+    allCreators: 'All Creators',
+    pendingCreators: 'Pending Applications',
+    allProducts: 'All Products',
+    allOffers: 'All Offers',
+    settings: 'Settings',
+    combos: 'Combos',
   },
   orderStatuses: {
     new: 'New',

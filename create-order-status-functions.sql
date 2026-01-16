@@ -219,3 +219,7 @@ COMMENT ON FUNCTION get_user_orders IS 'Obtiene todos los pedidos de un usuario'
 COMMENT ON FUNCTION get_order_items IS 'Obtiene los items de un pedido específico';
 COMMENT ON FUNCTION can_cancel_order IS 'Verifica si un pedido puede ser cancelado (política de 48 horas)';
 COMMENT ON FUNCTION get_creator_order_stats IS 'Obtiene estadísticas de pedidos por estado para un creador';
+
+
+
+

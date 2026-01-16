@@ -2,7 +2,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, Tag, BarChart, ClipboardList, Users, Settings, Crown, BarChart3, Gift } from 'lucide-react';
+import { Home, ShoppingBag, Tag, BarChart, ClipboardList, Users, Settings, Crown, BarChart3, Gift, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDictionary } from '@/hooks/useDictionary';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -22,6 +22,7 @@ const creatorLinks = [
 const adminLinks = [
   { href: '/admin/analytics', label: 'analytics', icon: BarChart3 },
   { href: '/admin/creators', label: 'allCreators', icon: Users },
+  { href: '/admin/creators/pending', label: 'pendingCreators', icon: Clock },
   { href: '/admin/products', label: 'allProducts', icon: ShoppingBag },
   { href: '/admin/offers', label: 'allOffers', icon: Tag },
   { href: '/admin/settings', label: 'settings', icon: Settings },

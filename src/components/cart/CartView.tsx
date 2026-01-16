@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/providers/auth-provider';
 import { useUser } from '@/hooks/useUser';
@@ -42,13 +42,34 @@ export function CartView() {
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const platformFee = subtotal * 0.1;
-  const deliveryFee = 5.0;
-  const total = subtotal + platformFee + deliveryFee;
+  const ivaRate = 0.12; // 12% IVA
+  const ivaAmount = subtotal * ivaRate;
+  const subtotalWithIva = subtotal + ivaAmount;
+  
+  // ✅ CORREGIDO: Q25 base estimado (no Q15 hardcodeado)
+  const deliveryFee = 25.0;
+  const total = subtotalWithIva + deliveryFee;
 
-  const maxPreparationTime = Math.max(...items.map(item => item.product.preparationTime), 0);
-  const estimatedDeliveryDate = addHours(new Date(), maxPreparationTime);
-  const formattedDeliveryDate = format(estimatedDeliveryDate, "EEEE, MMM d 'at' h:mm a");
+  // ⏰ TIEMPO DE PREPARACIÓN: Suma total de todas las horas artesanales
+  const totalPreparationTime = items.reduce((sum, item) => sum + (item.product.preparationTime * item.quantity), 0);
+  
+  // 🚚 FECHA DE ENTREGA: Siempre 48h mínimas + coordinación con servicio al cliente
+  const minimumDeliveryTime = useMemo(() => addHours(new Date(), 48), []); // 48h mínimas SIEMPRE
+  const formattedDeliveryDate = useMemo(() => format(minimumDeliveryTime, "EEEE, MMM d 'at' h:mm a"), [minimumDeliveryTime]);
+  
+  // ✅ LOGS MOVIDOS A useEffect para evitar loop infinito - SIN dependencias que cambien constantemente
+  useEffect(() => {
+    console.log('🛒 CartView: Cálculos [RENDER #' + Date.now() + ']', { subtotal, ivaAmount, subtotalWithIva, deliveryFee, total });
+    console.log('⏰ CartView: Horas artesanales [RENDER #' + Date.now() + ']', { 
+      items: items.map(item => `${item.product.name.es}: ${item.product.preparationTime}h x ${item.quantity} = ${item.product.preparationTime * item.quantity}h`),
+      totalPreparationTime: `${totalPreparationTime}h total`
+    });
+    console.log('📅 CartView: Separación conceptos [RENDER #' + Date.now() + ']', { 
+      totalPreparationTime: `${totalPreparationTime}h (esfuerzo creador total)`,
+      deliveryDate: formattedDeliveryDate + ' (48h mínimas)'
+    });
+    console.log('✅ CartView: useEffect ejecutado - Si ves este mensaje repetirse rápidamente, AÚN HAY LOOP');
+  }, [items.length, subtotal, totalPreparationTime]); // ✅ Solo dependencias estables
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-GT', {
@@ -59,6 +80,9 @@ export function CartView() {
 
   const handleCheckout = async () => {
     if (!authUser) {
+      // ✅ CORREGIDO: Guardar página actual para regresar después del login
+      console.log('🔄 CartView: Usuario no logueado, guardando returnUrl:', window.location.pathname);
+      sessionStorage.setItem('returnUrl', window.location.pathname);
       toast({
         variant: "destructive",
         title: "Inicia sesión",
@@ -142,7 +166,7 @@ export function CartView() {
               const productName = product.name[language];
               return (
                 <Card key={product.id} className="flex items-center p-4">
-                  <div className="relative h-24 w-24 rounded-md overflow-hidden mr-4">
+                  <div className="relative h-20 w-20 rounded-md overflow-hidden mr-4 flex-shrink-0">
                     <Image
                       src={product.imageUrl}
                       alt={productName}
@@ -190,27 +214,46 @@ export function CartView() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
-              <span>{dict.cartView.subtotal}</span>
+              <span>Productos</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>{dict.cartView.platformFee}</span>
-              <span>{formatPrice(platformFee)}</span>
+            <div className="flex justify-between text-sm">
+              <span>I.V.A. (12%)</span>
+              <span>{formatPrice(ivaAmount)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>{dict.cartView.deliveryFee}</span>
+            <div className="flex justify-between text-sm font-medium">
+              <span>Subtotal</span>
+              <span>{formatPrice(subtotalWithIva)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between text-sm">
+              <span>Delivery (estimado)</span>
               <span>{formatPrice(deliveryFee)}</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              💡 El costo final se calculará por distancia en el checkout
+            </p>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>{dict.cartView.total}</span>
               <span>{formatPrice(total)}</span>
             </div>
              <Separator />
-             <div className="space-y-1 text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
-                <p>{formattedDeliveryDate}</p>
-                <p className="text-xs">{dict.cartView.preparationTime(maxPreparationTime)}</p>
+             <div className="space-y-3">
+               {/* ⏰ MOSTRAR ESFUERZO DEL CREADOR */}
+               <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                 <p className="text-xs text-amber-700 font-medium">⏰ Tiempo de preparación total:</p>
+                 <p className="text-sm font-semibold text-amber-800">{totalPreparationTime}h de trabajo artesanal</p>
+               </div>
+               
+               {/* 🚚 FECHA DE ENTREGA */}
+               <div className="text-sm text-muted-foreground">
+                 <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
+                 <p>{formattedDeliveryDate}</p>
+                 <p className="text-xs mt-1">
+                   📞 Basado en 48h mínimas + coordinación con servicio al cliente
+                 </p>
+               </div>
              </div>
 
           </CardContent>

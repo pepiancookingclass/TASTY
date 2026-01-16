@@ -155,6 +155,7 @@ const dictionary = {
     // Enlaces administrativos
     analytics: 'Analytics',
     allCreators: 'Todos los Creadores',
+    pendingCreators: 'Solicitudes Pendientes',
     allProducts: 'Todos los Productos',
     allOffers: 'Todas las Ofertas',
   },

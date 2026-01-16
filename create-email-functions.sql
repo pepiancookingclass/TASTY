@@ -348,3 +348,7 @@ CREATE TRIGGER send_emails_on_order_creation
 -- 2. Crear la Edge Function 'send-email' (ver archivo separado)
 -- 3. Configurar las variables de entorno para el servicio de email
 -- =====================================================
+
+
+
+

@@ -131,3 +131,7 @@ curl -X POST https://aitmxnfljglwpkpibgek.supabase.co/functions/v1/send-email \
   -H "Content-Type: application/json" \
   -d '{"to":"test@email.com","subject":"Test","html":"<h1>Test</h1>"}'
 ```
+
+
+
+

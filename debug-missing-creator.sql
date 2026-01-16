@@ -20,3 +20,7 @@ WHERE roles::text LIKE '%creator%';
 SELECT id, title, creator_id, created_at
 FROM products 
 WHERE creator_id = '3abbc537-125b-4bc9-b5e0-0ea318f739d8';
+
+
+
+

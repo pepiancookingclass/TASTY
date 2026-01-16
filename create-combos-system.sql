@@ -293,3 +293,7 @@ INSERT INTO combos (name_es, description_es, category, total_price, original_pri
 COMMENT ON TABLE combos IS 'Combos colaborativos entre múltiples creadores';
 COMMENT ON TABLE combo_items IS 'Productos incluidos en cada combo';
 COMMENT ON TABLE combo_creators IS 'Creadores participantes en cada combo con su distribución de ganancias';
+
+
+
+

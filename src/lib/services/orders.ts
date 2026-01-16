@@ -18,7 +18,7 @@ export function sendWhatsAppToAgent(orderData: {
     `• ${item.quantity}x ${item.product.name.es} - Q${(item.product.price * item.quantity).toFixed(2)}`
   ).join('\n');
 
-  const message = `🍳 *NUEVO PEDIDO TASTY*
+  const message = `🍳 *NUEVO PEDIDO TASTY - SISTEMA*
 📋 *Pedido:* #${orderData.orderId.slice(0, 8)}
 👤 *Cliente:* ${orderData.customerName}
 📱 *Teléfono:* ${orderData.customerPhone || 'No proporcionado'}
@@ -30,7 +30,7 @@ ${itemsList}
 💳 *Pago:* ${orderData.paymentMethod === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}
 📍 *Entrega:* ${orderData.deliveryAddress || 'Dirección no especificada'}
 
-⚠️ *FAVOR CONFIRMAR ESTE PEDIDO CON EL CLIENTE*`;
+⚠️ *ESPERANDO QUE EL CLIENTE TE ESCRIBA DIRECTAMENTE PARA COORDINAR ENTREGA*`;
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${AGENT_WHATSAPP.replace('+', '')}?text=${encodedMessage}`;
@@ -38,28 +38,56 @@ ${itemsList}
   return whatsappUrl;
 }
 
-// Función para generar mensaje de confirmación para el cliente
-export function generateCustomerWhatsAppMessage(orderData: {
+// Función para generar URL de WhatsApp directo para el cliente
+export function generateCustomerWhatsAppUrl(orderData: {
   orderId: string;
   customerName: string;
+  customerPhone: string;
   items: CartItem[];
   total: number;
+  deliveryAddress: string;
+  paymentMethod: string;
+  subtotal?: number;
+  ivaAmount?: number;
+  deliveryFee?: number;
 }) {
+  // Construir lista de productos
   const itemsList = orderData.items.map(item => 
     `• ${item.quantity}x ${item.product.name.es} - Q${(item.product.price * item.quantity).toFixed(2)}`
   ).join('\n');
 
-  const message = `🍳 *CONFIRMACIÓN DE PEDIDO TASTY*
-📋 *Tu pedido:* #${orderData.orderId.slice(0, 8)}
+  // Calcular valores financieros
+  const calculatedSubtotal = orderData.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const calculatedIva = calculatedSubtotal * 0.12;
+  const calculatedDeliveryFee = orderData.deliveryFee || (orderData.total - calculatedSubtotal - calculatedIva);
 
-📦 *PRODUCTOS:*
+  // Construir sección de teléfono solo si existe
+  const phoneSection = orderData.customerPhone && orderData.customerPhone.trim() !== '' 
+    ? `\n📱 Mi número de celular es: ${orderData.customerPhone}` 
+    : '';
+
+  // Construir mensaje completo
+  const message = `Hola, te saluda *${orderData.customerName}*
+
+Hice un pedido de:
 ${itemsList}
 
-💰 *TOTAL:* Q${orderData.total.toFixed(2)}
+💰 *DESGLOSE:*
+• Productos: Q${calculatedSubtotal.toFixed(2)}
+• IVA (12%): Q${calculatedIva.toFixed(2)}
+• Delivery: Q${calculatedDeliveryFee.toFixed(2)}
+• *TOTAL: Q${orderData.total.toFixed(2)}*
 
-📱 *FAVOR ENVÍA ESTE MENSAJE A NUESTRO AGENTE PARA RECONFIRMAR TU PEDIDO*`;
+💳 *Pago:* ${orderData.paymentMethod === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}
+${phoneSection}
+📍 Mi dirección de entrega es: ${orderData.deliveryAddress}
 
-  return message;
+Agradeceré me apoyes para coordinar mi entrega. 🙏`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${AGENT_WHATSAPP.replace('+', '')}?text=${encodedMessage}`;
+  
+  return whatsappUrl;
 }
 
 // Tipo para crear una orden
@@ -82,6 +110,13 @@ export interface CreateOrderInput {
   userLocation?: { lat: number; lng: number } | null;
   saveLocationData?: boolean;
   autoDeleteAfterDelivery?: boolean;
+  // Desglose de delivery
+  deliveryBreakdown?: Array<{
+    creator_id: string;
+    creator_name: string;
+    delivery_fee: number;
+    distance_km: number;
+  }>;
 }
 
 // Transformar datos de Supabase a Order
@@ -118,7 +153,44 @@ function transformOrder(data: any, items: any[] = []): Order {
 }
 
 // Crear una orden
-export async function createOrder(input: CreateOrderInput): Promise<{ order: Order | null; whatsappUrl: string; customerMessage: string }> {
+export async function createOrder(input: CreateOrderInput): Promise<{ order: Order | null; whatsappUrl: string; customerWhatsAppUrl: string }> {
+  console.log('🚀 INICIANDO CREACIÓN DE ORDEN:', {
+    userId: input.userId,
+    customerName: input.customerName,
+    customerPhone: input.customerPhone,
+    total: input.total,
+    itemsCount: input.items.length
+  });
+  
+  // ✅ DEBUG: Ver qué items llegan
+  console.log('🛒 ITEMS RECIBIDOS:', input.items.map(item => ({
+    name: item.product.name.es,
+    price: item.product.price,
+    quantity: item.quantity,
+    total: item.product.price * item.quantity
+  })));
+  
+  // Calcular subtotal de productos SIN IVA
+  const subtotal = input.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const ivaAmount = subtotal * 0.12;
+  const deliveryFee = input.total - subtotal - ivaAmount;
+  
+  console.log('💰 DESGLOSE FINANCIERO:', {
+    subtotal: subtotal,
+    ivaAmount: ivaAmount,
+    deliveryFee: deliveryFee,
+    total: input.total
+  });
+
+  // ✅ DEBUG: WhatsApp data que se pasa
+  console.log('📱 DATOS PARA WHATSAPP:', {
+    subtotal: subtotal,
+    ivaAmount: ivaAmount,
+    deliveryFee: deliveryFee,
+    total: input.total,
+    itemsCount: input.items.length
+  });
+  
   // Crear la orden
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
@@ -128,6 +200,10 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
       customer_phone: input.customerPhone,
       customer_email: input.customerEmail,
       total: input.total,
+      subtotal: subtotal,
+      iva_amount: ivaAmount,
+      delivery_fee: deliveryFee,
+      delivery_breakdown: input.deliveryBreakdown || [],
       delivery_date: input.deliveryDate.toISOString(),
       delivery_street: input.deliveryAddress?.street,
       delivery_city: input.deliveryAddress?.municipality,
@@ -145,11 +221,41 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     .single();
 
   if (orderError) {
-    console.error('Error creating order:', orderError);
-    return { order: null, whatsappUrl: '', customerMessage: '' };
+    console.error('❌ ERROR DETALLADO CREANDO ORDEN:', {
+      message: orderError.message,
+      details: orderError.details,
+      hint: orderError.hint,
+      code: orderError.code,
+      statusCode: orderError.status,
+      fullError: orderError
+    });
+    console.error('📊 DATOS QUE SE INTENTARON INSERTAR:', {
+      user_id: input.userId,
+      customer_name: input.customerName,
+      customer_phone: input.customerPhone,
+      customer_email: input.customerEmail,
+      total: input.total,
+      delivery_date: input.deliveryDate.toISOString(),
+      delivery_street: input.deliveryAddress?.street,
+      delivery_city: input.deliveryAddress?.municipality,
+      delivery_state: input.deliveryAddress?.department,
+      delivery_notes: input.deliveryAddress?.notes,
+      payment_method: input.paymentMethod || 'cash',
+      delivery_latitude: input.userLocation?.lat,
+      delivery_longitude: input.userLocation?.lng,
+      save_location_data: input.saveLocationData || false,
+      auto_delete_after_delivery: input.autoDeleteAfterDelivery || false,
+      status: 'new'
+    });
+    throw new Error(`Error al crear la orden: ${orderError.message}`);
   }
 
-  // Crear los items de la orden
+  console.log('✅ INSERT EN TABLA ORDERS EXITOSO:', {
+    orderId: orderData.id,
+    insertedAt: orderData.created_at
+  });
+
+  // Crear los items de la orden PRIMERO (antes de enviar emails)
   const orderItems = input.items.map(item => ({
     order_id: orderData.id,
     product_id: item.product.id,
@@ -159,13 +265,38 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     product_name_es: item.product.name.es,
   }));
 
+  console.log('📦 INSERTANDO ORDER_ITEMS:', orderItems.length, 'productos');
+
   const { error: itemsError } = await supabase
     .from('order_items')
     .insert(orderItems);
 
   if (itemsError) {
-    console.error('Error creating order items:', itemsError);
-    // La orden ya fue creada, pero sin items
+    console.error('❌ Error creating order items:', itemsError);
+  } else {
+    console.log('✅ ORDER_ITEMS INSERTADOS CORRECTAMENTE');
+  }
+
+  // AHORA enviar emails (después de que los items existan en la BD)
+  console.log('🔄 ENVIANDO EMAILS VIA FETCH DIRECTO...');
+  try {
+    const response = await fetch('https://aitmxnfljglwpkpibgek.supabase.co/functions/v1/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpdG14bmZsamdsd3BrcGliZ2VrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjAxNTM3MCwiZXhwIjoyMDgxNTkxMzcwfQ.hrrCFLJJ2IKwMuewr4SVacMVMqq_Xsa97aOBcIDmaO4'
+      },
+      body: JSON.stringify({ order_uuid: orderData.id })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ EMAILS ENVIADOS:', result);
+    } else {
+      console.error('❌ ERROR FETCH:', await response.text());
+    }
+  } catch (error) {
+    console.error('❌ ERROR FETCH DIRECTO:', error);
   }
 
   // Generar URLs de WhatsApp
@@ -183,12 +314,27 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     paymentMethod: input.paymentMethod
   });
 
-  const customerMessage = generateCustomerWhatsAppMessage({
-    orderId: orderData.id,
-    customerName: input.customerName,
-    items: input.items,
+  console.log('📱 GENERANDO WHATSAPP URL CON:', {
+    subtotal: subtotal,
+    ivaAmount: ivaAmount,
+    deliveryFee: deliveryFee,
     total: input.total
   });
+
+  const customerWhatsAppUrl = generateCustomerWhatsAppUrl({
+    orderId: orderData.id,
+    customerName: input.customerName,
+    customerPhone: input.customerPhone || '',
+    items: input.items,
+    total: input.total,
+    deliveryAddress: deliveryAddressText,
+    paymentMethod: input.paymentMethod || 'cash',
+    subtotal: subtotal,
+    ivaAmount: ivaAmount,
+    deliveryFee: deliveryFee
+  });
+
+  console.log('📱 WHATSAPP URL GENERADA:', customerWhatsAppUrl.substring(0, 200) + '...');
 
   // Manejar opciones de privacidad
   if (input.saveLocationData && !input.autoDeleteAfterDelivery) {
@@ -208,10 +354,14 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
 
   const order = transformOrder(orderData, orderItems);
   
-  // Enviar emails automáticamente (se ejecuta via trigger en DB)
-  // El trigger 'send_emails_on_order_creation' se encarga de todo
+  console.log('🔍 ORDEN CREADA EXITOSAMENTE:', {
+    orderId: orderData.id,
+    status: orderData.status,
+    itemsCount: orderItems.length,
+    timestamp: new Date().toISOString()
+  });
   
-  return { order, whatsappUrl, customerMessage };
+  return { order, whatsappUrl, customerWhatsAppUrl };
 }
 
 // Obtener órdenes por usuario

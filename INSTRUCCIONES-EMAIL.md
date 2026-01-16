@@ -130,3 +130,7 @@ SELECT process_order_emails('uuid-del-pedido-aqui');
 3. 🔄 Probar con pedido real
 4. 📧 Personalizar templates de email
 5. 📊 Agregar tracking de emails abiertos (opcional)
+
+
+
+

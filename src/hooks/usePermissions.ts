@@ -46,3 +46,7 @@ export function usePermissions() {
     hasAnyRole: (roleList: string[]) => roleList.some(role => roles.includes(role))
   };
 }
+
+
+
+

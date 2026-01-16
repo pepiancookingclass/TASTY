@@ -113,13 +113,31 @@ export function DeliveryMap({
 
   // Actualizar centro del mapa
   useEffect(() => {
-    if (selectedDepartment && DELIVERY_ZONES[selectedDepartment as keyof typeof DELIVERY_ZONES]) {
+    if (userLocation) {
+      // ✅ PRIORIDAD: Si hay ubicación GPS, centrar en el usuario
+      console.log('🗺️ DeliveryMap: Centrando mapa en ubicación GPS del usuario:', userLocation);
+      console.log('🎯 DeliveryMap: Coordenadas exactas - Lat:', userLocation.lat, 'Lng:', userLocation.lng);
+      setMapCenter([userLocation.lat, userLocation.lng]);
+    } else if (selectedDepartment && DELIVERY_ZONES[selectedDepartment as keyof typeof DELIVERY_ZONES]) {
+      // Fallback: centrar en el departamento seleccionado
       const zone = DELIVERY_ZONES[selectedDepartment as keyof typeof DELIVERY_ZONES];
+      console.log('🗺️ DeliveryMap: Centrando mapa en departamento:', selectedDepartment);
       setMapCenter(zone.center as [number, number]);
     }
-  }, [selectedDepartment]);
+  }, [selectedDepartment, userLocation]);
 
   useEffect(() => {
+    // ✅ ARREGLAR: Configurar íconos de Leaflet solo en el cliente
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((L) => {
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        });
+      });
+    }
     setIsLoaded(true);
   }, []);
 
@@ -181,7 +199,7 @@ export function DeliveryMap({
         <div className="h-64 w-full rounded-lg overflow-hidden">
           <MapContainer
             center={mapCenter}
-            zoom={selectedMunicipality ? 13 : 10}
+            zoom={userLocation ? 15 : (selectedMunicipality ? 13 : 10)}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
@@ -203,14 +221,19 @@ export function DeliveryMap({
             
             {/* Marcador de ubicación del usuario */}
             {userLocation && (
-              <Marker position={[userLocation.lat, userLocation.lng]}>
-                <Popup>
-                  <div className="text-center">
-                    <strong>Tu ubicación</strong><br />
-                    {distance && `${distance.toFixed(1)} km al destino`}
-                  </div>
-                </Popup>
-              </Marker>
+              <>
+                {console.log('📍 DeliveryMap: Renderizando marcador GPS en:', userLocation)}
+                <Marker position={[userLocation.lat, userLocation.lng]}>
+                  <Popup>
+                    <div className="text-center">
+                      <strong>🎯 Tu ubicación GPS</strong><br />
+                      Lat: {userLocation.lat.toFixed(6)}<br />
+                      Lng: {userLocation.lng.toFixed(6)}<br />
+                      {distance && `${distance.toFixed(1)} km al destino`}
+                    </div>
+                  </Popup>
+                </Marker>
+              </>
             )}
             
             {/* Mostrar todos los municipios del departamento */}
@@ -236,3 +259,7 @@ export function DeliveryMap({
     </Card>
   );
 }
+
+
+
+

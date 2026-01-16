@@ -372,3 +372,7 @@ $$;
 -- 5. NOTIFICACIONES AUTOMÁTICAS:
 --    Se envían emails automáticamente al cambiar estados
 -- =====================================================
+
+
+
+

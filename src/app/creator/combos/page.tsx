@@ -67,7 +67,7 @@ export default function CreatorCombosPage() {
 
   // Cargar combos del creador
   const loadCombos = async () => {
-    if (!user) return;
+    if (!user?.id) return;
     
     try {
       setLoading(true);
@@ -180,10 +180,10 @@ export default function CreatorCombosPage() {
   };
 
   useEffect(() => {
-    if (canManageOwnProducts && user) {
+    if (canManageOwnProducts && user?.id) {
       loadCombos();
     }
-  }, [canManageOwnProducts, user]);
+  }, [canManageOwnProducts, user?.id]);
 
   if (permissionsLoading || loading) {
     return (

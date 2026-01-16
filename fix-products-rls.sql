@@ -17,3 +17,7 @@ CREATE POLICY "Creators can update own products" ON products
 -- Los creadores pueden eliminar solo sus propios productos
 CREATE POLICY "Creators can delete own products" ON products
     FOR DELETE USING (auth.uid() = creator_id);
+
+
+
+

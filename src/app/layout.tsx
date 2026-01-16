@@ -6,12 +6,12 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/shared/SiteHeader";
+import { HelpSticker } from "@/components/shared/HelpSticker";
 import { CartProvider } from '@/context/CartProvider';
 import { LanguageProvider } from '@/context/LanguageProvider';
 import { AuthProvider } from '@/providers/auth-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
+// Analytics eliminados completamente en desarrollo
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,9 +37,9 @@ export default function RootLayout({
                   {children}
                 </main>
               </div>
+              <HelpSticker />
               <Toaster />
-              <Analytics />
-              <SpeedInsights />
+        {/* Analytics eliminados - causaban errores 404 en desarrollo */}
             </CartProvider>
           </AuthProvider>
         </LanguageProvider>

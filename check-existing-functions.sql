@@ -31,3 +31,7 @@ SELECT
 FROM information_schema.columns
 WHERE table_name IN ('orders', 'order_items', 'order_status_history')
 ORDER BY table_name, ordinal_position;
+
+
+
+
