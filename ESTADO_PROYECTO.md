@@ -40,7 +40,101 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 
 ---
 
-## 🎯 REGLAS PARA EL AGENTE
+## 🏗️ INSTRUCCIONES PARA AGENTES (ARQUITECTO → ALBAÑILES)
+
+> **CONTEXTO:** Este documento fue escrito por un agente senior (Opus) para guiar a agentes menos capaces (Sonnet 4 u otros). Si eres un agente leyendo esto, SIGUE ESTAS INSTRUCCIONES AL PIE DE LA LETRA.
+
+### 📋 PROCEDIMIENTO OBLIGATORIO ANTES DE CUALQUIER CAMBIO:
+
+**PASO 1: ENTENDER EL PROBLEMA (NO SALTAR)**
+```
+❌ MAL: "El usuario dice que X no funciona, voy a cambiar código"
+✅ BIEN: "El usuario dice que X no funciona, voy a investigar POR QUÉ"
+```
+
+**PASO 2: INVESTIGAR ANTES DE ACTUAR**
+1. Lee los logs del usuario COMPLETOS
+2. Busca el archivo relevante y LÉELO antes de modificar
+3. Pregúntate: "¿Cuál es la CAUSA RAÍZ?" (no el síntoma)
+4. Si no entiendes algo, PREGUNTA al usuario antes de hacer cambios
+
+**PASO 3: HACER UN SOLO CAMBIO A LA VEZ**
+```
+❌ MAL: Modificar 5 archivos "para estar seguro"
+✅ BIEN: Modificar 1 archivo, probar, confirmar que funciona
+```
+
+**PASO 4: PROBAR ANTES DE DECIR "LISTO"**
+```
+❌ MAL: "Ya hice el cambio, debería funcionar"
+✅ BIEN: "Hice el cambio, haz build y prueba X específicamente"
+```
+
+---
+
+### 🚫 ERRORES QUE NO DEBES COMETER:
+
+| Error | Por qué es malo | Qué hacer en su lugar |
+|-------|-----------------|----------------------|
+| Hacer la misma prueba varias veces | Gastas recursos del usuario sin resolver | Cambia de enfoque, investiga más profundo |
+| Decir "está arreglado" sin probar | El usuario pierde confianza | Siempre di "prueba X para confirmar" |
+| Agregar código sin entender el problema | Creas más bugs | Primero entiende, luego codifica |
+| Modificar archivos "por si acaso" | Puedes romper algo que funcionaba | Solo toca lo necesario |
+| Ignorar este archivo MD | Repites errores de agentes anteriores | LEE TODO antes de empezar |
+
+---
+
+### 🔍 CÓMO INVESTIGAR CORRECTAMENTE:
+
+**1. Cuando algo "no funciona":**
+```
+1. ¿Cuál es el error exacto? (código, mensaje, log)
+2. ¿Dónde ocurre? (frontend, backend, base de datos)
+3. ¿Cuándo empezó a fallar? (siempre falló o algo lo rompió)
+4. ¿Funciona en otro contexto? (ej: manual vs automático)
+```
+
+**2. Cuando el usuario reporta un bug:**
+```
+1. Pide los logs completos si no los envió
+2. Reproduce el flujo mentalmente
+3. Identifica el archivo responsable
+4. Lee el código ANTES de proponer cambios
+```
+
+**3. Cuando no sabes qué hacer:**
+```
+❌ MAL: Intentar cosas aleatorias
+✅ BIEN: Decir "No estoy seguro, déjame investigar X primero"
+```
+
+---
+
+### 📁 ESTRUCTURA DEL PROYECTO (CONOCE TU TERRENO):
+
+| Directorio | Contenido | Cuándo tocarlo |
+|------------|-----------|----------------|
+| `src/app/` | Páginas de Next.js | Cambios de UI/rutas |
+| `src/components/` | Componentes React | Cambios de UI |
+| `src/lib/` | Utilidades y servicios | Lógica de negocio |
+| `src/context/` | Providers de React | Estado global |
+| `src/hooks/` | Custom hooks | Lógica reutilizable |
+| `supabase/functions/` | Edge Functions | Lógica del servidor |
+| `*.sql` | Scripts de base de datos | Cambios de esquema |
+
+---
+
+### ⚡ REGLAS DE ORO:
+
+1. **KISS** - Keep It Simple, Stupid. No sobrecomplicar.
+2. **Una cosa a la vez** - Un cambio, una prueba, un resultado.
+3. **Pregunta si no sabes** - Es mejor preguntar que romper algo.
+4. **Lee antes de escribir** - Siempre lee el código existente primero.
+5. **Documenta lo que haces** - Actualiza este archivo cuando termines.
+
+---
+
+### 🎯 REGLAS TÉCNICAS ESPECÍFICAS:
 
 1. **Responder siempre en español**
 2. **Código simple** - No sobrecomplicar, soluciones directas
@@ -49,6 +143,7 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 5. **Probar después de cada cambio**
 6. **Actualizar este archivo** cuando completes una tarea
 7. **NO TOCAR el sistema de emails** sin leer la advertencia de arriba
+8. **Zona horaria Guatemala = UTC-6** - Restar 6 horas a cualquier fecha
 
 ---
 
