@@ -343,6 +343,37 @@ const dictionary = {
   },
   footer: {
     text: 'Hecho con ♡ para delicias caseras.'
+  },
+  categoryCarousel: {
+    title: '¿Qué te antoja hoy?',
+    swipeHint: '← Desliza →'
+  },
+  categories: {
+    dulce: {
+      name: 'Dulces',
+      description: 'Postres, pasteles, galletas y todas las delicias dulces de nuestros creadores'
+    },
+    salado: {
+      name: 'Salados',
+      description: 'Platos salados artesanales preparados con ingredientes frescos'
+    },
+    handcrafts: {
+      name: 'Artesanías',
+      description: 'Productos hechos a mano con amor y dedicación'
+    },
+    otros: {
+      name: 'Otros',
+      description: 'Descubre productos especiales y únicos'
+    }
+  },
+  categoryPage: {
+    backButton: 'Volver',
+    productsAvailable: (count: number) => `${count} productos disponibles`,
+    noProducts: 'No hay productos en esta categoría',
+    noProductsHint: 'Pronto tendremos más opciones para ti.',
+    exploreOther: 'Explorar otras categorías',
+    notFound: 'Categoría no encontrada',
+    notFoundHint: 'La categoría que buscas no existe.'
   }
 };
 

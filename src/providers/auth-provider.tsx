@@ -69,12 +69,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    console.log('🚀 INICIANDO REGISTRO DE USUARIO:', { email, name });
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } }
     });
-    if (error) throw error;
+    
+    if (error) {
+      console.error('❌ ERROR EN REGISTRO:', error);
+      throw error;
+    }
+    
+    console.log('✅ REGISTRO EXITOSO EN SUPABASE AUTH:', {
+      userId: data.user?.id,
+      email: data.user?.email,
+      confirmed: data.user?.email_confirmed_at ? 'SÍ' : 'NO'
+    });
+    
+    // ✅ ENVIAR EMAIL DE BIENVENIDA después del registro exitoso
+    if (data.user) {
+      console.log('🎉 Usuario creado, enviando email de bienvenida...');
+      console.log('📧 DATOS PARA EMAIL:', {
+        user_id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.name || name
+      });
+      
+      try {
+        console.log('🔄 LLAMANDO EDGE FUNCTION send-welcome-email...');
+        const response = await fetch('https://aitmxnfljglwpkpibgek.supabase.co/functions/v1/send-welcome-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpdG14bmZsamdsd3BrcGliZ2VrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjAxNTM3MCwiZXhwIjoyMDgxNTkxMzcwfQ.hrrCFLJJ2IKwMuewr4SVacMVMqq_Xsa97aOBcIDmaO4'
+          },
+          body: JSON.stringify({ user_id: data.user.id })
+        });
+        
+        console.log('📡 RESPUESTA EDGE FUNCTION:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ EMAIL DE BIENVENIDA ENVIADO EXITOSAMENTE:', result);
+        } else {
+          const errorText = await response.text();
+          console.error('❌ ERROR ENVIANDO EMAIL DE BIENVENIDA:', {
+            status: response.status,
+            error: errorText
+          });
+        }
+      } catch (error) {
+        console.error('❌ ERROR FETCH EMAIL DE BIENVENIDA:', error);
+      }
+    } else {
+      console.warn('⚠️ NO SE CREÓ USUARIO, NO SE ENVÍA EMAIL');
+    }
+    
+    console.log('🏁 REGISTRO COMPLETADO');
     return data;
   };
 

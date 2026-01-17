@@ -342,6 +342,37 @@ const dictionary = {
   },
   footer: {
     text: 'Built with ♡ for homemade delights.'
+  },
+  categoryCarousel: {
+    title: 'What are you craving today?',
+    swipeHint: '← Swipe →'
+  },
+  categories: {
+    dulce: {
+      name: 'Sweets',
+      description: 'Desserts, cakes, cookies and all sweet delights from our creators'
+    },
+    salado: {
+      name: 'Savory',
+      description: 'Artisanal savory dishes prepared with fresh ingredients'
+    },
+    handcrafts: {
+      name: 'Handcrafts',
+      description: 'Handmade products with love and dedication'
+    },
+    otros: {
+      name: 'Others',
+      description: 'Discover unique and special products'
+    }
+  },
+  categoryPage: {
+    backButton: 'Back',
+    productsAvailable: (count: number) => `${count} products available`,
+    noProducts: 'No products in this category',
+    noProductsHint: 'We will have more options for you soon.',
+    exploreOther: 'Explore other categories',
+    notFound: 'Category not found',
+    notFoundHint: 'The category you are looking for does not exist.'
   }
 };
 

@@ -6,6 +6,7 @@ import { useCreators } from '@/hooks/useCreators';
 import { usePromotions } from '@/hooks/usePromotions';
 import { PromotionsBanner } from '@/components/promotions/PromotionsBanner';
 import { CreatorShowcase } from '@/components/creator/CreatorShowcase';
+import { CategoryCarousel } from '@/components/category/CategoryCarousel';
 import { Hero } from '@/components/shared/Hero';
 import { useDictionary } from '@/hooks/useDictionary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,10 @@ export default function Home() {
   return (
     <div className="space-y-16">
       <Hero />
+      
+      {/* Carrusel de Categorías */}
+      <CategoryCarousel />
+      
       <div className="container mx-auto px-4 py-8 space-y-16">
         {creatorsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
