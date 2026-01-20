@@ -1,8 +1,36 @@
 # 🍳 TASTY - Plan de Trabajo para Agentes
 
-> **Última actualización:** 16 Enero 2026 - AGENTE 6  
+> **Última actualización:** 20 Enero 2026 - AGENTE 7 (Claude Opus 4)  
 > **Contexto:** Proyecto migrado de Firebase a Supabase  
 > **Idioma:** Siempre responder en ESPAÑOL
+
+---
+
+## 📋 RESUMEN RÁPIDO - LEE ESTO PRIMERO
+
+### **¿QUÉ FUNCIONA? (NO TOCAR)**
+| Sistema | Estado | Archivos |
+|---------|--------|----------|
+| ✅ Emails de ÓRDENES | FUNCIONA | `supabase/functions/send-email/index.ts` |
+| ✅ Emails de BIENVENIDA | FUNCIONA | `supabase/functions/send-welcome-email/index.ts` |
+| ✅ Registro de usuarios | FUNCIONA | Trigger `on_auth_user_created` en Supabase |
+| ✅ Carrito persistente | FUNCIONA | `src/context/CartProvider.tsx` |
+| ✅ Carrusel de categorías | FUNCIONA | `src/components/category/CategoryCarousel.tsx` |
+| ✅ Páginas por categoría | FUNCIONA | `src/app/products/[category]/page.tsx` |
+| ✅ Traducciones ES/EN | FUNCIONA | `src/dictionaries/es.ts`, `src/dictionaries/en.ts` |
+
+### **¿QUÉ PUEDES MODIFICAR?**
+- Páginas en `src/app/`
+- Componentes en `src/components/`
+- Traducciones en `src/dictionaries/`
+- Estilos CSS
+
+### **¿QUÉ NO DEBES TOCAR?**
+- Edge Functions en `supabase/functions/` (a menos que te lo pidan)
+- `src/lib/services/orders.ts`
+- `src/context/CartProvider.tsx`
+- `src/providers/auth-provider.tsx`
+- Triggers de base de datos
 
 ---
 
@@ -18,9 +46,11 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 ```
 
 **ARCHIVOS CRÍTICOS QUE NO DEBES MODIFICAR SIN RAZÓN:**
-1. `supabase/functions/send-email/index.ts` - Edge Function que envía emails
-2. `src/lib/services/orders.ts` - Lógica de creación de órdenes
-3. `src/context/CartProvider.tsx` - Persistencia del carrito
+1. `supabase/functions/send-email/index.ts` - Edge Function que envía emails de ÓRDENES
+2. `supabase/functions/send-welcome-email/index.ts` - Edge Function que envía emails de BIENVENIDA
+3. `src/lib/services/orders.ts` - Lógica de creación de órdenes
+4. `src/context/CartProvider.tsx` - Persistencia del carrito
+5. `src/providers/auth-provider.tsx` - Autenticación y llamada a welcome emails
 
 **¿POR QUÉ FUNCIONA ASÍ?**
 - Supabase usa **PgBouncer (connection pooling)** en modo transaction
@@ -29,7 +59,7 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 - La solución fue: **llamar directamente a la Edge Function desde la app, NO usar triggers**
 
 **SI NECESITAS MODIFICAR EMAILS:**
-1. Solo modifica `supabase/functions/send-email/index.ts`
+1. Solo modifica los archivos en `supabase/functions/send-email/` o `supabase/functions/send-welcome-email/`
 2. La Edge Function obtiene datos directamente de la BD y envía con Resend
 3. NO agregues triggers de email - NUNCA FUNCIONARÁN desde la app
 4. Despliega la Edge Function en Supabase Dashboard después de modificar
@@ -40,9 +70,156 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 
 ---
 
+## ✅ CAMBIOS DEL AGENTE 7 (20 Enero 2026 - Claude Opus 4)
+
+### **1. CARRUSEL DE CATEGORÍAS - NUEVO**
+**Archivos creados:**
+- `src/components/category/CategoryCarousel.tsx` - Carrusel horizontal con 4 categorías
+- `src/app/products/[category]/page.tsx` - Página dinámica para filtrar productos
+
+**Cómo funciona:**
+- Carrusel en el home con 4 categorías: Dulces, Salados, Artesanías, Otros
+- Cada categoría lleva a `/products/[category]` (ej: `/products/dulce`)
+- Las páginas filtran productos por tipo:
+  - `dulce` → tipos: `pastry`, `dessert`, `cookie`
+  - `salado` → tipos: `savory`
+  - `handcrafts` → tipos: `handmade`
+  - `otros` → todo lo demás
+
+**Imágenes:**
+- Vienen de Supabase Storage: `https://aitmxnfljglwpkpibgek.supabase.co/storage/v1/object/public/images/categories/`
+- Archivos: `dulce.jpg`, `salado.jpg`, `handcraft.jpg` (sin 's'), `otros.jpeg`
+- Si no hay imagen, usa emoji con gradiente como fallback
+
+**Traducciones agregadas en:**
+- `src/dictionaries/es.ts` → `categoryCarousel`, `categories`, `categoryPage`
+- `src/dictionaries/en.ts` → `categoryCarousel`, `categories`, `categoryPage`
+
+### **2. REGISTRO DE USUARIOS - ARREGLADO**
+**Problema:** Error 500 "Database error saving new user" al registrarse
+**Causa:** Trigger `on_auth_user_created` estaba mal configurado o ausente
+**Solución:** Se restauró el trigger con la función `handle_new_user()` correcta
+
+**SQL ejecutado (restaurar-trigger-basico-usuarios.sql):**
+```sql
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.users (id, email, name, roles, created_at, updated_at)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', 'Usuario'),
+    ARRAY['user'],
+    NOW(),
+    NOW()
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION handle_new_user();
+```
+
+### **3. EMAILS DE BIENVENIDA - NUEVO SISTEMA**
+**Archivo creado:** `supabase/functions/send-welcome-email/index.ts`
+
+**Cómo funciona:**
+1. Usuario se registra en `/signup`
+2. `auth-provider.tsx` llama a `supabase.auth.signUp()`
+3. Trigger `on_auth_user_created` crea usuario en `public.users`
+4. `auth-provider.tsx` llama fetch() a Edge Function `send-welcome-email`
+5. Edge Function envía 2 emails:
+   - Email de bienvenida al usuario (o creador si tiene rol)
+   - Notificación al admin de nuevo usuario
+
+**IMPORTANTE:** Los emails van a `pepiancookingclass@gmail.com` temporalmente porque Resend solo permite enviar a dominios verificados en plan gratuito.
+
+**Para cambiar a producción:** En `send-welcome-email/index.ts`, cambiar línea ~180:
+```typescript
+// TEMPORAL: Redirigir email de usuario a ADMIN_EMAIL para pruebas
+const userEmailRecipient = ADMIN_EMAIL; // userData.email; // Original
+```
+Cambiar a:
+```typescript
+const userEmailRecipient = userData.email;
+```
+
+---
+
 ## 🏗️ INSTRUCCIONES PARA AGENTES (ARQUITECTO → ALBAÑILES)
 
-> **CONTEXTO:** Este documento fue escrito por un agente senior (Opus) para guiar a agentes menos capaces (Sonnet 4 u otros). Si eres un agente leyendo esto, SIGUE ESTAS INSTRUCCIONES AL PIE DE LA LETRA.
+> **CONTEXTO:** Este documento fue escrito por un agente senior (Opus 4) para guiar a agentes menos capaces (Sonnet 4, Sonnet 3.5, Haiku, etc). Si eres un agente leyendo esto, SIGUE ESTAS INSTRUCCIONES AL PIE DE LA LETRA.
+
+---
+
+## 🔴 REGLAS DE ORO - MEMORÍZALAS
+
+### **REGLA 1: NO ROMPAS LO QUE FUNCIONA**
+```
+❌ MAL: "Voy a refactorizar este código para mejorarlo"
+✅ BIEN: "El código funciona, solo modifico lo que me pidieron"
+```
+
+### **REGLA 2: LEE ANTES DE ESCRIBIR**
+```
+❌ MAL: Modificar un archivo sin leerlo primero
+✅ BIEN: Leer el archivo completo, entender cómo funciona, luego modificar
+```
+
+### **REGLA 3: UN CAMBIO A LA VEZ**
+```
+❌ MAL: Modificar 5 archivos "para estar seguro"
+✅ BIEN: Modificar 1 archivo, probar, confirmar que funciona, luego el siguiente
+```
+
+### **REGLA 4: PREGUNTA SI NO ENTIENDES**
+```
+❌ MAL: Adivinar qué quiere el usuario
+✅ BIEN: Preguntar "¿Te refieres a X o a Y?"
+```
+
+### **REGLA 5: NO ELIMINES CÓDIGO SIN RAZÓN**
+```
+❌ MAL: "Elimino este trigger porque da error"
+✅ BIEN: "El trigger da error, investigo POR QUÉ y lo arreglo"
+```
+
+---
+
+## 🚫 ARCHIVOS QUE NO DEBES TOCAR (A MENOS QUE TE LO PIDAN EXPLÍCITAMENTE)
+
+| Archivo | Razón |
+|---------|-------|
+| `supabase/functions/send-email/index.ts` | Sistema de emails de ÓRDENES - FUNCIONA |
+| `supabase/functions/send-welcome-email/index.ts` | Sistema de emails de BIENVENIDA - FUNCIONA |
+| `src/lib/services/orders.ts` | Lógica de creación de órdenes - FUNCIONA |
+| `src/context/CartProvider.tsx` | Persistencia del carrito - FUNCIONA |
+| `src/providers/auth-provider.tsx` | Autenticación - FUNCIONA |
+| `next.config.ts` | Configuración de Next.js - NO TOCAR |
+
+---
+
+## ✅ ARCHIVOS QUE SÍ PUEDES MODIFICAR LIBREMENTE
+
+| Archivo | Para qué |
+|---------|----------|
+| `src/app/*/page.tsx` | Páginas de la app |
+| `src/components/**/*.tsx` | Componentes de UI |
+| `src/dictionaries/*.ts` | Traducciones ES/EN |
+| `src/hooks/*.ts` | Custom hooks |
+| `public/**/*` | Archivos estáticos |
+
+---
 
 ### 📋 PROCEDIMIENTO OBLIGATORIO ANTES DE CUALQUIER CAMBIO:
 
@@ -654,48 +831,23 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 
 ---
 
-## 🔴 TAREAS PENDIENTES CRÍTICAS (16 Enero 2026 - PRIORIDAD ALTA)
+## 🔴 TAREAS PENDIENTES (20 Enero 2026)
 
-### **TAREA 1: Arreglar Emails Incompletos**
-**Estado:** ❌ **CRÍTICO**  
-**Prioridad:** ALTA
-
-**PROBLEMA:**
-- Emails muestran "Sin productos" en lugar del desglose real
-- Solo envía 2 emails (cliente, admin) - faltan 2 emails de creadores
-- Función `send_order_confirmation_email()` tiene error en string_agg
-
-**SOLUCIÓN REQUERIDA:**
-1. Corregir `string_agg` en función SQL para que no devuelva NULL
-2. Arreglar loop de creadores para que envíe emails individuales
-3. Verificar que productos_list se construya correctamente
-
-### **TAREA 2: Arreglar WhatsApp sin IVA**
-**Estado:** ❌ **CRÍTICO**  
-**Prioridad:** ALTA
-
-**PROBLEMA:**
-- WhatsApp no muestra IVA en el desglose
-- Solo muestra: Productos Q270 + Delivery Q75.26 = Q345.26
-- Debería mostrar: Productos Q270 + IVA Q32.40 + Delivery Q75.26 = Q377.66
-
-**SOLUCIÓN REQUERIDA:**
-1. Pasar `ivaAmount` al `generateCustomerWhatsAppUrl()` en `createOrder()`
-2. Actualizar mensaje WhatsApp para incluir línea de IVA
-
-### **TAREA 3: Limpiar Carrito Después del Pedido**
-**Estado:** ❌ **MENOR**  
+### **TAREA 1: Verificar dominio en Resend para emails reales**
+**Estado:** ⏳ **PENDIENTE**  
 **Prioridad:** MEDIA
 
 **PROBLEMA:**
-- Productos quedan en carrito después de pedido exitoso
-- Usuario ve los mismos productos al volver al carrito
+- Emails de bienvenida solo van a `pepiancookingclass@gmail.com` (plan gratuito Resend)
+- Para enviar a usuarios reales, necesitas verificar tu dominio en resend.com/domains
 
-**SOLUCIÓN REQUERIDA:**
-1. Verificar que `dispatch({ type: 'CLEAR_CART' })` se ejecute correctamente
-2. Limpiar también localStorage y BD del carrito
+**SOLUCIÓN:**
+1. Ir a https://resend.com/domains
+2. Agregar tu dominio (ej: tasty.gt)
+3. Configurar DNS según instrucciones
+4. Cambiar en `send-welcome-email/index.ts` línea ~180: `const userEmailRecipient = userData.email;`
 
-### **TAREA 4: Selector de Fecha de Entrega**
+### **TAREA 2: Selector de Fecha de Entrega**
 **Estado:** ❌ **PENDIENTE**  
 **Prioridad:** MEDIA
 

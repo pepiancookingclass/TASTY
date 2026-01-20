@@ -13,32 +13,35 @@ interface CategoryBase {
   gradient: string;
 }
 
+// Imágenes desde Supabase Storage
+const SUPABASE_STORAGE_URL = 'https://aitmxnfljglwpkpibgek.supabase.co/storage/v1/object/public/images/categories';
+
 const categoriesBase: CategoryBase[] = [
   {
     id: 'dulce',
     slug: 'dulce',
-    image: '/images/categories/dulce.jpg',
+    image: `${SUPABASE_STORAGE_URL}/dulce.jpg`,
     emoji: '🍰',
     gradient: 'from-pink-400 via-rose-400 to-red-400'
   },
   {
     id: 'salado',
     slug: 'salado',
-    image: '/images/categories/salado.jpg',
+    image: `${SUPABASE_STORAGE_URL}/salado.jpg`,
     emoji: '🥘',
     gradient: 'from-amber-400 via-orange-400 to-red-500'
   },
   {
     id: 'handcrafts',
     slug: 'handcrafts',
-    image: '/images/categories/handcrafts.jpg',
+    image: `${SUPABASE_STORAGE_URL}/handcraft.jpg`, // Sin 's' al final
     emoji: '🎨',
     gradient: 'from-violet-400 via-purple-400 to-fuchsia-500'
   },
   {
     id: 'otros',
     slug: 'otros',
-    image: '/images/categories/otros.jpg',
+    image: `${SUPABASE_STORAGE_URL}/otros.jpeg`, // .jpeg no .jpg
     emoji: '✨',
     gradient: 'from-emerald-400 via-teal-400 to-cyan-500'
   }
@@ -71,9 +74,10 @@ export function CategoryCarousel() {
                 className="group flex-shrink-0"
               >
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl group-active:scale-95">
-                  {/* Fondo con gradiente y emoji como fallback */}
+                  {/* Fondo con gradiente */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient}`}>
-                    {!imageErrors[category.id] && (
+                    {/* Solo cargar imagen si existe URL */}
+                    {category.image && !imageErrors[category.id] && (
                       <Image
                         src={category.image}
                         alt={categoryName}
@@ -84,8 +88,8 @@ export function CategoryCarousel() {
                     )}
                   </div>
                   
-                  {/* Emoji grande como fallback visual */}
-                  {imageErrors[category.id] && (
+                  {/* Emoji como visual principal (o fallback si imagen falla) */}
+                  {(!category.image || imageErrors[category.id]) && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-4xl md:text-5xl drop-shadow-lg">
                         {category.emoji}
