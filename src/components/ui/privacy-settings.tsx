@@ -8,6 +8,7 @@ import { Shield, Trash2, Eye, MapPin, Loader2 } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,7 @@ interface PrivacyStatus {
 export function PrivacySettings() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const dict = useDictionary();
   
   const [privacyStatus, setPrivacyStatus] = useState<PrivacyStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,8 +54,8 @@ export function PrivacySettings() {
       console.error('Error loading privacy status:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo cargar el estado de privacidad"
+        title: dict.privacySettings.errorLoadTitle,
+        description: dict.privacySettings.errorLoadDesc
       });
     } finally {
       setIsLoading(false);
@@ -72,8 +74,8 @@ export function PrivacySettings() {
       if (error) throw error;
 
       toast({
-        title: "✅ Datos eliminados",
-        description: "Toda tu información de ubicación ha sido eliminada"
+        title: dict.privacySettings.deletedTitle,
+        description: dict.privacySettings.deletedDesc
       });
 
       // Recargar estado
@@ -82,8 +84,8 @@ export function PrivacySettings() {
       console.error('Error deleting location data:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron eliminar los datos"
+        title: dict.privacySettings.errorLoadTitle,
+        description: dict.privacySettings.errorDeleteDesc
       });
     } finally {
       setIsDeleting(false);
@@ -99,7 +101,7 @@ export function PrivacySettings() {
       <Card>
         <CardContent className="flex items-center justify-center h-32">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          Cargando configuración de privacidad...
+          {dict.privacySettings.loading}
         </CardContent>
       </Card>
     );
@@ -114,21 +116,21 @@ export function PrivacySettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Configuración de Privacidad
+          {dict.privacySettings.title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Estado actual */}
         <div className="space-y-4">
-          <h4 className="font-medium">Estado Actual de tus Datos</h4>
+          <h4 className="font-medium">{dict.privacySettings.currentStatus}</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <MapPin className={`h-4 w-4 ${privacyStatus.has_location_data ? 'text-orange-500' : 'text-gray-400'}`} />
               <div>
-                <p className="text-sm font-medium">Datos de Ubicación</p>
+                <p className="text-sm font-medium">{dict.privacySettings.locationData}</p>
                 <p className="text-xs text-muted-foreground">
-                  {privacyStatus.has_location_data ? 'Guardados en tu perfil' : 'No guardados'}
+                  {privacyStatus.has_location_data ? dict.privacySettings.locationSaved : dict.privacySettings.locationNotSaved}
                 </p>
               </div>
             </div>
@@ -136,9 +138,9 @@ export function PrivacySettings() {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Eye className={`h-4 w-4 ${privacyStatus.has_address_data ? 'text-blue-500' : 'text-gray-400'}`} />
               <div>
-                <p className="text-sm font-medium">Datos de Dirección</p>
+                <p className="text-sm font-medium">{dict.privacySettings.addressData}</p>
                 <p className="text-xs text-muted-foreground">
-                  {privacyStatus.has_address_data ? 'Guardados en tu perfil' : 'No guardados'}
+                  {privacyStatus.has_address_data ? dict.privacySettings.locationSaved : dict.privacySettings.locationNotSaved}
                 </p>
               </div>
             </div>
@@ -146,14 +148,14 @@ export function PrivacySettings() {
 
           {/* Estadísticas de pedidos */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h5 className="font-medium text-blue-800 mb-2">Historial de Pedidos</h5>
+            <h5 className="font-medium text-blue-800 mb-2">{dict.privacySettings.ordersHistory}</h5>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-blue-700">Pedidos pendientes:</span>
+                <span className="font-medium text-blue-700">{dict.privacySettings.pendingOrders}</span>
                 <span className="ml-2">{privacyStatus.pending_orders_with_location}</span>
               </div>
               <div>
-                <span className="font-medium text-blue-700">Pedidos entregados:</span>
+                <span className="font-medium text-blue-700">{dict.privacySettings.deliveredOrders}</span>
                 <span className="ml-2">{privacyStatus.delivered_orders_with_location}</span>
               </div>
             </div>
@@ -164,22 +166,21 @@ export function PrivacySettings() {
 
         {/* Acciones */}
         <div className="space-y-4">
-          <h4 className="font-medium">Gestionar tus Datos</h4>
+          <h4 className="font-medium">{dict.privacySettings.manageData}</h4>
           
           <div className="space-y-3">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h5 className="font-medium text-green-800 mb-1">✅ Protección Automática</h5>
+              <h5 className="font-medium text-green-800 mb-1">{dict.privacySettings.autoProtectionTitle}</h5>
               <p className="text-sm text-green-700">
-                Cuando haces un pedido y eliges "eliminar después de entrega", 
-                tus datos se borran automáticamente una vez completado.
+                {dict.privacySettings.autoProtectionDesc}
               </p>
             </div>
 
             {(privacyStatus.has_location_data || privacyStatus.has_address_data) && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h5 className="font-medium text-red-800 mb-2">🗑️ Eliminar Todos los Datos</h5>
+                <h5 className="font-medium text-red-800 mb-2">{dict.privacySettings.deleteAllTitle}</h5>
                 <p className="text-sm text-red-700 mb-3">
-                  Elimina permanentemente toda tu información de ubicación y direcciones guardadas.
+                  {dict.privacySettings.deleteAllDesc}
                 </p>
                 
                 <AlertDialog>
@@ -188,34 +189,27 @@ export function PrivacySettings() {
                       {isDeleting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Eliminando...
+                          {dict.privacySettings.deleting}
                         </>
                       ) : (
                         <>
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar Mis Datos de Ubicación
+                          {dict.privacySettings.deleteButton}
                         </>
                       )}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar datos de ubicación?</AlertDialogTitle>
+                      <AlertDialogTitle>{dict.privacySettings.confirmTitle}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta acción eliminará permanentemente:
-                        <br />• Tu dirección guardada en el perfil
-                        <br />• Coordenadas de geolocalización
-                        <br />• Datos de ubicación de pedidos pendientes
-                        <br /><br />
-                        Los pedidos ya entregados no se verán afectados.
-                        <br /><br />
-                        <strong>Esta acción no se puede deshacer.</strong>
+                        {dict.privacySettings.confirmDesc}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>{dict.privacySettings.confirmCancel}</AlertDialogCancel>
                       <AlertDialogAction onClick={deleteLocationData} className="bg-red-600 hover:bg-red-700">
-                        Sí, Eliminar Datos
+                        {dict.privacySettings.confirmYes}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -229,12 +223,11 @@ export function PrivacySettings() {
 
         {/* Información */}
         <div className="text-xs text-muted-foreground space-y-2">
-          <p><strong>Política de Privacidad:</strong></p>
+          <p><strong>{dict.privacySettings.infoTitle}</strong></p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>Solo pedimos tu ubicación cuando vas a hacer un pedido</li>
-            <li>Tú decides si guardar o eliminar tus datos después de cada entrega</li>
-            <li>Puedes eliminar todos tus datos en cualquier momento</li>
-            <li>No compartimos tu ubicación con terceros</li>
+            {dict.privacySettings.infoBullets.map((item: string, idx: number) => (
+              <li key={idx}>{item}</li>
+            ))}
           </ul>
         </div>
       </CardContent>

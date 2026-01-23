@@ -61,6 +61,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   // Cargar pedidos del creador desde la base de datos
   const loadOrders = async () => {
     if (!user) {
+      console.log('📭 CreatorOrders: sin usuario, limpiando pedidos');
       setOrders([]);
       setLoading(false);
       return;
@@ -68,43 +69,72 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setLoading(true);
-      
-      // Obtener pedidos que incluyen productos del creador
+      console.log('🔄 CreatorOrders: cargando pedidos para', user.id);
+      // 1) Obtener los productos del creador (sin joins para evitar recursión RLS)
+      const { data: creatorProducts, error: creatorProductsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('creator_id', user.id);
+
+      if (creatorProductsError) throw creatorProductsError;
+
+      const creatorProductIds = (creatorProducts || []).map((p) => p.id);
+
+      if (creatorProductIds.length === 0) {
+        console.log('📭 CreatorOrders: creador no tiene productos, 0 pedidos');
+        setOrders([]);
+        return;
+      }
+
+      console.log('📦 CreatorOrders: productos del creador', creatorProductIds.length);
+
+      // 2) Encontrar order_items que correspondan a esos productos (sin join)
+      const { data: creatorItems, error: itemsForCreatorError } = await supabase
+        .from('order_items')
+        .select('order_id')
+        .in('product_id', creatorProductIds);
+
+      if (itemsForCreatorError) throw itemsForCreatorError;
+
+      const orderIds = Array.from(new Set((creatorItems || []).map((row) => row.order_id)));
+
+      if (orderIds.length === 0) {
+        console.log('📭 CreatorOrders: no hay order_items para productos del creador');
+        setOrders([]);
+        return;
+      }
+
+      console.log('🧾 CreatorOrders: ordenes encontradas', orderIds.length);
+
+      // 3) Traer órdenes y sus items (sin joins complejos)
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          order_items (
-            *,
-            products!inner (
-              creator_id
-            )
-          )
-        `)
-        .eq('order_items.products.creator_id', user.id)
+        .select('*')
+        .in('id', orderIds)
         .order('created_at', { ascending: false });
 
       if (orderError) throw orderError;
 
-      // Transformar datos
       const transformedOrders: Order[] = [];
-      
+
       for (const order of orderData || []) {
-        // Obtener items del pedido
+        console.log('🔍 CreatorOrders: cargando items para orden', order.id);
         const { data: items, error: itemsError } = await supabase
           .from('order_items')
           .select('*')
           .eq('order_id', order.id);
 
         if (!itemsError && items) {
+          console.log('✅ CreatorOrders: items cargados', items.length, 'para orden', order.id);
           const transformedOrder = transformOrderFromDB(order, items);
           transformedOrders.push(transformedOrder);
         }
       }
 
+      console.log('🏁 CreatorOrders: pedidos cargados', transformedOrders.length);
       setOrders(transformedOrders);
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('❌ CreatorOrders: error loading orders:', error);
       toast({
         variant: "destructive",
         title: "Error",

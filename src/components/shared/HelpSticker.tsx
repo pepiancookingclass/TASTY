@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { MessageCircle, X, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export function HelpSticker() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const dict = useDictionary();
 
   const handleWhatsAppClick = () => {
     const phoneNumber = '50230635323';
@@ -27,9 +29,9 @@ export function HelpSticker() {
               </div>
               <div>
                 <h3 className="font-headline font-semibold text-sm text-gray-900">
-                  TASTY Support
+                  {dict.helpSticker.supportTitle}
                 </h3>
-                <p className="text-xs text-gray-500">En línea ahora</p>
+                <p className="text-xs text-gray-500">{dict.helpSticker.online}</p>
               </div>
             </div>
             <Button
@@ -44,10 +46,10 @@ export function HelpSticker() {
           
           <div className="mb-4">
             <p className="text-sm text-gray-700 mb-1">
-              <strong>Do you have questions?</strong>
+              <strong>{dict.helpSticker.question}</strong>
             </p>
             <p className="text-xs text-gray-600">
-              Our support team is here to help you with your bookings or any other questions
+              {dict.helpSticker.description}
             </p>
           </div>
 
@@ -56,7 +58,7 @@ export function HelpSticker() {
             className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            Chat on WhatsApp
+            {dict.helpSticker.cta}
           </Button>
         </Card>
       )}
@@ -78,8 +80,6 @@ export function HelpSticker() {
         ) : (
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
-            {/* Punto de notificación */}
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-pulse" />
           </div>
         )}
       </Button>

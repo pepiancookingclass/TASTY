@@ -42,6 +42,24 @@ const categoryLabels = {
   'artisan_mix': 'Mix Artesanal'
 };
 
+// Placeholder embebido para evitar 400 si falta la imagen
+const COMBO_PLACEHOLDER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f472b6"/>
+          <stop offset="100%" stop-color="#8b5cf6"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="400" fill="url(#g)"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="32" font-weight="600">
+        Combo
+      </text>
+    </svg>`
+  );
+
 export default function CombosPage() {
   const { toast } = useToast();
   const { trackPageView } = useAnalytics();
@@ -280,7 +298,7 @@ function ComboCard({ combo, featured = false }: { combo: Combo; featured?: boole
       
       <div className="relative">
         <Image
-          src={combo.image_url || '/placeholder-combo.jpg'}
+          src={combo.image_url || COMBO_PLACEHOLDER}
           alt={combo.name_es}
           width={400}
           height={250}

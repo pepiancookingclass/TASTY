@@ -36,23 +36,47 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useDictionary } from '@/hooks/useDictionary';
+import { Separator } from '@/components/ui/separator';
 
 const categoryLabels = {
-  'sweet_savory': 'Dulce & Salado',
-  'breakfast': 'Desayuno',
-  'dessert_mix': 'Mix de Postres',
-  'full_meal': 'Comida Completa',
-  'artisan_mix': 'Mix Artesanal'
+  'sweet_savory': { es: 'Dulce & Salado', en: 'Sweet & Savory' },
+  'breakfast': { es: 'Desayuno', en: 'Breakfast' },
+  'dessert_mix': { es: 'Mix de Postres', en: 'Dessert Mix' },
+  'full_meal': { es: 'Comida Completa', en: 'Full Meal' },
+  'artisan_mix': { es: 'Mix Artesanal', en: 'Artisan Mix' }
 };
+
+// Placeholder embebido para evitar 400 si falta la imagen
+const COMBO_PLACEHOLDER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f472b6"/>
+          <stop offset="100%" stop-color="#8b5cf6"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="400" fill="url(#g)"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="32" font-weight="600">
+        Combo
+      </text>
+    </svg>`
+  );
 
 export default function CreatorCombosPage() {
   const { canManageOwnProducts, loading: permissionsLoading } = usePermissions();
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
+  const userId = user?.uid;
+  console.log('🟣 CombosPage: render', { userId, permissionsLoading, canManageOwnProducts });
   
   const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const formatPrice = (price: number) => 
@@ -67,13 +91,38 @@ export default function CreatorCombosPage() {
 
   // Cargar combos del creador
   const loadCombos = async () => {
-    if (!user?.id) return;
+    if (!userId) {
+      console.warn('⚠️ Combos: sin user.id, se omite carga');
+      return;
+    }
     
     try {
       setLoading(true);
+      setHasError(false);
+      console.log('🔄 Combos: cargando combos para usuario', userId);
       
-      // Obtener combos donde el usuario es el creador principal o participante
-      const { data: combosData, error: combosError } = await supabase
+      // Query 1: combos donde es creador (sin depender de combo_creators)
+      const { data: ownedCombos, error: ownedError } = await supabase
+        .from('combos')
+        .select(`
+          *,
+          combo_creators (
+            creator_id,
+            creator_name,
+            products_count,
+            total_contribution
+          )
+        `)
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+
+      if (ownedError) {
+        console.error('❌ Combos: error en query owned', ownedError);
+        throw ownedError;
+      }
+
+      // Query 2: combos donde participa en combo_creators
+      const { data: participantCombos, error: participantError } = await supabase
         .from('combos')
         .select(`
           *,
@@ -84,14 +133,24 @@ export default function CreatorCombosPage() {
             total_contribution
           )
         `)
-        .or(`created_by.eq.${user.id},combo_creators.creator_id.eq.${user.id}`)
+        .eq('combo_creators.creator_id', userId)
         .order('created_at', { ascending: false });
 
-      if (combosError) throw combosError;
+      if (participantError) {
+        console.error('❌ Combos: error en query participant', participantError);
+        throw participantError;
+      }
+
+      const allCombos = [...(ownedCombos || []), ...(participantCombos || [])];
+
+      // deduplicar por id
+      const uniqueCombos = Array.from(new Map(allCombos.map(c => [c.id, c])).values());
+
+      console.log('✅ Combos: recibidos', uniqueCombos.length, uniqueCombos);
 
       // Obtener estadísticas adicionales
       const combosWithStats = await Promise.all(
-        (combosData || []).map(async (combo) => {
+        (uniqueCombos || []).map(async (combo) => {
           const { count: creatorsCount } = await supabase
             .from('combo_creators')
             .select('*', { count: 'exact', head: true })
@@ -111,13 +170,15 @@ export default function CreatorCombosPage() {
       );
 
       setCombos(combosWithStats);
+      console.log('✅ Combos: con stats', combosWithStats.length, combosWithStats);
     } catch (error) {
-      console.error('Error loading combos:', error);
+      console.error('❌ Combos: error cargando combos', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar los combos"
+        title: dict.creatorCombos.errorTitle,
+        description: dict.creatorCombos.errorDesc
       });
+      setHasError(true);
     } finally {
       setLoading(false);
     }
@@ -180,18 +241,24 @@ export default function CreatorCombosPage() {
   };
 
   useEffect(() => {
-    if (canManageOwnProducts && user?.id) {
+    console.log('🟣 CombosPage: useEffect permisos/usuario', { canManageOwnProducts, permissionsLoading, userId });
+    if (canManageOwnProducts && userId) {
       loadCombos();
     }
-  }, [canManageOwnProducts, user?.id]);
+  }, [canManageOwnProducts, userId]);
 
   if (permissionsLoading || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando combos...
+          {dict.creatorCombos.loading}
         </div>
+        {hasError && (
+          <div className="text-center text-sm text-red-600 mt-4">
+            {dict.creatorCombos.errorDesc}
+          </div>
+        )}
       </div>
     );
   }
@@ -207,19 +274,25 @@ export default function CreatorCombosPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Gift className="h-8 w-8" />
-            Mis Combos Colaborativos
+            {dict.creatorCombos.title}
           </h1>
           <p className="text-muted-foreground">
-            Gestiona tus combos y colaboraciones con otros creadores
+            {dict.creatorCombos.subtitle}
           </p>
         </div>
         <Button asChild>
           <Link href="/creator/combos/new">
             <Plus className="mr-2 h-4 w-4" />
-            Crear Combo
+            {dict.creatorCombos.create}
           </Link>
         </Button>
       </div>
+
+      {hasError && (
+        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
+          {dict.creatorCombos.errorDesc}
+        </div>
+      )}
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -229,7 +302,7 @@ export default function CreatorCombosPage() {
               <Gift className="h-5 w-5 text-purple-600" />
               <div>
                 <p className="text-2xl font-bold">{combos.length}</p>
-                <p className="text-sm text-muted-foreground">Total Combos</p>
+                <p className="text-sm text-muted-foreground">{dict.creatorCombos.title}</p>
               </div>
             </div>
           </CardContent>
@@ -242,7 +315,7 @@ export default function CreatorCombosPage() {
                 <p className="text-2xl font-bold">
                   {combos.filter(c => c.is_active).length}
                 </p>
-                <p className="text-sm text-muted-foreground">Activos</p>
+                <p className="text-sm text-muted-foreground">{dict.creatorCombos.isActive}</p>
               </div>
             </div>
           </CardContent>
@@ -255,7 +328,7 @@ export default function CreatorCombosPage() {
                 <p className="text-2xl font-bold">
                   {combos.reduce((sum, c) => sum + (c.creators_count || 0), 0)}
                 </p>
-                <p className="text-sm text-muted-foreground">Colaboraciones</p>
+                <p className="text-sm text-muted-foreground">{dict.creatorCombos.participants}</p>
               </div>
             </div>
           </CardContent>
@@ -271,7 +344,7 @@ export default function CreatorCombosPage() {
                     : 0
                   }%
                 </p>
-                <p className="text-sm text-muted-foreground">Descuento Promedio</p>
+                <p className="text-sm text-muted-foreground">{dict.creatorCombos.avgDiscount}</p>
               </div>
             </div>
           </CardContent>
@@ -282,14 +355,14 @@ export default function CreatorCombosPage() {
       {combos.length === 0 ? (
         <div className="text-center py-16">
           <Gift className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">No tienes combos aún</h2>
+          <h2 className="text-2xl font-semibold mb-2">{dict.creatorCombos.empty}</h2>
           <p className="text-muted-foreground mb-6">
-            ¡Crea tu primer combo colaborativo y aumenta tus ventas trabajando con otros creadores!
+            {dict.creatorCombos.subtitle}
           </p>
           <Button asChild size="lg">
             <Link href="/creator/combos/new">
               <Plus className="mr-2 h-4 w-4" />
-              Crear Mi Primer Combo
+              {dict.creatorCombos.create}
             </Link>
           </Button>
         </div>
@@ -297,13 +370,13 @@ export default function CreatorCombosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {combos.map((combo) => {
             const savings = combo.original_price - combo.total_price;
-            const isOwner = combo.created_by === user?.id;
+            const isOwner = combo.created_by === userId;
 
             return (
               <Card key={combo.id} className="overflow-hidden">
                 <div className="relative">
                   <Image
-                    src={combo.image_url || '/placeholder-combo.jpg'}
+                    src={combo.image_url || COMBO_PLACEHOLDER}
                     alt={combo.name_es}
                     width={300}
                     height={200}
@@ -311,7 +384,7 @@ export default function CreatorCombosPage() {
                   />
                   <div className="absolute top-2 right-2">
                     <Badge variant={combo.is_active ? "default" : "secondary"}>
-                      {combo.is_active ? "Activo" : "Inactivo"}
+                      {combo.is_active ? dict.creatorCombos.isActive : dict.creatorCombos.isInactive}
                     </Badge>
                   </div>
                   <div className="absolute top-2 left-2">
@@ -324,7 +397,7 @@ export default function CreatorCombosPage() {
                     <div className="absolute bottom-2 left-2">
                       <Badge className="bg-purple-600 text-white">
                         <Star className="h-3 w-3 mr-1" />
-                        Destacado
+                      {dict.creatorCombos.featuredBadge}
                       </Badge>
                     </div>
                   )}
@@ -335,12 +408,12 @@ export default function CreatorCombosPage() {
                     <div className="flex-1">
                       <CardTitle className="text-lg line-clamp-1">{combo.name_es}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {categoryLabels[combo.category as keyof typeof categoryLabels]}
+                        {categoryLabels[combo.category as keyof typeof categoryLabels]?.[dict.language === 'en' ? 'en' : 'es'] || combo.category}
                       </p>
                     </div>
                     {isOwner && (
                       <Badge variant="outline" className="text-xs">
-                        Organizador
+                        {dict.creatorCombos.organizerBadge}
                       </Badge>
                     )}
                   </div>
@@ -361,8 +434,8 @@ export default function CreatorCombosPage() {
                         <p className="text-sm text-muted-foreground line-through">
                           {formatPrice(combo.original_price)}
                         </p>
-                        <Badge variant="secondary" className="text-xs">
-                          -{formatPrice(savings)}
+                          <Badge variant="secondary" className="text-xs">
+                            {dict.creatorCombos.savings(formatPrice(savings))}
                         </Badge>
                       </div>
                     </div>
@@ -372,11 +445,11 @@ export default function CreatorCombosPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>{combo.creators_count} creadores</span>
+                      <span>{combo.creators_count} {dict.creatorCombos.participants}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                      <span>{combo.products_count} productos</span>
+                      <span>{combo.products_count} {dict.creatorCombos.products}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -384,7 +457,7 @@ export default function CreatorCombosPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-muted-foreground" />
-                      <span>{combo.current_orders} pedidos</span>
+                      <span>{combo.current_orders} {dict.creatorCombos.orders}</span>
                     </div>
                   </div>
 
@@ -393,14 +466,14 @@ export default function CreatorCombosPage() {
                     <Button asChild variant="outline" size="sm" className="flex-1">
                       <Link href={`/combos/${combo.id}`}>
                         <Eye className="mr-2 h-4 w-4" />
-                        Ver
+                        {dict.creatorCombos.view}
                       </Link>
                     </Button>
                     {isOwner && (
                       <Button asChild variant="outline" size="sm" className="flex-1">
                         <Link href={`/creator/combos/${combo.id}/edit`}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Editar
+                          {dict.creatorCombos.edit}
                         </Link>
                       </Button>
                     )}
@@ -414,7 +487,7 @@ export default function CreatorCombosPage() {
                         className="flex-1"
                         onClick={() => toggleComboStatus(combo.id, combo.is_active)}
                       >
-                        {combo.is_active ? 'Desactivar' : 'Activar'}
+                        {combo.is_active ? dict.creatorCombos.toggleOff : dict.creatorCombos.toggleOn}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -432,19 +505,18 @@ export default function CreatorCombosPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar combo?</AlertDialogTitle>
+                            <AlertDialogTitle>{dict.creatorCombos.deleteConfirmTitle}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              ¿Estás seguro de que quieres eliminar "{combo.name_es}"? 
-                              Esta acción no se puede deshacer y afectará a todos los creadores colaboradores.
+                              {dict.creatorCombos.deleteConfirmDesc}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel>{dict.privacySettings.confirmCancel}</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => deleteCombo(combo.id)}
                               className="bg-red-600 hover:bg-red-700"
                             >
-                              Eliminar
+                              {dict.creatorCombos.delete}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

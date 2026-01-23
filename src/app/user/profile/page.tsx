@@ -57,7 +57,6 @@ export default function UserProfilePage() {
     street: '',
     city: '',
     state: '', // Departamento
-    zip: '',
     country: ''
   });
   
@@ -122,7 +121,6 @@ export default function UserProfilePage() {
             street: userData.address_street || '',
             city: userData.address_city || '',
             state: userData.address_state || '', // Departamento
-            zip: userData.address_zip || '',
             country: userData.address_country || ''
           };
           
@@ -345,7 +343,6 @@ export default function UserProfilePage() {
         address_street: formData.street,
         address_city: formData.city,
         address_state: formData.state,
-        address_zip: formData.zip,
         address_country: formData.country,
         ...(isCreator && { 
           skills: formData.skills, 
@@ -424,7 +421,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Mi Perfil</h1>
+      <h1 className="text-3xl font-bold mb-8">{dict.userProfile.title}</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Columna izquierda - Foto de perfil */}
@@ -506,27 +503,27 @@ export default function UserProfilePage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Información del Perfil</CardTitle>
+              <CardTitle>{dict.userProfile.personalInfo.title}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveChanges}>
                 <div className="space-y-6">
                   {/* Información Personal */}
                   <div>
-                    <h3 className="font-headline text-lg mb-4">Información Personal</h3>
+                    <h3 className="font-headline text-lg mb-4">{dict.userProfile.personalInfo.title}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nombre Completo</Label>
+                        <Label htmlFor="name">{dict.userProfile.personalInfo.name}</Label>
                         <Input 
                           id="name" 
                           value={formData.displayName} 
                           onChange={e => updateField('displayName', e.target.value)}
                           disabled={isSaving}
-                          placeholder="Escribe tu nombre aquí..."
+                          placeholder={dict.userProfile.personalInfo.namePlaceholder}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Correo Electrónico</Label>
+                        <Label htmlFor="email">{dict.userProfile.personalInfo.email}</Label>
                         <Input 
                           id="email" 
                           type="email" 
@@ -536,13 +533,13 @@ export default function UserProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Número de Teléfono</Label>
+                        <Label htmlFor="phone">{dict.userProfile.personalInfo.phone}</Label>
                         <Input 
                           id="phone" 
                           value={formData.phone} 
                           onChange={e => updateField('phone', e.target.value)}
                           disabled={isSaving}
-                          placeholder="+502 1234-5678"
+                          placeholder={dict.userProfile.personalInfo.phonePlaceholder}
                         />
                       </div>
                     </div>
@@ -554,7 +551,7 @@ export default function UserProfilePage() {
                   {isCreator && (
                     <>
                       <div>
-                        <h3 className="font-headline text-lg mb-4">Mis Habilidades de Creador</h3>
+                        <h3 className="font-headline text-lg mb-4">{dict.userProfile.skills.title}</h3>
                         <div className="flex flex-wrap gap-4">
                           <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -568,7 +565,7 @@ export default function UserProfilePage() {
                                 }
                               }}
                             />
-                            <Label htmlFor="pastry">Repostería y Postres</Label>
+                            <Label htmlFor="pastry">{dict.creatorSkills.pastry}</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -582,7 +579,7 @@ export default function UserProfilePage() {
                                 }
                               }}
                             />
-                            <Label htmlFor="savory">Platos Salados</Label>
+                            <Label htmlFor="savory">{dict.creatorSkills.savory}</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -596,19 +593,19 @@ export default function UserProfilePage() {
                                 }
                               }}
                             />
-                            <Label htmlFor="handmade">Artesanías</Label>
+                            <Label htmlFor="handmade">{dict.creatorSkills.handmade}</Label>
                           </div>
                         </div>
                         
                         {/* Instagram solo para creadores */}
                         <div className="space-y-2 mt-4">
-                          <Label htmlFor="instagram">Instagram del negocio (opcional)</Label>
+                          <Label htmlFor="instagram">{dict.userProfile.personalInfo.instagramLabel}</Label>
                           <Input 
                             id="instagram" 
                             value={formData.instagram} 
                             onChange={e => updateField('instagram', e.target.value)}
                             disabled={isSaving}
-                            placeholder="@tu_negocio"
+                            placeholder={dict.userProfile.personalInfo.instagramPlaceholder}
                           />
                         </div>
                       </div>
@@ -617,9 +614,9 @@ export default function UserProfilePage() {
 
                       {/* Fotos del Espacio de Trabajo */}
                       <div>
-                        <h3 className="font-headline text-lg mb-4">📸 Fotos de tu Espacio de Trabajo</h3>
+                        <h3 className="font-headline text-lg mb-4">{dict.userProfile.workspace.title}</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Muestra a tus clientes dónde creas tus productos. Sube fotos de tu cocina, taller, herramientas, etc.
+                          {dict.userProfile.workspace.hint}
                         </p>
                         <MultiImageUpload
                           values={formData.workspacePhotos}
@@ -633,37 +630,14 @@ export default function UserProfilePage() {
                     </>
                   )}
 
-                  {/* Opción para convertirse en Creador */}
-                  {!isCreator && (
-                    <>
-                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg border border-primary/20">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                            <ChefHat className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-headline text-lg mb-2">¡Únete a nuestros Creadores!</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Vende tus productos artesanales, recibe 90% de las ganancias y forma parte de la comunidad TASTY.
-                            </p>
-                            <Button onClick={handleBecomeCreator} className="bg-primary hover:bg-primary/90">
-                              <ChefHat className="w-4 h-4 mr-2" />
-                              Solicitar ser Creador
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-                    </>
-                  )}
-
-                  {/* Dirección de Entrega */}
+                  {/* Dirección / Dirección del creador */}
                   <div>
-                    <h3 className="font-headline text-lg mb-4">Dirección de Entrega</h3>
+                    <h3 className="font-headline text-lg mb-4">
+                      {isCreator ? dict.userProfile.address.creatorTitle : dict.userProfile.address.title}
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="street">Dirección</Label>
+                        <Label htmlFor="street">{dict.userProfile.address.street}</Label>
                         <Input 
                           id="street" 
                           value={formData.street} 
@@ -672,10 +646,10 @@ export default function UserProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="state">Departamento</Label>
+                        <Label htmlFor="state">{dict.userProfile.address.state}</Label>
                         <Select value={selectedDepartment} onValueChange={handleDepartmentChange} disabled={isSaving}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecciona un departamento" />
+                            <SelectValue placeholder={dict.signupPage.departmentPlaceholder} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Guatemala">Guatemala</SelectItem>
@@ -684,10 +658,10 @@ export default function UserProfilePage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="city">Municipio</Label>
+                        <Label htmlFor="city">{dict.userProfile.address.city}</Label>
                         <Select value={formData.city} onValueChange={(value) => updateField('city', value)} disabled={isSaving || !selectedDepartment}>
                           <SelectTrigger>
-                            <SelectValue placeholder={selectedDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento"} />
+                            <SelectValue placeholder={selectedDepartment ? dict.signupPage.cityPlaceholder : dict.signupPage.departmentPlaceholder} />
                           </SelectTrigger>
                           <SelectContent>
                             {availableMunicipalities.map((municipality) => (
@@ -699,16 +673,7 @@ export default function UserProfilePage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="zip">Código Postal</Label>
-                        <Input 
-                          id="zip" 
-                          value={formData.zip} 
-                          onChange={e => updateField('zip', e.target.value)}
-                          disabled={isSaving}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">País</Label>
+                        <Label htmlFor="country">{dict.userProfile.address.country}</Label>
                         <Input 
                           id="country" 
                           value={formData.country} 
@@ -724,9 +689,9 @@ export default function UserProfilePage() {
                     <>
                       <Separator />
                       <div>
-                        <h3 className="font-headline text-lg mb-4">📍 Dirección de tu Lugar Creador</h3>
+                        <h3 className="font-headline text-lg mb-4">{dict.userProfile.creatorLocation.title}</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Configura desde dónde salen tus pedidos para calcular entregas correctamente
+                          {dict.userProfile.creatorLocation.description}
                         </p>
                         
                         {/* Botones de ubicación - COPIADOS DEL CHECKOUT */}
@@ -742,12 +707,12 @@ export default function UserProfilePage() {
                               {isGettingLocationGPS ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Obteniendo ubicación...
+                                  {dict.userProfile.creatorLocation.gettingLocation}
                                 </>
                               ) : (
                                 <>
                                   <MapPin className="mr-2 h-4 w-4" />
-                                  📍 Usar mi ubicación actual
+                                  {dict.userProfile.creatorLocation.useCurrent}
                                 </>
                               )}
                             </Button>
@@ -762,7 +727,7 @@ export default function UserProfilePage() {
                               variant="outline"
                             >
                               <MapPin className="mr-2 h-4 w-4" />
-                              📌 Seleccionar en mapa
+                              {dict.userProfile.creatorLocation.selectOnMap}
                             </Button>
                           </div>
                           
@@ -770,7 +735,7 @@ export default function UserProfilePage() {
                             <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
                               ❌ {locationError}
                               <p className="mt-2 text-xs">
-                                💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.
+                                {dict.userProfile.creatorLocation.locationErrorFallback}
                               </p>
                             </div>
                           )}
@@ -784,10 +749,13 @@ export default function UserProfilePage() {
                                 </div>
                                 <div>
                                   <h4 className="font-medium text-green-800">
-                                    📍 Ubicación de entrega configurada
+                                    {dict.userProfile.creatorLocation.configured}
                                   </h4>
                                   <p className="text-sm text-green-700">
-                                    Lat: {creatorDeliveryConfig.latitude.toFixed(6)}, Lng: {creatorDeliveryConfig.longitude.toFixed(6)}
+                                    {dict.userProfile.creatorLocation.latlng(
+                                      creatorDeliveryConfig.latitude.toFixed(6),
+                                      creatorDeliveryConfig.longitude.toFixed(6)
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -797,7 +765,7 @@ export default function UserProfilePage() {
                           {/* Configuración de delivery */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                             <div className="space-y-2">
-                              <Label>📏 Radio de Entrega (km)</Label>
+                              <Label>{dict.userProfile.creatorLocation.radiusLabel}</Label>
                               <Input 
                                 type="number" 
                                 value={creatorDeliveryConfig.deliveryRadius} 
@@ -810,7 +778,7 @@ export default function UserProfilePage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>💰 Tarifa Base (Q)</Label>
+                              <Label>{dict.userProfile.creatorLocation.baseFeeLabel}</Label>
                               <Input 
                                 type="number" 
                                 step="0.01"
@@ -824,7 +792,7 @@ export default function UserProfilePage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>🚗 Por km extra (Q)</Label>
+                              <Label>{dict.userProfile.creatorLocation.perKmFeeLabel}</Label>
                               <Input 
                                 type="number" 
                                 step="0.01"
@@ -840,7 +808,7 @@ export default function UserProfilePage() {
                           </div>
                           
                           <p className="text-xs text-gray-600">
-                            💡 Los primeros 3km están incluidos en la tarifa base. El sistema calculará automáticamente el costo de entrega basado en la distancia desde tu ubicación.
+                            {dict.userProfile.creatorLocation.hint}
                           </p>
                         </div>
                       </div>
@@ -853,10 +821,10 @@ export default function UserProfilePage() {
                       {isSaving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Guardando...
+                          {dict.loading}
                         </>
                       ) : (
-                        'Guardar Cambios'
+                        dict.userProfile.save
                       )}
                     </Button>
                   </div>
@@ -867,6 +835,30 @@ export default function UserProfilePage() {
 
           {/* Configuración de Privacidad */}
           <PrivacySettings />
+
+        {/* Opción para convertirse en Creador (al final de la página) */}
+        {!isCreator && (
+          <div className="mt-10">
+            <Separator className="mb-6" />
+            <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                  <ChefHat className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-headline text-lg mb-2">{dict.userProfile.becomeCreator.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {dict.userProfile.becomeCreator.description}
+                  </p>
+                  <Button onClick={handleBecomeCreator} className="bg-primary hover:bg-primary/90">
+                    <ChefHat className="w-4 h-4 mr-2" />
+                    {dict.userProfile.becomeCreator.cta}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
       

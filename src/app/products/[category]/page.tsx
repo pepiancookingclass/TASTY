@@ -10,6 +10,9 @@ import { ArrowLeft, Package } from 'lucide-react';
 import Link from 'next/link';
 import { useDictionary } from '@/hooks/useDictionary';
 
+// Imágenes desde Supabase Storage (mismas que el carrusel)
+const SUPABASE_STORAGE_URL = 'https://aitmxnfljglwpkpibgek.supabase.co/storage/v1/object/public/images/categories';
+
 // Configuración de categorías (solo tipos y emojis, nombres vienen del diccionario)
 const categoryConfig: Record<string, {
   types: string[];
@@ -27,13 +30,40 @@ const categoryConfig: Record<string, {
     types: ['handmade'],
     emoji: '🎨'
   },
+  season: {
+    types: ['seasonal'],
+    emoji: '🎉'
+  },
   otros: {
     types: [], // Todos los que no están en las otras categorías
     emoji: '✨'
   }
 };
 
-type CategoryKey = 'dulce' | 'salado' | 'handcrafts' | 'otros';
+type CategoryKey = 'dulce' | 'salado' | 'handcrafts' | 'season' | 'otros';
+
+const categoryVisuals: Record<CategoryKey, { gradient: string; image: string }> = {
+  dulce: {
+    gradient: 'from-pink-500 via-rose-500 to-red-500',
+    image: `${SUPABASE_STORAGE_URL}/dulce.jpg`
+  },
+  salado: {
+    gradient: 'from-amber-500 via-orange-500 to-red-500',
+    image: `${SUPABASE_STORAGE_URL}/salado.jpg`
+  },
+  handcrafts: {
+    gradient: 'from-violet-500 via-purple-500 to-fuchsia-500',
+    image: `${SUPABASE_STORAGE_URL}/handcraft.jpg`
+  },
+  season: {
+    gradient: 'from-amber-500 via-pink-500 to-purple-500',
+    image: `${SUPABASE_STORAGE_URL}/season.jpg`
+  },
+  otros: {
+    gradient: 'from-emerald-500 via-teal-500 to-cyan-500',
+    image: `${SUPABASE_STORAGE_URL}/otros.jpeg`
+  }
+};
 
 export default function CategoryProductsPage() {
   const params = useParams();
@@ -66,10 +96,11 @@ export default function CategoryProductsPage() {
 
   // Obtener traducciones de la categoría
   const categoryData = dict.categories[category as CategoryKey];
+  const visuals = categoryVisuals[category as CategoryKey];
 
   // Filtrar productos por categoría
   const filteredProducts = category === 'otros'
-    ? products.filter(p => !['pastry', 'dessert', 'cookie', 'savory', 'handmade'].includes(p.type))
+    ? products.filter(p => !['pastry', 'dessert', 'cookie', 'savory', 'handmade', 'seasonal'].includes(p.type))
     : products.filter(p => config.types.includes(p.type));
 
   const isLoading = productsLoading || creatorsLoading;
@@ -77,8 +108,16 @@ export default function CategoryProductsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-        <div className="container mx-auto px-4 py-12">
+      <div className="relative overflow-hidden text-white">
+        {/* Fondo con imagen + overlay degradado por categoría */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${visuals?.image ?? ''})` }}
+        />
+        <div className={`absolute inset-0 bg-gradient-to-r ${visuals?.gradient ?? 'from-primary/70 to-secondary/70'} opacity-90`} />
+        <div className="absolute inset-0 bg-black/30" />
+
+        <div className="relative container mx-auto px-4 py-12">
           <Button 
             variant="ghost" 
             asChild 
@@ -90,12 +129,12 @@ export default function CategoryProductsPage() {
             </Link>
           </Button>
           
-          <div className="flex items-center gap-4">
-            <span className="text-5xl">{config.emoji}</span>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold">{categoryData.name}</h1>
-              <p className="text-white/90 mt-1">{categoryData.description}</p>
-            </div>
+          <div className="max-w-2xl">
+            <p className="uppercase tracking-[0.2em] text-white/80 text-sm mb-2">
+              {dict.categoryPage.productsAvailable(filteredProducts.length)}
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold">{categoryData.name}</h1>
+            <p className="text-white/90 mt-2">{categoryData.description}</p>
           </div>
         </div>
       </div>

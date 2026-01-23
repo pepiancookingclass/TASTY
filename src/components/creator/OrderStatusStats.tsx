@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingUp, Package, Clock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
+import { useDictionary } from '@/hooks/useDictionary';
+import { useToast } from '@/hooks/use-toast';
 
 interface StatusStat {
   status: string;
@@ -15,40 +17,34 @@ interface StatusStat {
 
 const statusConfig = {
   'new': {
-    label: 'Nuevos',
+    labelKey: 'new',
     icon: Package,
     color: 'bg-blue-100 text-blue-800 border-blue-200',
-    description: 'Pedidos recién recibidos'
   },
   'preparing': {
-    label: 'En Preparación',
+    labelKey: 'preparing',
     icon: Clock,
     color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    description: 'Siendo preparados'
   },
   'ready': {
-    label: 'Listos',
+    labelKey: 'ready',
     icon: CheckCircle,
     color: 'bg-green-100 text-green-800 border-green-200',
-    description: 'Listos para entrega'
   },
   'out_for_delivery': {
-    label: 'En Camino',
+    labelKey: 'out_for_delivery',
     icon: TrendingUp,
     color: 'bg-purple-100 text-purple-800 border-purple-200',
-    description: 'En proceso de entrega'
   },
   'delivered': {
-    label: 'Entregados',
+    labelKey: 'delivered',
     icon: CheckCircle,
     color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    description: 'Completados exitosamente'
   },
   'cancelled': {
-    label: 'Cancelados',
+    labelKey: 'cancelled',
     icon: Package,
     color: 'bg-red-100 text-red-800 border-red-200',
-    description: 'Pedidos cancelados'
   }
 };
 
@@ -56,6 +52,8 @@ export function OrderStatusStats() {
   const [stats, setStats] = useState<StatusStat[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const dict = useDictionary();
+  const { toast } = useToast();
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(amount);
@@ -69,10 +67,17 @@ export function OrderStatusStats() {
       const { data, error } = await supabase
         .rpc('get_order_status_stats', { creator_uuid: user.id });
 
-      if (error) throw error;
-      setStats(data || []);
-    } catch (error) {
-      console.error('Error loading order stats:', error);
+      if (error) {
+        console.error('Error loading order stats:', error);
+        toast({
+          variant: 'destructive',
+          title: dict.creatorCombos.errorTitle,
+          description: `${error.message || dict.orderStatusStats.sectionTitle} (${error.code || ''})`
+        });
+        setStats([]);
+      } else {
+        setStats(data || []);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,7 +92,7 @@ export function OrderStatusStats() {
       <Card>
         <CardContent className="flex items-center justify-center h-32">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          Cargando estadísticas...
+          {dict.loading}
         </CardContent>
       </Card>
     );
@@ -108,7 +113,7 @@ export function OrderStatusStats() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Pedidos</p>
+                <p className="text-sm font-medium text-muted-foreground">{dict.orderStatusStats.summaryTotal}</p>
                 <p className="text-2xl font-bold">{totalOrders}</p>
               </div>
               <Package className="h-8 w-8 text-muted-foreground" />
@@ -120,7 +125,7 @@ export function OrderStatusStats() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pedidos Activos</p>
+                <p className="text-sm font-medium text-muted-foreground">{dict.orderStatusStats.summaryActive}</p>
                 <p className="text-2xl font-bold text-amber-600">{activeOrders}</p>
               </div>
               <Clock className="h-8 w-8 text-amber-600" />
@@ -132,7 +137,7 @@ export function OrderStatusStats() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Valor Total</p>
+                <p className="text-sm font-medium text-muted-foreground">{dict.orderStatusStats.summaryValue}</p>
                 <p className="text-2xl font-bold text-green-600">{formatCurrency(totalValue)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -144,7 +149,7 @@ export function OrderStatusStats() {
       {/* Estadísticas por estado */}
       <Card>
         <CardHeader>
-          <CardTitle>Estados de Pedidos</CardTitle>
+          <CardTitle>{dict.orderStatusStats.sectionTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -169,8 +174,8 @@ export function OrderStatusStats() {
                     </Badge>
                   </div>
                   
-                  <h4 className="font-semibold mb-1">{config.label}</h4>
-                  <p className="text-xs opacity-80 mb-2">{config.description}</p>
+                  <h4 className="font-semibold mb-1">{dict.orderStatusStats.status[config.labelKey].label}</h4>
+                  <p className="text-xs opacity-80 mb-2">{dict.orderStatusStats.status[config.labelKey].description}</p>
                   
                   {value > 0 && (
                     <p className="text-sm font-medium">

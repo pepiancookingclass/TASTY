@@ -24,6 +24,7 @@ export default function Home() {
   const sweets = products.filter(p => p.type === 'pastry' || p.type === 'dessert' || p.type === 'cookie');
   const savory = products.filter(p => p.type === 'savory');
   const handmades = products.filter(p => p.type === 'handmade');
+  const seasonal = products.filter(p => p.type === 'seasonal');
 
   const isLoading = productsLoading || creatorsLoading || promotionsLoading;
 
@@ -82,6 +83,9 @@ export default function Home() {
             )}
             {savory.length > 0 && (
               <ProductShowcase products={savory} creators={creators} title={dict.productShowcase.savory} id="savory" />
+            )}
+            {seasonal.length > 0 && (
+              <ProductShowcase products={seasonal} creators={creators} title={dict.productShowcase.seasonal} id="seasonal" />
             )}
             {handmades.length > 0 && (
               <ProductShowcase products={handmades} creators={creators} title={dict.productShowcase.handmades} id="handmades" />

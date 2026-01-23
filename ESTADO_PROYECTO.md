@@ -1400,6 +1400,7 @@ Los 2 problemas restantes requieren enfoque diferente:
 2. **Fotos de perfil:** Dan 404, pero workspace funciona. Mismo código, diferente carpeta.
 3. **Tildes:** Usuario reporta que no guarda nombres con tildes. Necesita debugging.
 4. **Imágenes grandes:** CSS necesita ajuste de tamaños.
+5. **Órdenes de creador no visibles:** RLS en `order_items` sigue arrojando `42P17 infinite recursion` y evita que el creador vea pedidos en `/creator/orders`. Se requieren policies simples (cliente por `orders.user_id`, creador por `products.creator_id`, sin joins) y revisar `order_items`/`orders` en Supabase.
 
 ## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
 

@@ -22,6 +22,7 @@ type DietaryFilters = {
 };
 
 export function ProductShowcase({ products, creators, title, id }: ProductShowcaseProps) {
+  const isHandmadeSection = id === 'handmades' || id === 'handcrafts' || id === 'handmade';
   const [filters, setFilters] = useState<DietaryFilters>({
     isGlutenFree: false,
     isVegan: false,
@@ -59,7 +60,7 @@ export function ProductShowcase({ products, creators, title, id }: ProductShowca
     <section id={id}>
       <div className="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-6">
         <h2 className="font-headline text-3xl font-bold">{title}</h2>
-        {id !== 'handmades' && (
+        {!isHandmadeSection && (
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
               {filterOptions.map(option => (
                   <div key={option.id} className="flex items-center space-x-2">

@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface CreatorLocationData {
   creator_latitude: number | null;
@@ -58,6 +59,7 @@ export function CreatorLocationSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { location, error: locationError, loading: isGettingLocation, getLocation } = useGeolocation();
+  const dict = useDictionary();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,8 +122,8 @@ export function CreatorLocationSettings() {
       console.error('Error loading creator location:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar los datos de ubicación"
+        title: dict.creatorLocation.errorLoad,
+        description: dict.creatorLocation.errorLoad
       });
     } finally {
       setLoading(false);
@@ -183,14 +185,14 @@ export function CreatorLocationSettings() {
 
       toast({
         title: "✅ Configuración guardada",
-        description: "Tu configuración de delivery ha sido actualizada"
+        description: dict.creatorLocation.savedDesc
       });
     } catch (error: any) {
       console.error('Error saving location settings:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo guardar la configuración"
+        title: dict.creatorLocation.saveError,
+        description: dict.creatorLocation.saveError
       });
     } finally {
       setSaving(false);
@@ -212,8 +214,8 @@ export function CreatorLocationSettings() {
     if (!latitude || !longitude) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Necesitas configurar una ubicación primero"
+        title: dict.creatorLocation.needLocation,
+        description: dict.creatorLocation.needLocation
       });
       return;
     }
@@ -233,8 +235,8 @@ export function CreatorLocationSettings() {
       if (error) throw error;
 
       toast({
-        title: "✅ Ubicación temporal agregada",
-        description: "La ubicación temporal ha sido configurada"
+        title: dict.creatorLocation.tempAdded,
+        description: dict.creatorLocation.tempAddedDesc
       });
       
       setShowTempLocationDialog(false);
@@ -250,8 +252,8 @@ export function CreatorLocationSettings() {
       console.error('Error adding temporary location:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo agregar la ubicación temporal"
+        title: dict.creatorLocation.tempAddError,
+        description: dict.creatorLocation.tempAddError
       });
     }
   };
@@ -266,8 +268,8 @@ export function CreatorLocationSettings() {
       if (error) throw error;
 
       toast({
-        title: "✅ Ubicación temporal eliminada",
-        description: "La ubicación temporal ha sido desactivada"
+        title: dict.creatorLocation.tempRemoved,
+        description: dict.creatorLocation.tempRemovedDesc
       });
       
       loadTemporaryLocations();
@@ -275,8 +277,8 @@ export function CreatorLocationSettings() {
       console.error('Error removing temporary location:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo eliminar la ubicación temporal"
+        title: dict.creatorLocation.tempRemoveError,
+        description: dict.creatorLocation.tempRemoveError
       });
     }
   };
@@ -289,7 +291,7 @@ export function CreatorLocationSettings() {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando configuración...
+          {dict.creatorLocation.loading}
         </CardContent>
       </Card>
     );
@@ -302,16 +304,16 @@ export function CreatorLocationSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Ubicación Base de Entrega
+            {dict.creatorLocation.baseTitle}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Esta es tu ubicación principal desde donde entregas (casa, taller, etc.)
+            {dict.creatorLocation.baseDescription}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Latitud</Label>
+              <Label>{dict.creatorLocation.latitude}</Label>
               <Input
                 type="number"
                 step="0.000001"
@@ -324,7 +326,7 @@ export function CreatorLocationSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Longitud</Label>
+              <Label>{dict.creatorLocation.longitude}</Label>
               <Input
                 type="number"
                 step="0.000001"
@@ -339,14 +341,14 @@ export function CreatorLocationSettings() {
           </div>
           
           <div className="space-y-2">
-            <Label>Dirección</Label>
+            <Label>{dict.creatorLocation.address}</Label>
             <Textarea
               value={locationData.creator_address}
               onChange={(e) => setLocationData(prev => ({
                 ...prev,
                 creator_address: e.target.value
               }))}
-              placeholder="Ej: 5ta Avenida 12-34, Zona 1, Ciudad de Guatemala"
+              placeholder={dict.creatorLocation.addressPlaceholder}
               rows={2}
             />
           </div>
@@ -361,12 +363,12 @@ export function CreatorLocationSettings() {
               {isGettingLocation ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Obteniendo...
+                  {dict.creatorLocation.gettingLocation}
                 </>
               ) : (
                 <>
                   <Navigation className="mr-2 h-4 w-4" />
-                  Usar Mi Ubicación Actual
+                  {dict.creatorLocation.useCurrent}
                 </>
               )}
             </Button>
@@ -382,7 +384,7 @@ export function CreatorLocationSettings() {
           {location && (
             <div className="flex items-center gap-2 text-sm text-green-600">
               <Check className="h-4 w-4" />
-              Ubicación obtenida: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+              {dict.creatorLocation.locationFetched(location.lat.toFixed(6), location.lng.toFixed(6))}
             </div>
           )}
         </CardContent>
@@ -393,7 +395,7 @@ export function CreatorLocationSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Configuración de Delivery
+            {dict.creatorLocation.deliveryTitle}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -401,7 +403,7 @@ export function CreatorLocationSettings() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Radius className="h-4 w-4" />
-                Radio Máximo (km)
+                {dict.creatorLocation.radiusLabel}
               </Label>
               <Input
                 type="number"
@@ -418,7 +420,7 @@ export function CreatorLocationSettings() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                Tarifa Base
+                {dict.creatorLocation.baseFeeLabel}
               </Label>
               <Input
                 type="number"
@@ -435,7 +437,7 @@ export function CreatorLocationSettings() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                Costo por km adicional
+                {dict.creatorLocation.perKmLabel}
               </Label>
               <Input
                 type="number"
@@ -451,13 +453,11 @@ export function CreatorLocationSettings() {
           </div>
 
           <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-medium mb-2">Ejemplo de Cálculo:</h4>
+            <h4 className="font-medium mb-2">{dict.creatorLocation.calcExample}</h4>
             <p className="text-sm text-muted-foreground">
-              • Primeros 3 km: {formatPrice(locationData.creator_base_delivery_fee)}
-              <br />
-              • Km adicionales: +{formatPrice(locationData.creator_per_km_fee)} por km
-              <br />
-              • Radio máximo: {locationData.creator_delivery_radius} km
+              {dict.creatorLocation.calcBase(formatPrice(locationData.creator_base_delivery_fee))}<br />
+              {dict.creatorLocation.calcPerKm(formatPrice(locationData.creator_per_km_fee))}<br />
+              {dict.creatorLocation.calcRadius(locationData.creator_delivery_radius)}
             </p>
           </div>
         </CardContent>
@@ -470,51 +470,51 @@ export function CreatorLocationSettings() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Ubicaciones Temporales
+                {dict.creatorLocation.tempTitle}
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Para cuando entregas desde otro lugar (eventos, mercados, etc.)
+                {dict.creatorLocation.tempDescription}
               </p>
             </div>
             <Dialog open={showTempLocationDialog} onOpenChange={setShowTempLocationDialog}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Agregar
+                  {dict.creatorLocation.tempAdd}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Agregar Ubicación Temporal</DialogTitle>
+                  <DialogTitle>{dict.creatorLocation.tempDialogTitle}</DialogTitle>
                   <DialogDescription>
-                    Configura una ubicación temporal desde donde entregarás por un tiempo limitado
+                    {dict.creatorLocation.tempDialogDesc}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Dirección</Label>
+                    <Label>{dict.creatorLocation.tempAddress}</Label>
                     <Textarea
                       value={tempLocationForm.address}
                       onChange={(e) => setTempLocationForm(prev => ({
                         ...prev,
                         address: e.target.value
                       }))}
-                      placeholder="Ej: Mercado Central, Stand 15"
+                      placeholder={dict.creatorLocation.addressPlaceholder}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Motivo</Label>
+                    <Label>{dict.creatorLocation.tempReason}</Label>
                     <Input
                       value={tempLocationForm.reason}
                       onChange={(e) => setTempLocationForm(prev => ({
                         ...prev,
                         reason: e.target.value
                       }))}
-                      placeholder="Ej: Evento especial, Mercado navideño"
+                      placeholder={dict.creatorLocation.tempReasonPlaceholder}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Válido hasta</Label>
+                    <Label>{dict.creatorLocation.tempValidUntil}</Label>
                     <Input
                       type="datetime-local"
                       value={tempLocationForm.valid_until}
@@ -527,10 +527,10 @@ export function CreatorLocationSettings() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowTempLocationDialog(false)}>
-                    Cancelar
+                    {dict.creatorLocation.tempCancel}
                   </Button>
                   <Button onClick={handleAddTemporaryLocation}>
-                    Agregar Ubicación
+                    {dict.creatorLocation.tempSave}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -540,7 +540,7 @@ export function CreatorLocationSettings() {
         <CardContent>
           {temporaryLocations.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
-              No tienes ubicaciones temporales configuradas
+              {dict.creatorLocation.tempEmpty}
             </p>
           ) : (
             <div className="space-y-3">
@@ -550,7 +550,9 @@ export function CreatorLocationSettings() {
                     <p className="font-medium">{location.address}</p>
                     <p className="text-sm text-muted-foreground">{location.reason}</p>
                     <p className="text-xs text-muted-foreground">
-                      Válido hasta: {new Date(location.valid_until).toLocaleString('es-GT')}
+                      {dict.creatorLocation.tempValidUntilValue(
+                        new Date(location.valid_until).toLocaleString(dict.language === 'en' ? 'en-US' : 'es-GT')
+                      )}
                     </p>
                   </div>
                   <Button
@@ -577,12 +579,12 @@ export function CreatorLocationSettings() {
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Guardando...
+              {dict.creatorLocation.saving}
             </>
           ) : (
             <>
               <Check className="mr-2 h-4 w-4" />
-              Guardar Configuración
+              {dict.creatorLocation.saveButton}
             </>
           )}
         </Button>

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useDictionary } from '@/hooks/useDictionary';
 
 interface CategoryBase {
-  id: 'dulce' | 'salado' | 'handcrafts' | 'otros';
+  id: 'dulce' | 'salado' | 'handcrafts' | 'season' | 'otros';
   slug: string;
   image: string;
   emoji: string;
@@ -37,6 +37,13 @@ const categoriesBase: CategoryBase[] = [
     image: `${SUPABASE_STORAGE_URL}/handcraft.jpg`, // Sin 's' al final
     emoji: '🎨',
     gradient: 'from-violet-400 via-purple-400 to-fuchsia-500'
+  },
+  {
+    id: 'season',
+    slug: 'season',
+    image: `${SUPABASE_STORAGE_URL}/season.jpg`,
+    emoji: '🎉',
+    gradient: 'from-amber-400 via-pink-400 to-purple-500'
   },
   {
     id: 'otros',

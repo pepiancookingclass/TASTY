@@ -245,6 +245,7 @@ export function NewProductForm() {
                                     <SelectItem value="savory">{dict.creatorProducts.new.details.type_savory}</SelectItem>
                                     <SelectItem value="cookie">{dict.creatorProducts.new.details.type_cookie}</SelectItem>
                                     <SelectItem value="handmade">{dict.creatorProducts.new.details.type_handmade}</SelectItem>
+                                <SelectItem value="seasonal">{dict.creatorProducts.new.details.type_seasonal}</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
