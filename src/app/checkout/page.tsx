@@ -141,19 +141,40 @@ export default function CheckoutPage() {
     return format(d, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
   };
 
+  // Asegurar que los municipios se llenen cuando el departamento viene prellenado
+  useEffect(() => {
+    if (!deliveryData.department) return;
+    const municipalities = GUATEMALA_DEPARTMENTS[deliveryData.department as keyof typeof GUATEMALA_DEPARTMENTS] || [];
+    setAvailableMunicipalities(municipalities);
+  }, [deliveryData.department]);
+
   // Prefill datos de entrega cuando el perfil llega y los campos están vacíos
   useEffect(() => {
     if (!user) return;
-    setDeliveryData(prev => ({
-      name: prev.name || user.displayName || '',
-      phone: prev.phone || user.phone || '',
-      email: prev.email || user.email || '',
-      street: prev.street || user.address_street || '',
-      department: prev.department || user.address_state || '',
-      municipality: prev.municipality || user.address_city || '',
-      notes: prev.notes || ''
-    }));
-  }, [user]);
+
+    setDeliveryData(prev => {
+      const next = {
+        name: prev.name || user.displayName || '',
+        phone: prev.phone || user.phone || '',
+        email: prev.email || user.email || '',
+        street: prev.street || user.address_street || '',
+        department: prev.department || user.address_state || '',
+        municipality: prev.municipality || user.address_city || '',
+        notes: prev.notes || ''
+      };
+
+      const isSame =
+        prev.name === next.name &&
+        prev.phone === next.phone &&
+        prev.email === next.email &&
+        prev.street === next.street &&
+        prev.department === next.department &&
+        prev.municipality === next.municipality &&
+        prev.notes === next.notes;
+
+      return isSame ? prev : next;
+    });
+  }, [user?.uid, user?.displayName, user?.email, user?.phone, user?.address_street, user?.address_state, user?.address_city]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-GT', {

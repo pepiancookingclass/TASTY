@@ -1407,6 +1407,14 @@ Los 2 problemas restantes requieren enfoque diferente:
 3. **Tildes:** Usuario reporta que no guarda nombres con tildes. Necesita debugging.
 4. **Imágenes grandes:** CSS necesita ajuste de tamaños.
 5. **Órdenes de creador no visibles:** RLS en `order_items` sigue arrojando `42P17 infinite recursion` y evita que el creador vea pedidos en `/creator/orders`. Se requieren policies simples (cliente por `orders.user_id`, creador por `products.creator_id`, sin joins) y revisar `order_items`/`orders` en Supabase.
+6. **Checkout crash (RESUELTO 23 Ene 2026):** Causa era bucle por objeto `useUser` inestable + prefill que seteaba en cada render. Se memorizó el usuario y se agregó guardas antes de setear. Pendiente validar en dispositivo real que ya no crashea y que el mensaje de WhatsApp muestra IVA y teléfono.
+
+### ✅ ACTUALIZACIÓN (23 Ene 2026 - Checkout sin crash)
+- 🔧 **Arreglo aplicado:** `useUser` ahora memoiza y trae `phone/address` del perfil; el prefill en `/checkout` solo setea si cambian los datos.  
+- 📱 **WhatsApp:** Plantilla ya incluye IVA y el teléfono si existe en el perfil.  
+- 🧪 **Pendiente de probar:** Abrir `/checkout` logueado, verificar prefill (nombre/tel/correo/dirección), calcular delivery, crear pedido y revisar que el mensaje de WhatsApp muestre IVA + teléfono.  
+- ⚠️ **Validación 500m geoloc vs dirección:** Está fuera porque antes rompió el checkout. Reintroducirla solo con pruebas controladas.
+- 😅 **Nota (Agente actual = “estúpido 5” sin resolver WhatsApp al 100%):** Si el perfil no tiene teléfono, el mensaje sigue poniendo “No proporcionado”. Propuesta pendiente de implementar: en `createOrder`, forzar teléfono con fallback en este orden `deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''` para que siempre se envíe el número escrito en el formulario aunque el perfil esté vacío. IVA ya está en la plantilla; si no aparece es por usar build viejo.
 
 ## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
 
