@@ -211,6 +211,20 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     const formattedDelivery = formatDateGuatemala(order.delivery_date)
     const formattedNow = getCurrentDateGuatemala()
 
+    // Construir lista de productos completa
+    const productsListHtml = items.map(item => {
+      const name = item.product_name_es || (item.products as any)?.name_es || 'Producto'
+      const qty = item.quantity
+      const price = item.unit_price
+      const total = qty * price
+      return `• ${qty}x ${name} - Q${price.toFixed(2)} (Q${total.toFixed(2)})`
+    }).join('<br>')
+
+    // Desglose global
+    const globalSubtotal = typeof order.subtotal === 'number' ? order.subtotal : items.reduce((s, it) => s + it.quantity * it.unit_price, 0)
+    const globalIva = typeof order.iva_amount === 'number' ? order.iva_amount : globalSubtotal * 0.12
+    const globalDelivery = typeof order.delivery_fee === 'number' ? order.delivery_fee : 0
+
     // Agrupar items por creador
     const creatorMap = new Map<string, {
       id: string
@@ -302,9 +316,9 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     } else {
       // Solo un creador
       clientPaymentSection = `💰 <strong>RESUMEN FINANCIERO:</strong><br>`
-      clientPaymentSection += `• Subtotal productos: Q${totalSubtotal.toFixed(2)}<br>`
-      clientPaymentSection += `• IVA (12%): Q${(totalSubtotal * 0.12).toFixed(2)}<br>`
-      clientPaymentSection += `• Costo de delivery: Q${(order.delivery_fee || 0).toFixed(2)}<br>`
+      clientPaymentSection += `• Subtotal productos: Q${globalSubtotal.toFixed(2)}<br>`
+      clientPaymentSection += `• IVA (12%): Q${globalIva.toFixed(2)}<br>`
+      clientPaymentSection += `• Costo de delivery: Q${globalDelivery.toFixed(2)}<br>`
       clientPaymentSection += `• <strong>TOTAL: Q${order.total.toFixed(2)}</strong><br><br>`
     }
 
@@ -317,7 +331,13 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       • Fecha: ${formattedNow}<br>
       • Entrega estimada: ${formattedDelivery}<br>
       • Dirección: ${fullAddress}<br><br>
-      🛍️ <strong>TU PEDIDO COMPLETO:</strong> Q${order.total.toFixed(2)}<br><br>
+      🛍️ <strong>TU PEDIDO COMPLETO:</strong> Q${order.total.toFixed(2)}<br>
+      ${productsListHtml}<br><br>
+      💰 <strong>DESGLOSE:</strong><br>
+      • Subtotal: Q${globalSubtotal.toFixed(2)}<br>
+      • IVA (12%): Q${globalIva.toFixed(2)}<br>
+      • Delivery: Q${globalDelivery.toFixed(2)}<br>
+      • <strong>TOTAL: Q${order.total.toFixed(2)}</strong><br><br>
       ${clientPaymentSection}
       📱 <strong>PRÓXIMOS PASOS:</strong><br>
       1. Recuerda enviar el WhatsApp desde tu plataforma de "Mis Pedidos" para que nuestro agente te ayude a coordinar la entrega<br>
@@ -361,7 +381,14 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       
       adminCreatorsSection += `📦 <strong>${creator.name.toUpperCase()}:</strong><br>`
       adminCreatorsSection += `• Productos: Q${creator.subtotal.toFixed(2)} | Ganancia (90%): Q${ganancia90.toFixed(2)} | Comisión TASTY: Q${comisionTasty.toFixed(2)}<br>`
-      adminCreatorsSection += `• Delivery: Q${creator.deliveryFee.toFixed(2)} | IVA: Q${creatorIva.toFixed(2)}<br>`
+      adminCreatorsSection += `• Delivery: Q${creator.deliveryFee.toFixed(2)} | IVA (12%): Q${creatorIva.toFixed(2)}<br>`
+      adminCreatorsSection += `• ITEMS:<br>`
+      adminCreatorsSection += creator.items.map(it => {
+        const name = it.product_name_es || (it.products as any)?.name_es || 'Producto'
+        const total = it.quantity * it.unit_price
+        return `  - ${it.quantity}x ${name} - Q${it.unit_price.toFixed(2)} (Q${total.toFixed(2)})`
+      }).join('<br>')
+      adminCreatorsSection += `<br>`
       adminCreatorsSection += `• <strong>CLIENTE PAGA A ${creator.name.toUpperCase()}: Q${creatorTotal.toFixed(2)}</strong><br><br>`
     })
 

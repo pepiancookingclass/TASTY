@@ -21,7 +21,7 @@ export function sendWhatsAppToAgent(orderData: {
   const message = `🍳 *NUEVO PEDIDO TASTY - SISTEMA*
 📋 *Pedido:* #${orderData.orderId.slice(0, 8)}
 👤 *Cliente:* ${orderData.customerName}
-📱 *Teléfono:* ${orderData.customerPhone || 'No proporcionado'}
+${orderData.customerPhone && orderData.customerPhone.trim() !== '' ? `📱 *Teléfono:* ${orderData.customerPhone}` : ''}
 
 📦 *PRODUCTOS:*
 ${itemsList}
@@ -57,9 +57,15 @@ export function generateCustomerWhatsAppUrl(orderData: {
   ).join('\n');
 
   // Calcular valores financieros
-  const calculatedSubtotal = orderData.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const calculatedIva = calculatedSubtotal * 0.12;
-  const calculatedDeliveryFee = orderData.deliveryFee || (orderData.total - calculatedSubtotal - calculatedIva);
+  const calculatedSubtotal = typeof orderData.subtotal === 'number'
+    ? orderData.subtotal
+    : orderData.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const calculatedIva = typeof orderData.ivaAmount === 'number'
+    ? orderData.ivaAmount
+    : calculatedSubtotal * 0.12;
+  const calculatedDeliveryFee = typeof orderData.deliveryFee === 'number'
+    ? orderData.deliveryFee
+    : (orderData.total - calculatedSubtotal - calculatedIva);
 
   // Construir sección de teléfono solo si existe
   const phoneSection = orderData.customerPhone && orderData.customerPhone.trim() !== '' 

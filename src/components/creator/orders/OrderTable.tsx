@@ -63,13 +63,25 @@ export function OrderTable({ orders }: OrderTableProps) {
               </div>
             </TableCell>
             <TableCell className="text-right">
-              <div className="font-medium">{formatPrice(order.total)}</div>
-              <div className="text-sm text-green-600 font-medium">
-                Tu parte: {formatPrice(order.total * 0.9)}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                (Tasty 10%: {formatPrice(order.total * 0.1)})
-              </div>
+              {(() => {
+                const creatorSubtotal = order.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+                const creatorIva = creatorSubtotal * 0.12;
+                const commissionBase = creatorSubtotal; // 10% solo sobre productos
+                const tastyCommission = commissionBase * 0.1;
+                const creatorTake = commissionBase * 0.9;
+                const displayTotal = creatorSubtotal + creatorIva; // sin delivery (no se reparte aquí)
+                return (
+                  <>
+                    <div className="font-medium">{formatPrice(displayTotal)}</div>
+                    <div className="text-sm text-green-600 font-medium">
+                      Tu parte: {formatPrice(creatorTake)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      (Tasty 10%: {formatPrice(tastyCommission)})
+                    </div>
+                  </>
+                );
+              })()}
             </TableCell>
             <TableCell className="text-center">
               <OrderStatusSelector orderId={order.id} currentStatus={order.status} />

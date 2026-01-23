@@ -58,6 +58,10 @@ const dictionary = {
     deliveryFee: 'Costo de Envío',
     total: 'Total',
     estimatedDelivery: 'Entrega Estimada:',
+    deliveryDateLabel: 'Fecha y hora de entrega deseada (mín. 48h)',
+    deliveryDateHelper: 'Si no eliges, usaremos el mínimo de 48h automáticamente.',
+    deliveryDateErrorTitle: 'Fecha inválida',
+    deliveryDateErrorDesc: 'La fecha de entrega debe ser al menos 48h después de ahora.',
     preparationTime: (hours: number) => `Basado en ${hours}h de preparación.`,
     proceedToCheckout: 'Proceder al Pago',
     checkoutModal: {

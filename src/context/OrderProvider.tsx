@@ -122,7 +122,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         const { data: items, error: itemsError } = await supabase
           .from('order_items')
           .select('*')
-          .eq('order_id', order.id);
+          .eq('order_id', order.id)
+          .in('product_id', creatorProductIds);
 
         if (!itemsError && items) {
           console.log('✅ CreatorOrders: items cargados', items.length, 'para orden', order.id);

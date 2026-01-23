@@ -633,6 +633,12 @@ const userEmailRecipient = userData.email;
 **Agente anterior:** Corrigió varios problemas críticos
 
 **✅ PROBLEMAS RESUELTOS:**
+- ✅ RLS `order_items` simplificado y `user_carts` con policies limpias (406 resuelto con fila por usuario)
+- ✅ Selector de fecha/hora de entrega: carrito y checkout usan el mismo valor (mín 48h) y se envía a la orden
+- ✅ Checkout autorrellena teléfono/dirección desde perfil si están vacíos
+- ✅ WhatsApp: usa subtotal/IVA/delivery reales y no muestra “No proporcionado” en teléfono
+- ✅ Emails cliente/admin/creador ahora incluyen productos y desglose (subtotal, IVA, delivery) y delivery/IVA para creadores
+- ✅ Panel creador: su “Tu parte” y 10% se calculan sobre sus productos (no sobre el total) y solo carga sus items en orders
 - ✅ **Error 42804** - Función `get_user_orders_with_breakdown()` corregida
 - ✅ **"Mis Pedidos" CARGA** - Ya no da error 400
 - ✅ **IVA separado** - Se muestra correctamente en interfaz

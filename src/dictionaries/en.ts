@@ -58,6 +58,10 @@ const dictionary = {
     deliveryFee: 'Delivery Fee',
     total: 'Total',
     estimatedDelivery: 'Estimated Delivery:',
+    deliveryDateLabel: 'Preferred delivery date/time (min. 48h)',
+    deliveryDateHelper: 'If you don’t pick one, we’ll default to the 48h minimum.',
+    deliveryDateErrorTitle: 'Invalid date',
+    deliveryDateErrorDesc: 'Delivery must be at least 48h from now.',
     preparationTime: (hours: number) => `Based on ${hours}hr preparation time.`,
     proceedToCheckout: 'Proceed to Checkout',
     checkoutModal: {

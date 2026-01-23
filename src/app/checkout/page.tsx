@@ -24,6 +24,10 @@ import { DeliveryMap } from '@/components/ui/delivery-map';
 import { LocationSelector } from '@/components/ui/location-selector';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/lib/supabase';
+import { useDictionary } from '@/hooks/useDictionary';
+import { Input as UITextInput } from '@/components/ui/input';
+
+const DELIVERY_DATETIME_KEY = 'tasty-delivery-datetime';
 
 // Datos de Guatemala (mismo que en perfil)
 const GUATEMALA_DEPARTMENTS = {
@@ -48,22 +52,25 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const dict = useDictionary();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [deliveryDateInput, setDeliveryDateInput] = useState<string>('');
   
   // Estados para opciones de privacidad
   const [saveLocationData, setSaveLocationData] = useState(false);
   const [autoDeleteAfterDelivery, setAutoDeleteAfterDelivery] = useState(true);
   
   // Datos de entrega
+  const safeUser: any = user || {};
   const [deliveryData, setDeliveryData] = useState({
-    name: user?.displayName || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-    street: user?.address_street || '',
-    department: user?.address_state || '',
-    municipality: user?.address_city || '',
+    name: safeUser.displayName || '',
+    phone: safeUser.phone || '',
+    email: safeUser.email || '',
+    street: safeUser.address_street || '',
+    department: safeUser.address_state || '',
+    municipality: safeUser.address_city || '',
     notes: ''
   });
 
@@ -103,6 +110,50 @@ export default function CheckoutPage() {
   const minimumDeliveryTime = 48; // horas
   const estimatedDeliveryDate = addHours(new Date(), minimumDeliveryTime);
   const formattedDeliveryDate = format(estimatedDeliveryDate, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
+
+  const formatForInput = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  const minimumDeliveryInput = formatForInput(estimatedDeliveryDate);
+
+  // Prefill fecha de entrega desde carrito o default 48h
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem(DELIVERY_DATETIME_KEY);
+    if (saved) {
+      setDeliveryDateInput(saved);
+    } else {
+      setDeliveryDateInput(minimumDeliveryInput);
+    }
+  }, [minimumDeliveryInput]);
+
+  const getSelectedDeliveryDate = () => {
+    if (deliveryDateInput) {
+      const d = new Date(deliveryDateInput);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return estimatedDeliveryDate;
+  };
+
+  const formatSelectedDateDisplay = () => {
+    const d = getSelectedDeliveryDate();
+    return format(d, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
+  };
+
+  // Prefill datos de entrega cuando el perfil llega y los campos están vacíos
+  useEffect(() => {
+    if (!user) return;
+    setDeliveryData(prev => ({
+      name: prev.name || user.displayName || '',
+      phone: prev.phone || user.phone || '',
+      email: prev.email || user.email || '',
+      street: prev.street || user.address_street || '',
+      department: prev.department || user.address_state || '',
+      municipality: prev.municipality || user.address_city || '',
+      notes: prev.notes || ''
+    }));
+  }, [user]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-GT', {
@@ -341,6 +392,18 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validar fecha de entrega (mínimo 48h)
+    const selectedDeliveryDate = deliveryDateInput ? new Date(deliveryDateInput) : estimatedDeliveryDate;
+    const minDate = addHours(new Date(), minimumDeliveryTime);
+    if (selectedDeliveryDate.getTime() < minDate.getTime()) {
+      toast({
+        variant: "destructive",
+        title: dict.cartView?.deliveryDateErrorTitle ?? "Fecha inválida",
+        description: dict.cartView?.deliveryDateErrorDesc ?? "La fecha de entrega debe ser al menos 48h después de ahora.",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -351,7 +414,7 @@ export default function CheckoutPage() {
         customerEmail: deliveryData.email,
         items: items,
         total: total,
-        deliveryDate: estimatedDeliveryDate,
+        deliveryDate: selectedDeliveryDate,
         deliveryAddress: {
           street: deliveryData.street,
           department: deliveryData.department,
@@ -561,6 +624,27 @@ export default function CheckoutPage() {
                   >
                     Guardar Cambios
                   </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryDate">{dict.cartView?.deliveryDateLabel ?? 'Fecha y hora deseada (mín. 48h)'}</Label>
+                  <UITextInput
+                    id="deliveryDate"
+                    type="datetime-local"
+                    min={minimumDeliveryInput}
+                    value={deliveryDateInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDeliveryDateInput(val);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem(DELIVERY_DATETIME_KEY, val);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {dict.cartView?.deliveryDateHelper ?? 'Si no eliges, usaremos el mínimo de 48h automáticamente.'}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -874,7 +958,7 @@ export default function CheckoutPage() {
                   <Clock className="h-4 w-4" />
                   Entrega estimada
                 </div>
-                <p className="text-sm text-muted-foreground">{formattedDeliveryDate}</p>
+                <p className="text-sm text-muted-foreground">{formatSelectedDateDisplay()}</p>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
                   <p className="text-xs text-blue-700">
                     ⏰ <strong>Política de entrega:</strong> Mínimo 48 horas de anticipación para garantizar la frescura de tus productos.

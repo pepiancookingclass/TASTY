@@ -19,6 +19,8 @@ import { createOrder } from '@/lib/services/orders';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
+const DELIVERY_DATETIME_KEY = 'tasty-delivery-datetime';
+
 export function CartView() {
   const { state, dispatch } = useCart();
   const { items } = state;
@@ -29,6 +31,12 @@ export function CartView() {
   const { toast } = useToast();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [deliveryDateInput, setDeliveryDateInput] = useState<string>('');
+
+  const formatForInput = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
@@ -56,6 +64,18 @@ export function CartView() {
   // 🚚 FECHA DE ENTREGA: Siempre 48h mínimas + coordinación con servicio al cliente
   const minimumDeliveryTime = useMemo(() => addHours(new Date(), 48), []); // 48h mínimas SIEMPRE
   const formattedDeliveryDate = useMemo(() => format(minimumDeliveryTime, "EEEE, MMM d 'at' h:mm a"), [minimumDeliveryTime]);
+  const minimumDeliveryInput = useMemo(() => formatForInput(minimumDeliveryTime), [minimumDeliveryTime]);
+
+  // Cargar fecha guardada (si existe) o usar 48h por defecto
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem(DELIVERY_DATETIME_KEY);
+    if (saved) {
+      setDeliveryDateInput(saved);
+    } else {
+      setDeliveryDateInput(minimumDeliveryInput);
+    }
+  }, [minimumDeliveryInput]);
   
   // ✅ LOGS MOVIDOS A useEffect para evitar loop infinito - SIN dependencias que cambien constantemente
   useEffect(() => {
@@ -95,12 +115,13 @@ export function CartView() {
     setIsProcessing(true);
 
     try {
+      const selectedDeliveryDate = deliveryDateInput ? new Date(deliveryDateInput) : minimumDeliveryTime;
       const order = await createOrder({
         userId: authUser.id,
         customerName: user?.displayName || authUser.email || 'Cliente',
         items: items,
         total: total,
-        deliveryDate: estimatedDeliveryDate,
+        deliveryDate: selectedDeliveryDate,
       });
 
       if (order) {
@@ -246,14 +267,32 @@ export function CartView() {
                  <p className="text-sm font-semibold text-amber-800">{totalPreparationTime}h de trabajo artesanal</p>
                </div>
                
-               {/* 🚚 FECHA DE ENTREGA */}
-               <div className="text-sm text-muted-foreground">
-                 <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
-                 <p>{formattedDeliveryDate}</p>
-                 <p className="text-xs mt-1">
-                   📞 Basado en 48h mínimas + coordinación con servicio al cliente
-                 </p>
-               </div>
+              {/* 🚚 FECHA DE ENTREGA */}
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
+                <p>{formattedDeliveryDate}</p>
+                <p className="text-xs">
+                  📞 Basado en 48h mínimas + coordinación con servicio al cliente
+                </p>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">{dict.cartView.deliveryDateLabel}</label>
+                  <Input
+                    type="datetime-local"
+                    min={minimumDeliveryInput}
+                    value={deliveryDateInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDeliveryDateInput(val);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem(DELIVERY_DATETIME_KEY, val);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {dict.cartView.deliveryDateHelper}
+                  </p>
+                </div>
+              </div>
              </div>
 
           </CardContent>
