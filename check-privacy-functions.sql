@@ -15,3 +15,4 @@ SELECT 'Verificación de funciones de privacidad completada' as resultado;
 
 
 
+

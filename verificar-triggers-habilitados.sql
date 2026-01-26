@@ -14,3 +14,4 @@ SELECT
   tgrelid::regclass as table_name
 FROM pg_trigger 
 WHERE tgrelid = 'orders'::regclass;
+

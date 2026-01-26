@@ -21,3 +21,4 @@ CREATE POLICY "Creators can delete own products" ON products
 
 
 
+

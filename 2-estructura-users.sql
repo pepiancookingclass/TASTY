@@ -11,3 +11,4 @@ WHERE table_name = 'users'
    OR column_name LIKE '%latitude%'
    OR column_name LIKE '%longitude%')
 ORDER BY ordinal_position;
+

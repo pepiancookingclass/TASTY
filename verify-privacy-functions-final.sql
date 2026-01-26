@@ -16,3 +16,4 @@ SELECT 'Funciones de privacidad verificadas y funcionando correctamente' as resu
 
 
 
+

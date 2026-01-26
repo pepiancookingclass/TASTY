@@ -110,3 +110,4 @@ $$;
 -- FUNCIÓN LISTA PARA EJECUTAR
 -- Incluye delays de 1 segundo entre emails
 -- =====================================================
+

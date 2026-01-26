@@ -89,3 +89,4 @@ WHERE event_object_table = 'orders';
 - Asumieron que el trigger existía sin verificar la función específica
 - No limpiaron conflictos de versiones anteriores
 */
+

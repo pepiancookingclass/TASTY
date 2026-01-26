@@ -46,3 +46,4 @@ CREATE TRIGGER save_user_address_on_order
 -- Se ejecuta después de crear cada pedido
 -- Solo actualiza si la dirección es nueva o diferente
 -- =====================================================
+

@@ -7,3 +7,4 @@ WHERE routine_schema = 'public'
   AND (routine_name LIKE '%delivery%'
    OR routine_name LIKE '%location%')
 ORDER BY routine_name;
+

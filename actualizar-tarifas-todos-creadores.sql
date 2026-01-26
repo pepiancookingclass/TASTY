@@ -41,3 +41,4 @@ FROM users
 WHERE 'creator' = ANY(roles) 
   AND creator_base_delivery_fee = 25.00 
   AND creator_per_km_fee = 3.00;
+

@@ -36,3 +36,4 @@ SELECT
 FROM pg_policies 
 WHERE schemaname = 'public' AND tablename = 'users'
 ORDER BY policyname;
+

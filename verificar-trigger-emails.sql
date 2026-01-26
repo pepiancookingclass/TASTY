@@ -20,3 +20,4 @@ AND routine_schema = 'public';
 
 -- 3. Probar función manualmente (reemplazar UUID)
 -- SELECT send_order_confirmation_email('PONER_UUID_DE_ORDEN_AQUI');
+

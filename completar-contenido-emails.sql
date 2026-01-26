@@ -287,3 +287,4 @@ $$;
 -- - Admin: Control completo, creadores, finanzas
 -- - Creador: Sus productos, ganancias 90%, comisión 10%, datos cliente
 -- =====================================================
+

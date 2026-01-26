@@ -40,3 +40,4 @@ CREATE TRIGGER trigger_update_user_carts_updated_at
 -- Comentarios para documentación
 COMMENT ON TABLE user_carts IS 'Backup de carritos de compras de usuarios logueados';
 COMMENT ON COLUMN user_carts.cart_data IS 'Array de productos en formato JSON: [{"product": {...}, "quantity": 1}]';
+

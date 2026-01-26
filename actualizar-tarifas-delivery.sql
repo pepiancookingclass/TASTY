@@ -109,3 +109,4 @@ SELECT * FROM calculate_creator_delivery_fee(
   14.8446::DECIMAL(10, 8),  -- Lat cliente (ejemplo)
   -91.5232::DECIMAL(11, 8)  -- Lng cliente (ejemplo)
 );
+

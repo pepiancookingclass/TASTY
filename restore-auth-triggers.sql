@@ -41,3 +41,4 @@ AND trigger_name IN ('on_auth_user_created', 'send_welcome_email_trigger');
 
 
 
+

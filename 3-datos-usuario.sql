@@ -22,3 +22,4 @@ SELECT
   updated_at
 FROM users 
 WHERE email = 'ruajhostal@gmail.com';
+

@@ -168,3 +168,4 @@ SELECT 'Funciones de privacidad creadas exitosamente' as resultado;
 
 
 
+

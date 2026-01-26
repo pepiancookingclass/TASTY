@@ -112,3 +112,4 @@ SELECT 'TEST 3: Edge Function' as test, check_edge_function() as result;
 
 
 
+

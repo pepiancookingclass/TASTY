@@ -24,3 +24,4 @@ EXCEPTION
     RETURN NEW;
 END;
 $$;
+

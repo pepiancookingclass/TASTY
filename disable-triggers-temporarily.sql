@@ -27,3 +27,4 @@ SELECT 'Triggers eliminados temporalmente - Probar login ahora' as resultado;
 
 
 
+

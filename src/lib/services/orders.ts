@@ -67,6 +67,18 @@ export function generateCustomerWhatsAppUrl(orderData: {
     ? orderData.deliveryFee
     : (orderData.total - calculatedSubtotal - calculatedIva);
 
+  console.log('📱 WhatsApp calc (customer)', {
+    subtotal: calculatedSubtotal,
+    iva: calculatedIva,
+    delivery: calculatedDeliveryFee,
+    phone: orderData.customerPhone,
+    items: orderData.items.map(item => ({
+      name: item.product.name.es,
+      qty: item.quantity,
+      price: item.product.price,
+    })),
+  });
+
   // Construir sección de teléfono solo si existe
   const phoneSection = orderData.customerPhone && orderData.customerPhone.trim() !== '' 
     ? `\n📱 Mi número de celular es: ${orderData.customerPhone}` 
@@ -89,6 +101,8 @@ ${phoneSection}
 📍 Mi dirección de entrega es: ${orderData.deliveryAddress}
 
 Agradeceré me apoyes para coordinar mi entrega. 🙏`;
+
+  console.log('📱 WhatsApp message preview (customer)', message.slice(0, 400));
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${AGENT_WHATSAPP.replace('+', '')}?text=${encodedMessage}`;
@@ -180,6 +194,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
   const subtotal = input.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
   const ivaAmount = subtotal * 0.12;
   const deliveryFee = input.total - subtotal - ivaAmount;
+  const customerPhone = input.customerPhone || '';
   
   console.log('💰 DESGLOSE FINANCIERO:', {
     subtotal: subtotal,
@@ -194,7 +209,13 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     ivaAmount: ivaAmount,
     deliveryFee: deliveryFee,
     total: input.total,
-    itemsCount: input.items.length
+    itemsCount: input.items.length,
+    phone: customerPhone,
+    items: input.items.map(item => ({
+      name: item.product.name.es,
+      qty: item.quantity,
+      price: item.product.price
+    }))
   });
   
   // Crear la orden
@@ -203,7 +224,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     .insert({
       user_id: input.userId,
       customer_name: input.customerName,
-      customer_phone: input.customerPhone,
+      customer_phone: customerPhone,
       customer_email: input.customerEmail,
       total: input.total,
       subtotal: subtotal,
@@ -324,13 +345,14 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     subtotal: subtotal,
     ivaAmount: ivaAmount,
     deliveryFee: deliveryFee,
-    total: input.total
+    total: input.total,
+    phone: customerPhone
   });
 
   const customerWhatsAppUrl = generateCustomerWhatsAppUrl({
     orderId: orderData.id,
     customerName: input.customerName,
-    customerPhone: input.customerPhone || '',
+    customerPhone: customerPhone,
     items: input.items,
     total: input.total,
     deliveryAddress: deliveryAddressText,

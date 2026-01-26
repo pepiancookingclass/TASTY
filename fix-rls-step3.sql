@@ -11,3 +11,4 @@ CREATE POLICY "Users can insert own profile" ON users
 
 
 
+

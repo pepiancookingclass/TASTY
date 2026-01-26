@@ -5,3 +5,4 @@ SELECT
   created_at
 FROM supabase_functions.functions 
 WHERE name = 'send-email';
+

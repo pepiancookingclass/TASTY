@@ -295,3 +295,4 @@ $$;
 -- VERIFICACIÓN: Probar función con orden existente
 -- =====================================================
 -- SELECT send_order_confirmation_email('ORDEN_UUID_AQUI');
+

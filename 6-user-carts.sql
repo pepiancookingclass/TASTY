@@ -7,3 +7,4 @@ SELECT
   updated_at
 FROM user_carts 
 WHERE user_id = (SELECT id FROM users WHERE email = 'ruajhostal@gmail.com');
+

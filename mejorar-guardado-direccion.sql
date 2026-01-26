@@ -69,3 +69,4 @@ CREATE TRIGGER save_user_address_on_order
 -- 3. Preserva datos existentes si los nuevos están vacíos
 -- 4. Logs detallados para debugging
 -- =====================================================
+

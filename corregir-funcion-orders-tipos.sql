@@ -90,3 +90,4 @@ WHERE routine_name = 'get_user_orders_with_breakdown'
 -- ✅ payment_method ahora es VARCHAR(50) como en la tabla
 -- ✅ Error 42804 resuelto
 -- =====================================================
+

@@ -169,3 +169,4 @@ COMMENT ON FUNCTION get_cancellation_hours_remaining IS 'Obtiene las horas resta
 
 
 
+

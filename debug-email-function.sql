@@ -9,3 +9,4 @@ WHERE specific_name IN (
   FROM information_schema.routines 
   WHERE routine_name = 'send_order_confirmation_email'
 );
+

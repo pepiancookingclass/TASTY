@@ -6,3 +6,4 @@
 
 -- O usar URL local si están en desarrollo:
 -- 'http://localhost:54321/functions/v1/send-email'
+

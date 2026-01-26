@@ -50,3 +50,4 @@ FROM calculate_creator_delivery_fee(
   14.5586::DECIMAL(10, 8),  -- Antigua lat
   -90.7339::DECIMAL(11, 8)  -- Antigua lng
 );
+

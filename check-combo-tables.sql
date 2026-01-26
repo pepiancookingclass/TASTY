@@ -16,3 +16,4 @@ SELECT 'Verificación de tablas completada' as resultado;
 
 
 
+

@@ -77,3 +77,4 @@ La Edge Function ahora:
 - No depende de triggers ni funciones SQL con http()
 */
 
+

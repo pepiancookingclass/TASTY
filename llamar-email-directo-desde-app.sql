@@ -2,3 +2,4 @@
 -- En src/lib/services/orders.ts después de crear la orden:
 
 -- await supabase.rpc('send_order_confirmation_email', { order_uuid: orderData.id });
+
