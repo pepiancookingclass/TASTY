@@ -1011,7 +1011,7 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 
 ---
 
-## 🔄 **FLUJO COMPLETO DE PEDIDOS IMPLEMENTADO**
+### 🔄 **FLUJO COMPLETO DE PEDIDOS IMPLEMENTADO**
 
 ### 📱 **FLUJO USUARIO:**
 1. **Carrito:** Cliente agrega productos de múltiples creadores
@@ -1407,14 +1407,7 @@ Los 2 problemas restantes requieren enfoque diferente:
 3. **Tildes:** Usuario reporta que no guarda nombres con tildes. Necesita debugging.
 4. **Imágenes grandes:** CSS necesita ajuste de tamaños.
 5. **Órdenes de creador no visibles:** RLS en `order_items` sigue arrojando `42P17 infinite recursion` y evita que el creador vea pedidos en `/creator/orders`. Se requieren policies simples (cliente por `orders.user_id`, creador por `products.creator_id`, sin joins) y revisar `order_items`/`orders` en Supabase.
-6. **Checkout crash (RESUELTO 23 Ene 2026):** Causa era bucle por objeto `useUser` inestable + prefill que seteaba en cada render. Se memorizó el usuario y se agregó guardas antes de setear. Pendiente validar en dispositivo real que ya no crashea y que el mensaje de WhatsApp muestra IVA y teléfono.
-
-### ✅ ACTUALIZACIÓN (23 Ene 2026 - Checkout sin crash)
-- 🔧 **Arreglo aplicado:** `useUser` ahora memoiza y trae `phone/address` del perfil; el prefill en `/checkout` solo setea si cambian los datos.  
-- 📱 **WhatsApp:** Plantilla ya incluye IVA y el teléfono si existe en el perfil.  
-- 🧪 **Pendiente de probar:** Abrir `/checkout` logueado, verificar prefill (nombre/tel/correo/dirección), calcular delivery, crear pedido y revisar que el mensaje de WhatsApp muestre IVA + teléfono.  
-- ⚠️ **Validación 500m geoloc vs dirección:** Está fuera porque antes rompió el checkout. Reintroducirla solo con pruebas controladas.
-- 😅 **Nota (Agente actual = “estúpido 5” sin resolver WhatsApp al 100%):** Si el perfil no tiene teléfono, el mensaje sigue poniendo “No proporcionado”. Propuesta pendiente de implementar: en `createOrder`, forzar teléfono con fallback en este orden `deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''` para que siempre se envíe el número escrito en el formulario aunque el perfil esté vacío. IVA ya está en la plantilla; si no aparece es por usar build viejo.
+6. **ERROR CRÍTICO ACTUAL (Checkout):** Al entrar a `/checkout` se produce “Maximum update depth exceeded” en runtime. Se intentó agregar validación dirección↔geoloc y se removió, pero el crash persiste. Revisar `src/app/checkout/page.tsx` en dev sin Turbopack para obtener stack real y corregir el ciclo de render (Select/Avatar aparecen en el stack al crashear).
 
 ## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
 
@@ -1433,4 +1426,20 @@ Los 2 problemas restantes requieren enfoque diferente:
 
 ---
 
-*Actualizar este documento después de cada tarea completada.*
+## ✅ ACTUALIZACIÓN (23 Ene 2026 - Checkout sin crash)
+- 🔧 **Arreglo aplicado:** `useUser` ahora memoiza y trae `phone/address` del perfil; el prefill en `/checkout` solo setea si cambian los datos.  
+- 📱 **WhatsApp:** Plantilla ya incluye IVA y el teléfono si existe en el perfil.  
+- 🧪 **Pendiente de probar:** Abrir `/checkout` logueado, verificar prefill (nombre/tel/correo/dirección), calcular delivery, crear pedido y revisar que el mensaje de WhatsApp muestre IVA + teléfono.  
+- ⚠️ **Validación 500m geoloc vs dirección:** Está fuera porque antes rompió el checkout. Reintroducirla solo con pruebas controladas.
+- 😅 **Nota (Agente actual = “estúpido 5” sin resolver WhatsApp al 100%):** Si el perfil no tiene teléfono, el mensaje sigue poniendo “No proporcionado”. Propuesta pendiente de implementar: en `createOrder`, forzar teléfono con fallback en este orden `deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''` para que siempre se envíe el número escrito en el formulario aunque el perfil esté vacío. IVA ya está en la plantilla; si no aparece es por usar build viejo.
+- ✅ **Municipios prellenados funcionando:** Si el departamento viene del perfil, ahora se cargan los municipios automáticamente en el dropdown de `/checkout`.
+- 🟡 **Pendiente WhatsApp:** implementar el fallback de teléfono anterior para que nunca salga “No proporcionado”.
+- 🟡 **Pendiente validación dirección vs geoloc:** plan guardado en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500m); falta implementarlo sin romper checkout.
+- 🔥 **Fallo heredado (agente anterior):** Correos de cliente y admin no muestran los productos ni desglose de delivery (solo total), mientras que el correo de creador sí lista productos y delivery. Se necesita revisar plantillas/edge function `send-email` para cliente/admin; el agente anterior afirmó haberlo arreglado pero no lo hizo.
+- 📌 **Correcciones pendientes claras:**
+  1) WhatsApp: aplicar fallback de teléfono en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para que nunca salga “No proporcionado”. Verificar que IVA se incluya en mensaje.
+  2) Emails cliente/admin: revisar `supabase/functions/send-email/index.ts` para que las plantillas de cliente y admin incluyan lista de productos y desglose de delivery (como ya ocurre en el correo de creador). El agente anterior dijo que estaba arreglado, pero no aparecen en los correos.
+  3) Validación dirección vs geoloc: implementar el plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500m) sin romper checkout.
+
+---
+
