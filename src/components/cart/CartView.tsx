@@ -119,6 +119,8 @@ export function CartView() {
       const order = await createOrder({
         userId: authUser.id,
         customerName: user?.displayName || authUser.email || 'Cliente',
+        customerPhone: user?.phone || (authUser.user_metadata as any)?.phone || '',
+        fallbackPhone: user?.phone || (authUser.user_metadata as any)?.phone || '',
         items: items,
         total: total,
         deliveryDate: selectedDeliveryDate,

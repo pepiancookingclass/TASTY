@@ -122,11 +122,19 @@ export default function CheckoutPage() {
     if (typeof window === 'undefined') return;
     const saved = localStorage.getItem(DELIVERY_DATETIME_KEY);
     if (saved) {
-      setDeliveryDateInput(saved);
+      const savedDate = new Date(saved);
+      // Si lo guardado es inválido o anterior al mínimo, forzar mínimo
+      if (isNaN(savedDate.getTime()) || savedDate.getTime() < estimatedDeliveryDate.getTime()) {
+        setDeliveryDateInput(minimumDeliveryInput);
+        localStorage.setItem(DELIVERY_DATETIME_KEY, minimumDeliveryInput);
+      } else {
+        setDeliveryDateInput(saved);
+      }
     } else {
       setDeliveryDateInput(minimumDeliveryInput);
+      localStorage.setItem(DELIVERY_DATETIME_KEY, minimumDeliveryInput);
     }
-  }, [minimumDeliveryInput]);
+  }, [minimumDeliveryInput, estimatedDeliveryDate]);
 
   const getSelectedDeliveryDate = () => {
     if (deliveryDateInput) {
@@ -413,16 +421,17 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validar fecha de entrega (mínimo 48h)
-    const selectedDeliveryDate = deliveryDateInput ? new Date(deliveryDateInput) : estimatedDeliveryDate;
+    // Validar fecha de entrega (mínimo 48h) y auto-clampar si es menor
+    const selectedDeliveryDateRaw = deliveryDateInput ? new Date(deliveryDateInput) : estimatedDeliveryDate;
+    const selectedDeliveryDate = isNaN(selectedDeliveryDateRaw.getTime()) ? estimatedDeliveryDate : selectedDeliveryDateRaw;
     const minDate = addHours(new Date(), minimumDeliveryTime);
-    if (selectedDeliveryDate.getTime() < minDate.getTime()) {
-      toast({
-        variant: "destructive",
-        title: dict.cartView?.deliveryDateErrorTitle ?? "Fecha inválida",
-        description: dict.cartView?.deliveryDateErrorDesc ?? "La fecha de entrega debe ser al menos 48h después de ahora.",
-      });
-      return;
+    const finalDeliveryDate = selectedDeliveryDate.getTime() < minDate.getTime() ? minDate : selectedDeliveryDate;
+    if (finalDeliveryDate !== selectedDeliveryDate) {
+      // Ajustar el input para reflejar el mínimo y evitar el warning
+      setDeliveryDateInput(formatForInput(finalDeliveryDate));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(DELIVERY_DATETIME_KEY, formatForInput(finalDeliveryDate));
+      }
     }
 
     setIsProcessing(true);
@@ -432,6 +441,7 @@ export default function CheckoutPage() {
         userId: authUser.id,
         customerName: deliveryData.name,
         customerPhone: deliveryData.phone,
+        fallbackPhone: user?.phone || (authUser.user_metadata as any)?.phone || '',
         customerEmail: deliveryData.email,
         items: items,
         total: total,

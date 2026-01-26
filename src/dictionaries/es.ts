@@ -522,7 +522,7 @@ const dictionary = {
     text: 'Hecho con ♡ para delicias caseras.'
   },
   categoryCarousel: {
-    title: '¿Qué te antoja hoy?',
+    title: '¿Qué se te antoja hoy?',
     swipeHint: '← Desliza →'
   },
   categories: {

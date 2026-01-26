@@ -693,23 +693,25 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 - **Función SQL funciona perfectamente** cuando se ejecuta manual
 - **Logs agregados en aplicación** para confirmar si trigger se dispara
 
-### **❌ PROBLEMAS PENDIENTES CRÍTICOS**
+### **❌ PROBLEMAS PENDIENTES CRÍTICOS (ACTUALIZADO 26 Ene 2026)**
 **Estado:** 🔥 **REQUIERE ATENCIÓN INMEDIATA**
 
-**1. ❌ EMAILS - TRIGGER NO SE EJECUTA DESDE APP:**
-- ✅ **Trigger existe** - `send_emails_on_order_creation` confirmado
-- ✅ **Función existe** - `trigger_send_emails()` confirmado  
-- ✅ **Función email funciona** - Envía 4 emails cuando se ejecuta manual
-- ❌ **Trigger no se dispara** desde aplicación (logs agregados para confirmar)
+**1. Emails de pedido (cliente/admin)**
+- ✅ Plantillas corregidas en `supabase/functions/send-email/index.ts`: lista de productos y delivery por creador en cliente y admin.
+- ⚠️ En sandbox se envía al ADMIN_EMAIL (Resend limita destinos); en prod, apuntar a `order.customer_email`.
 
-**2. ❌ WHATSAPP SIN IVA:**
-- ❌ **Falta IVA en mensaje WhatsApp** - Solo muestra subtotal + delivery
-- ❌ **generateCustomerWhatsAppUrl()** no recibe ivaAmount
-- ❌ **AGENTE 4 TAMPOCO PUDO RESOLVER**
+**2. WhatsApp SIN TELÉFONO / SIN IVA**
+- ❌ El mensaje de WhatsApp sigue saliendo sin teléfono/IVA en el texto final, aunque los logs tienen el número y el cálculo del IVA. Varios intentos fallidos; NO resuelto. El agente 8 tampoco lo logró.
+- Se necesita un enfoque nuevo (no es tema de “build”).
 
-**3. ❌ CARRITO NO SE LIMPIA:**
-- ❌ **Productos quedan después del pedido** - Mala experiencia de usuario
-- ❌ **AGENTE 4 TAMPOCO PUDO RESOLVER**
+**3. Fecha mínima 48h (fecha de entrega)**
+- ⚠️ Se clampéa la fecha al mínimo si el usuario elige menos, pero el warning sigue apareciendo en la UI. Revisar validación/estado del input de fecha/hora.
+
+**4. Carrito / limpieza**
+- ⚠️ Flujo checkout limpia; revisar flujo alterno si reaparece.
+
+**5. Validación dirección vs geolocalización (pendiente de implementar)**
+- ❌ No implementada. Plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500 m). Integrar en checkout sin romper el flujo.
 
 **📋 ARCHIVOS AFECTADOS:**
 - ✅ **SQL Functions verificadas**: `send_order_confirmation_email()`, `trigger_send_emails()`
@@ -1408,6 +1410,10 @@ Los 2 problemas restantes requieren enfoque diferente:
 4. **Imágenes grandes:** CSS necesita ajuste de tamaños.
 5. **Órdenes de creador no visibles:** RLS en `order_items` sigue arrojando `42P17 infinite recursion` y evita que el creador vea pedidos en `/creator/orders`. Se requieren policies simples (cliente por `orders.user_id`, creador por `products.creator_id`, sin joins) y revisar `order_items`/`orders` en Supabase.
 6. **Checkout crash (RESUELTO 23 Ene 2026):** Causa era bucle por objeto `useUser` inestable + prefill que seteaba en cada render. Se memorizó el usuario y se agregó guardas antes de setear. Pendiente validar en dispositivo real que ya no crashea y que el mensaje de WhatsApp muestra IVA y teléfono.
+7. **Pendientes actuales (23 Ene 2026):**
+   - WhatsApp: falta fallback de teléfono en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para evitar “No proporcionado”. IVA ya está en la plantilla.
+   - Emails cliente/admin: siguen sin listar productos ni desglose de delivery; revisar plantillas en `supabase/functions/send-email/index.ts` (cliente y admin), el agente anterior no lo arregló.
+   - Validación dirección vs geoloc: plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500m) pendiente de implementar sin romper checkout.
 
 ### ✅ ACTUALIZACIÓN (23 Ene 2026 - Checkout sin crash)
 - 🔧 **Arreglo aplicado:** `useUser` ahora memoiza y trae `phone/address` del perfil; el prefill en `/checkout` solo setea si cambian los datos.  

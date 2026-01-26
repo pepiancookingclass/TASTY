@@ -56,39 +56,52 @@ export function generateCustomerWhatsAppUrl(orderData: {
     `• ${item.quantity}x ${item.product.name.es} - Q${(item.product.price * item.quantity).toFixed(2)}`
   ).join('\n');
 
-  // Calcular valores financieros
+  // Calcular valores financieros con fallback seguro
   const calculatedSubtotal = typeof orderData.subtotal === 'number'
     ? orderData.subtotal
     : orderData.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const calculatedIva = typeof orderData.ivaAmount === 'number'
-    ? orderData.ivaAmount
+  const calculatedIva = Number.isFinite(orderData.ivaAmount)
+    ? (orderData.ivaAmount as number)
     : calculatedSubtotal * 0.12;
-  const calculatedDeliveryFee = typeof orderData.deliveryFee === 'number'
-    ? orderData.deliveryFee
+  const calculatedDeliveryFee = Number.isFinite(orderData.deliveryFee)
+    ? (orderData.deliveryFee as number)
     : (orderData.total - calculatedSubtotal - calculatedIva);
 
-  // Construir sección de teléfono solo si existe
-  const phoneSection = orderData.customerPhone && orderData.customerPhone.trim() !== '' 
-    ? `\n📱 Mi número de celular es: ${orderData.customerPhone}` 
-    : '';
+  // Construir sección de teléfono
+  const phone = (orderData.customerPhone || '').trim();
+  const phoneSection = `📱 Mi número de celular es: ${phone || '(sin teléfono capturado, contáctame por WhatsApp)'}`;
 
-  // Construir mensaje completo
-  const message = `Hola, te saluda *${orderData.customerName}*
+  // Construir mensaje en líneas para asegurar saltos y presencia de IVA
+  const messageLines = [
+    `Hola, te saluda *${orderData.customerName}*`,
+    '',
+    'Hice un pedido de:',
+    itemsList,
+    '',
+    '💰 *DESGLOSE:*',
+    `• Productos: Q${calculatedSubtotal.toFixed(2)}`,
+    `• IVA (12%): Q${calculatedIva.toFixed(2)}`,
+    `• Delivery: Q${calculatedDeliveryFee.toFixed(2)}`,
+    `• *TOTAL: Q${orderData.total.toFixed(2)}*`,
+    '',
+    `💳 *Pago:* ${orderData.paymentMethod === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}`,
+    phoneSection,
+    `📍 Mi dirección de entrega es: ${orderData.deliveryAddress}`,
+    '',
+    'Agradeceré me apoyes para coordinar mi entrega. 🙏'
+  ];
 
-Hice un pedido de:
-${itemsList}
+  const message = messageLines.join('\n');
 
-💰 *DESGLOSE:*
-• Productos: Q${calculatedSubtotal.toFixed(2)}
-• IVA (12%): Q${calculatedIva.toFixed(2)}
-• Delivery: Q${calculatedDeliveryFee.toFixed(2)}
-• *TOTAL: Q${orderData.total.toFixed(2)}*
-
-💳 *Pago:* ${orderData.paymentMethod === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}
-${phoneSection}
-📍 Mi dirección de entrega es: ${orderData.deliveryAddress}
-
-Agradeceré me apoyes para coordinar mi entrega. 🙏`;
+  console.log('🧪 PREVIEW WHATSAPP CLIENTE:', {
+    orderId: orderData.orderId,
+    phone: orderData.customerPhone,
+    subtotal: calculatedSubtotal,
+    iva: calculatedIva,
+    deliveryFee: calculatedDeliveryFee,
+    total: orderData.total,
+    preview: message.slice(0, 400)
+  });
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${AGENT_WHATSAPP.replace('+', '')}?text=${encodedMessage}`;
@@ -101,6 +114,7 @@ export interface CreateOrderInput {
   userId: string;
   customerName: string;
   customerPhone?: string;
+  fallbackPhone?: string;
   customerEmail?: string;
   items: CartItem[];
   total: number;
@@ -164,6 +178,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     userId: input.userId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
+    fallbackPhone: input.fallbackPhone,
     total: input.total,
     itemsCount: input.items.length
   });
@@ -175,6 +190,14 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     quantity: item.quantity,
     total: item.product.price * item.quantity
   })));
+  
+  const finalPhone = [input.customerPhone, input.fallbackPhone]
+    .find((p) => p && p.trim() !== '')?.trim() || '';
+  console.log('📞 WHATSAPP: teléfono final seleccionado', {
+    providedPhone: input.customerPhone,
+    fallbackPhone: input.fallbackPhone,
+    finalPhone
+  });
   
   // Calcular subtotal de productos SIN IVA
   const subtotal = input.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
@@ -194,6 +217,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     ivaAmount: ivaAmount,
     deliveryFee: deliveryFee,
     total: input.total,
+    finalPhone,
     itemsCount: input.items.length
   });
   
@@ -203,7 +227,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     .insert({
       user_id: input.userId,
       customer_name: input.customerName,
-      customer_phone: input.customerPhone,
+      customer_phone: finalPhone,
       customer_email: input.customerEmail,
       total: input.total,
       subtotal: subtotal,
@@ -313,7 +337,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
   const whatsappUrl = sendWhatsAppToAgent({
     orderId: orderData.id,
     customerName: input.customerName,
-    customerPhone: input.customerPhone,
+    customerPhone: finalPhone,
     items: input.items,
     total: input.total,
     deliveryAddress: deliveryAddressText,
@@ -330,7 +354,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
   const customerWhatsAppUrl = generateCustomerWhatsAppUrl({
     orderId: orderData.id,
     customerName: input.customerName,
-    customerPhone: input.customerPhone || '',
+    customerPhone: finalPhone,
     items: input.items,
     total: input.total,
     deliveryAddress: deliveryAddressText,

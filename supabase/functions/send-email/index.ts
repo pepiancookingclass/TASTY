@@ -290,7 +290,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     console.log('📧 ENVIANDO EMAIL AL CLIENTE')
     console.log('📧 ========================================')
 
-    // Construir sección de pagos por creador
+    // Construir sección de pagos por creador (con delivery integrado)
     let clientPaymentSection = ''
     if (numCreators > 1) {
       clientPaymentSection = `💳 <strong>CÓMO VAS A PAGAR (${numCreators} entregas separadas):</strong><br><br>`
@@ -305,8 +305,10 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         clientPaymentSection += `🚚 <strong>CUANDO LLEGUE ${creator.name.toUpperCase()}:</strong><br>`
         clientPaymentSection += `• ${productsList}<br>`
         clientPaymentSection += `• Total productos: Q${creator.subtotal.toFixed(2)}<br>`
-        clientPaymentSection += `• Incluye impuestos y envío<br>`
-        clientPaymentSection += `• 💰 <strong>Pagas a ${creator.name}: Q${creatorTotal.toFixed(2)}</strong><br><br>`
+        clientPaymentSection += `• Delivery: Q${creator.deliveryFee.toFixed(2)}<br>`
+        clientPaymentSection += `• IVA (12%): Q${creatorIva.toFixed(2)}<br>`
+        clientPaymentSection += `• 💰 <strong>Pagas a ${creator.name}: Q${creatorTotal.toFixed(2)}</strong><br>`
+        clientPaymentSection += `• Incluye impuestos y envío<br><br>`
       })
       
       clientPaymentSection += `📝 <strong>IMPORTANTE:</strong><br>`
@@ -351,6 +353,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       WhatsApp: +502 30635323
     `
 
+    // Para ver el correo de cliente en sandbox, enviamos al ADMIN_EMAIL (Resend limita destinos no verificados)
     const clientResult = await sendEmailWithResend(ADMIN_EMAIL, clientSubject, clientHtml)
     if (clientResult.success) {
       emailsSent++
@@ -367,6 +370,12 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     console.log('\n📧 ========================================')
     console.log('📧 ENVIANDO EMAIL AL ADMIN')
     console.log('📧 ========================================')
+
+    // Construir sección de productos global para admin
+    const adminProductsSection = `
+      🛍️ <strong>PRODUCTOS DEL PEDIDO:</strong><br>
+      ${productsListHtml || 'Sin productos'}<br><br>
+    `
 
     // Construir sección de creadores para admin
     let adminCreatorsSection = '👥 <strong>CREADORES Y PAGOS SEPARADOS:</strong><br><br>'
@@ -403,6 +412,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       • Nombre: ${order.customer_name}<br>
       • Email: ${order.customer_email}<br>
       • Teléfono: ${order.customer_phone}<br><br>
+      ${adminProductsSection}
       💰 <strong>DESGLOSE FINANCIERO ADMINISTRATIVO:</strong><br><br>
       ${adminCreatorsSection}
       📊 <strong>RESUMEN ADMINISTRATIVO:</strong><br>
