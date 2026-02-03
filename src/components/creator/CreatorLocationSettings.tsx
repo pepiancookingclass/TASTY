@@ -69,9 +69,10 @@ export function CreatorLocationSettings() {
     creator_latitude: null,
     creator_longitude: null,
     creator_address: '',
-    creator_delivery_radius: 20,
-    creator_base_delivery_fee: 15.00,
-    creator_per_km_fee: 2.00
+    // Defaults acordados: radio 25 km, base Q25, Q3 por km
+    creator_delivery_radius: 25,
+    creator_base_delivery_fee: 25.00,
+    creator_per_km_fee: 3.00
   });
   
   const [temporaryLocations, setTemporaryLocations] = useState<TemporaryLocation[]>([]);
@@ -113,9 +114,10 @@ export function CreatorLocationSettings() {
           creator_latitude: data.creator_latitude,
           creator_longitude: data.creator_longitude,
           creator_address: data.creator_address || '',
-          creator_delivery_radius: data.creator_delivery_radius || 20,
-          creator_base_delivery_fee: data.creator_base_delivery_fee || 15.00,
-          creator_per_km_fee: data.creator_per_km_fee || 2.00
+          // Fallbacks consistentes con los defaults acordados
+          creator_delivery_radius: data.creator_delivery_radius || 25,
+          creator_base_delivery_fee: data.creator_base_delivery_fee || 25.00,
+          creator_per_km_fee: data.creator_per_km_fee || 3.00
         });
       }
     } catch (error: any) {
