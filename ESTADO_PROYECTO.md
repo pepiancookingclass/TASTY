@@ -8,6 +8,11 @@
 
 ## 📋 RESUMEN RÁPIDO - LEE ESTO PRIMERO
 
+**Actualización 03 Feb 2026 (Agente actual):**
+- Defaults de delivery para creadores fijados en la UI: radio 25 km, base Q25, Q3/km.
+- Trigger en BD `trg_set_creator_delivery_defaults` (función `set_creator_delivery_defaults`) rellena automáticamente esos valores cuando se asigna rol `creator`.
+- Proyecto Vercel activo: `tasty-lat` (dominio principal actual). `tasty` queda como secundario; auto-deploy desactivar en caso de ahorrar builds.
+
 ### **¿QUÉ FUNCIONA? (NO TOCAR)**
 | Sistema | Estado | Archivos |
 |---------|--------|----------|
