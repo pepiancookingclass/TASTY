@@ -316,12 +316,8 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       clientPaymentSection += `• Cada creador te cobrará solo por sus productos<br>`
       clientPaymentSection += `• Paga en efectivo a cada uno cuando llegue<br><br>`
     } else {
-      // Solo un creador
-      clientPaymentSection = `💰 <strong>RESUMEN FINANCIERO:</strong><br>`
-      clientPaymentSection += `• Subtotal productos: Q${globalSubtotal.toFixed(2)}<br>`
-      clientPaymentSection += `• IVA (12%): Q${globalIva.toFixed(2)}<br>`
-      clientPaymentSection += `• Costo de delivery: Q${globalDelivery.toFixed(2)}<br>`
-      clientPaymentSection += `• <strong>TOTAL: Q${order.total.toFixed(2)}</strong><br><br>`
+      // Solo un creador: ya se muestra el desglose global
+      clientPaymentSection = ''
     }
 
     const clientSubject = `🍳 [CLIENTE] Confirmación Pedido #${orderUuid.substring(0, 8)}`
