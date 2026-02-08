@@ -26,8 +26,11 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/lib/supabase';
 import { useDictionary } from '@/hooks/useDictionary';
 import { Input as UITextInput } from '@/components/ui/input';
+import { validateAddressDistance } from '@/lib/validate-address-distance';
 
 const DELIVERY_DATETIME_KEY = 'tasty-delivery-datetime';
+const ADDRESS_DISTANCE_THRESHOLD_KM = 0.5;
+const WHATSAPP_SUPPORT_URL = 'https://wa.me/50230635323';
 
 // Datos de Guatemala (mismo que en perfil)
 const GUATEMALA_DEPARTMENTS = {
@@ -91,11 +94,21 @@ export default function CheckoutPage() {
     delivery_fee: number;
     distance_km: number;
   }>>([]);
+  const [addressValidation, setAddressValidation] = useState<{
+    state: 'idle' | 'checking' | 'ok' | 'blocked';
+    distanceKm?: number;
+    message?: string;
+  }>({ state: 'idle' });
   
   // Estado para ubicación manual
   const [manualLocation, setManualLocation] = useState<{lat: number, lng: number} | null>(null);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
   const finalLocation = userLocation || manualLocation;
+
+  // Si el usuario cambia dirección o ubicación, limpiar bloqueo para permitir revalidar
+  useEffect(() => {
+    setAddressValidation((prev) => (prev.state === 'blocked' ? { state: 'idle' } : prev));
+  }, [deliveryData.street, deliveryData.municipality, deliveryData.department, finalLocation?.lat, finalLocation?.lng]);
 
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -189,6 +202,59 @@ export default function CheckoutPage() {
       style: 'currency',
       currency: 'GTQ',
     }).format(price);
+  };
+
+  const runAddressValidation = async () => {
+    if (!(finalLocation && deliveryData.street && deliveryData.department && deliveryData.municipality)) {
+      return { ok: true };
+    }
+    setAddressValidation({ state: 'checking' });
+    const validation = await validateAddressDistance(
+      {
+        street: deliveryData.street,
+        municipality: deliveryData.municipality,
+        department: deliveryData.department,
+        country: 'Guatemala',
+      },
+      { lat: finalLocation.lat, lng: finalLocation.lng },
+      ADDRESS_DISTANCE_THRESHOLD_KM
+    );
+    console.log('📍 Checkout: resultado validación dirección', validation);
+    if (!validation.ok) {
+      setAddressValidation({
+        state: 'blocked',
+        distanceKm: validation.distanceKm,
+        message: validation.warning || validation.error || '',
+      });
+      const distanceText = validation.distanceKm
+        ? `Distancia: ~${Math.round(validation.distanceKm * 1000)} m`
+        : undefined;
+      toast({
+        variant: "destructive",
+        title: dict.addressValidation?.warningTitle ?? "Tu dirección no coincide con tu ubicación",
+        description:
+          (dict.addressValidation?.warningBody ??
+            "Reintenta coincidir tu dirección con tu ubicación. Si no, contáctanos por WhatsApp para obtener ayuda.") +
+          (distanceText ? ` (${distanceText})` : ''),
+        action: (
+          <a
+            className="text-green-700 font-semibold underline"
+            href={WHATSAPP_SUPPORT_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            WhatsApp
+          </a>
+        ) as any
+      });
+      return { ok: false };
+    }
+    setAddressValidation({
+      state: 'ok',
+      distanceKm: validation.distanceKm,
+      message: undefined,
+    });
+    return { ok: true };
   };
 
   const handleDepartmentChange = (department: string) => {
@@ -327,7 +393,7 @@ export default function CheckoutPage() {
               }))
             );
             setDeliveryFee(0);
-            setDeliveryError('❌ Entrega no disponible en tu ubicación. Los creadores de tus productos no entregan a esa distancia.');
+            setDeliveryError(`❌ Entrega no disponible en tu ubicación. Contacta a servicio al cliente: +502 30635323 (WhatsApp: ${WHATSAPP_SUPPORT_URL}).`);
           } else {
             console.log(`✅ Checkout: ENTREGA DISPONIBLE - Total: Q${totalDeliveryFee}`);
             console.log('📊 Checkout: DETALLES ENTREGA EXITOSA:', {
@@ -434,9 +500,23 @@ export default function CheckoutPage() {
       }
     }
 
-    setIsProcessing(true);
-
     try {
+      // Revalidar si es necesario
+      const validationResult = await runAddressValidation();
+      if (validationResult.ok === false) {
+        return;
+      }
+
+      if (addressValidation.state === 'blocked') {
+        toast({
+          variant: "destructive",
+          title: dict.addressValidation?.warningTitle ?? "Tu dirección no coincide con tu ubicación",
+          description: dict.addressValidation?.warningBody ?? "Verifica tu dirección o contáctanos por WhatsApp.",
+        });
+        return;
+      }
+
+      setIsProcessing(true);
       const result = await createOrder({
         userId: authUser.id,
         customerName: deliveryData.name,
@@ -644,12 +724,13 @@ export default function CheckoutPage() {
                 {/* Botón Guardar Dirección */}
                 <div className="pt-4 border-t">
                   <Button 
-                    onClick={() => {
+                    onClick={async () => {
                       console.log('✅ Checkout: Dirección confirmada por usuario:', deliveryData);
                       toast({
                         title: "✅ Dirección guardada exitosamente",
                         description: `${deliveryData.street}, ${deliveryData.municipality}, ${deliveryData.department}`,
                       });
+                      await runAddressValidation();
                     }}
                     disabled={!deliveryData.name || !deliveryData.phone || !deliveryData.department || !deliveryData.municipality || !deliveryData.street}
                   >
@@ -772,6 +853,16 @@ export default function CheckoutPage() {
                             💡 Ubicación aproximada - Centro de Guatemala City
                           </p>
                         )}
+                        <div className="mt-3">
+                          <Button
+                            variant="secondary"
+                            className="bg-accent text-accent-foreground hover:bg-accent/80"
+                            size="sm"
+                            onClick={() => setShowLocationSelector(true)}
+                          >
+                            Cambiar ubicación
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -948,18 +1039,29 @@ export default function CheckoutPage() {
                   <div className="text-xs text-muted-foreground mt-2 p-3 bg-amber-50 border border-amber-200 rounded">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <div>
+                      <div className="space-y-2">
                         <p className="font-medium text-amber-800 mb-1">
-                          🚚 Delivery múltiple - {Object.keys(itemsByCreator).length} creadores diferentes
+                          🚚 Delivery múltiple - {Object.keys(itemsByCreator).length} creadores
                         </p>
                         <p className="text-amber-700">
-                          Tus productos vienen de <strong>{Object.keys(itemsByCreator).length} ubicaciones diferentes</strong>, 
-                          por lo que requieren entregas separadas. Cada creador tiene su propia tarifa de delivery 
-                          basada en su ubicación y distancia hacia ti.
+                          Tus productos vienen de <strong>{Object.keys(itemsByCreator).length} ubicaciones diferentes</strong> y requieren entregas separadas. Cada creador tiene su propia tarifa según distancia.
                         </p>
-                        <p className="text-amber-600 mt-1 text-xs">
-                          💡 Ejemplo: Creador A (Q31.15) + Creador B (Q37.30) = Q68.45 total
-                        </p>
+                        <div className="space-y-1 text-amber-800">
+                          {(deliveryBreakdown?.length ? deliveryBreakdown : []).map((d, idx) => (
+                            <div key={`${d.creator_id || idx}`} className="flex justify-between">
+                              <span>
+                                {d.creator_name || `Creador ${idx + 1}`}
+                                {Number.isFinite(d.distance_km) && ` · ${Number(d.distance_km).toFixed(1)} km`}
+                              </span>
+                              <span>Q {Number(d.delivery_fee || 0).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {(!deliveryBreakdown || deliveryBreakdown.length === 0) && (
+                          <p className="text-amber-700 text-xs">
+                            El costo final se mostrará por creador según la distancia calculada.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1040,7 +1142,7 @@ export default function CheckoutPage() {
                 }
                 handlePlaceOrder();
               }}
-              disabled={isProcessing || !finalLocation || deliveryFee === null || deliveryError !== null}
+              disabled={isProcessing || !finalLocation || deliveryFee === null || deliveryError !== null || addressValidation.state === 'blocked'}
               className="w-full bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-50"
               size="lg"
             >

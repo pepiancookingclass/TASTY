@@ -12,6 +12,7 @@
 - Defaults de delivery para creadores fijados en la UI: radio 25 km, base Q25, Q3/km.
 - Trigger en BD `trg_set_creator_delivery_defaults` (función `set_creator_delivery_defaults`) rellena automáticamente esos valores cuando se asigna rol `creator`.
 - Proyecto Vercel activo: `tasty-lat` (dominio principal actual). `tasty` queda como secundario; auto-deploy desactivar en caso de ahorrar builds.
+- Validación dirección vs ubicación ajustada: intento por zona, fallback municipio+depto, tolerancia aproximada 3 km; probado ok (zona 15, zona 11, Antigua) y mensajes con WhatsApp soporte.
 
 ### **¿QUÉ FUNCIONA? (NO TOCAR)**
 | Sistema | Estado | Archivos |
@@ -882,6 +883,11 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 - Función `get_user_orders_with_breakdown()` tiene tipos de datos incorrectos
 - "Mis Pedidos" no carga (Error 42804: character varying vs text)
 - Necesita corrección urgente de tipos de datos en columna 13
+
+### **TAREA 3: Bilingüalización completa de UI**
+**Estado:** ⏳ **PENDIENTE**  
+**Prioridad:** MEDIA  
+**Descripción:** Mover todos los textos duros a diccionarios ES/EN (checkout, carrito, orders, profile, creator/admin), incluir toasts/mensajes de validación (dirección vs ubicación y entrega no disponible) y plantillas de WhatsApp. Plan documentado en `docs/bilingualizacion.md`.
 
 ### **TAREA 2: Mejorar Flujo WhatsApp Post-Pedido**
 **Estado:** ✅ **COMPLETADO** (PERO ROTO POR ERROR SQL)  

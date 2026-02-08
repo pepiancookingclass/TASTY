@@ -18,6 +18,14 @@ const dictionary = {
     viewProfile: 'Ver Perfil',
     productCount: (count: number) => `${count} productos`,
   },
+  addressValidation: {
+    warningTitle: 'Tu dirección no coincide con tu ubicación',
+    warningBody: 'Verifica o comunícate con servicio al cliente para confirmar tu dirección de entrega.',
+    warningCta: 'Continuar bajo mi responsabilidad',
+    errorTitle: 'No se pudo validar la distancia',
+    errorBody: 'Intenta de nuevo o continúa bajo tu responsabilidad.',
+    retry: 'Reintentar validación',
+  },
   creatorSkills: {
     pastry: 'Repostería y Postres',
     savory: 'Platos Salados',

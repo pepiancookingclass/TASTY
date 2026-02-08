@@ -18,6 +18,14 @@ const dictionary = {
     viewProfile: 'View Profile',
     productCount: (count: number) => `${count} products`,
   },
+  addressValidation: {
+    warningTitle: 'Your address does not match your location',
+    warningBody: 'Please double-check or contact customer service to confirm your delivery address.',
+    warningCta: 'Continue at my own risk',
+    errorTitle: 'Distance could not be validated',
+    errorBody: 'Try again or continue at your own risk.',
+    retry: 'Retry validation',
+  },
   creatorSkills: {
     pastry: 'Pastry & Desserts',
     savory: 'Savory Dishes',
