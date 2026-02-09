@@ -26,6 +26,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 import {
   Select,
   SelectContent,
@@ -110,6 +111,8 @@ export default function AdminAnalyticsPage() {
   const { canAccessAdminPanel, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
+  const t = dict.admin.analytics;
   
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState('7d');
@@ -132,8 +135,8 @@ export default function AdminAnalyticsPage() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     setRefreshing(false);
     toast({
-      title: "Datos actualizados",
-      description: "Los analytics han sido actualizados exitosamente"
+      title: t?.updatedTitle ?? "Datos actualizados",
+      description: t?.updatedDesc ?? "Los analytics han sido actualizados exitosamente"
     });
   };
 
@@ -142,7 +145,7 @@ export default function AdminAnalyticsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando analytics...
+          {t?.loading ?? "Cargando analytics..."}
         </div>
       </div>
     );
@@ -159,10 +162,10 @@ export default function AdminAnalyticsPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <BarChart3 className="h-8 w-8" />
-            Analytics Dashboard
+            {t?.title ?? "Analytics Dashboard"}
           </h1>
           <p className="text-muted-foreground">
-            Análisis completo del comportamiento de usuarios y rendimiento
+            {t?.subtitle ?? "Análisis completo del comportamiento de usuarios y rendimiento"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -171,10 +174,10 @@ export default function AdminAnalyticsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1d">Hoy</SelectItem>
-              <SelectItem value="7d">7 días</SelectItem>
-              <SelectItem value="30d">30 días</SelectItem>
-              <SelectItem value="90d">90 días</SelectItem>
+              <SelectItem value="1d">{t?.ranges?.today ?? "Hoy"}</SelectItem>
+              <SelectItem value="7d">{t?.ranges?.last7 ?? "7 días"}</SelectItem>
+              <SelectItem value="30d">{t?.ranges?.last30 ?? "30 días"}</SelectItem>
+              <SelectItem value="90d">{t?.ranges?.last90 ?? "90 días"}</SelectItem>
             </SelectContent>
           </Select>
           <Button 
@@ -187,11 +190,11 @@ export default function AdminAnalyticsPage() {
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            Actualizar
+            {t?.refresh ?? "Actualizar"}
           </Button>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            Exportar
+            {t?.export ?? "Exportar"}
           </Button>
         </div>
       </div>
@@ -202,7 +205,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Visitantes Únicos</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t?.cards?.uniqueVisitors ?? "Visitantes Únicos"}
+                </p>
                 <p className="text-3xl font-bold">3,247</p>
                 <p className="text-sm text-green-600 flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 mr-1" />
@@ -218,7 +223,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Páginas Vistas</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t?.cards?.pageViews ?? "Páginas Vistas"}
+                </p>
                 <p className="text-3xl font-bold">8,916</p>
                 <p className="text-sm text-green-600 flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 mr-1" />
@@ -234,7 +241,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tasa de Conversión</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t?.cards?.conversionRate ?? "Tasa de Conversión"}
+                </p>
                 <p className="text-3xl font-bold">4.2%</p>
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 mr-1 rotate-180" />
@@ -250,7 +259,9 @@ export default function AdminAnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tiempo Promedio</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t?.cards?.avgTime ?? "Tiempo Promedio"}
+                </p>
                 <p className="text-3xl font-bold">3:24</p>
                 <p className="text-sm text-green-600 flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 mr-1" />
@@ -322,7 +333,7 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Páginas Más Visitadas</CardTitle>
+            <CardTitle>{t?.topPagesTitle ?? "Páginas Más Visitadas"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -334,10 +345,14 @@ export default function AdminAnalyticsPage() {
                     </div>
                     <div>
                       <p className="font-medium">{page.name}</p>
-                      <p className="text-sm text-muted-foreground">{page.unique} visitantes únicos</p>
+                      <p className="text-sm text-muted-foreground">
+                        {page.unique} {t?.topPagesUnique ?? "visitantes únicos"}
+                      </p>
                     </div>
                   </div>
-                  <Badge variant="secondary">{page.views.toLocaleString()} vistas</Badge>
+                  <Badge variant="secondary">
+                    {page.views.toLocaleString()} {t?.topPagesViews ?? "vistas"}
+                  </Badge>
                 </div>
               ))}
             </div>
@@ -347,7 +362,7 @@ export default function AdminAnalyticsPage() {
         {/* Productos Más Vistos */}
         <Card>
           <CardHeader>
-            <CardTitle>Productos Más Vistos</CardTitle>
+            <CardTitle>{t?.topProductsTitle ?? "Productos Más Vistos"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -359,12 +374,18 @@ export default function AdminAnalyticsPage() {
                     </div>
                     <div>
                       <p className="font-medium">{product.name}</p>
-                      <p className="text-sm text-muted-foreground">por {product.creator}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t?.topProductsBy ?? "por"} {product.creator}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">{product.views} vistas</p>
-                    <p className="text-sm text-green-600">{product.addToCart} al carrito</p>
+                    <p className="font-semibold">
+                      {product.views} {t?.topProductsViews ?? "vistas"}
+                    </p>
+                    <p className="text-sm text-green-600">
+                      {product.addToCart} {t?.topProductsAddToCart ?? "al carrito"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -378,7 +399,7 @@ export default function AdminAnalyticsPage() {
         {/* Dispositivos */}
         <Card>
           <CardHeader>
-            <CardTitle>Dispositivos</CardTitle>
+            <CardTitle>{t?.devicesTitle ?? "Dispositivos"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -411,7 +432,7 @@ export default function AdminAnalyticsPage() {
         {/* Horarios de Mayor Actividad */}
         <Card>
           <CardHeader>
-            <CardTitle>Actividad por Hora</CardTitle>
+            <CardTitle>{t?.performanceTitle ?? "Actividad por Hora"}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -436,23 +457,23 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">0.8s</div>
-              <div className="text-sm text-muted-foreground">First Contentful Paint</div>
-              <Badge variant="default" className="mt-2">Excelente</Badge>
+          <div className="text-sm text-muted-foreground">{t?.perfFCP ?? "First Contentful Paint"}</div>
+          <Badge variant="default" className="mt-2">{t?.perfBadges?.excellent ?? "Excelente"}</Badge>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">1.2s</div>
-              <div className="text-sm text-muted-foreground">Largest Contentful Paint</div>
-              <Badge variant="default" className="mt-2">Bueno</Badge>
+          <div className="text-sm text-muted-foreground">{t?.perfLCP ?? "Largest Contentful Paint"}</div>
+          <Badge variant="default" className="mt-2">{t?.perfBadges?.good ?? "Bueno"}</Badge>
             </div>
             <div className="text-3xl font-bold text-yellow-600 text-center">
               <div>2.1s</div>
-              <div className="text-sm text-muted-foreground">First Input Delay</div>
-              <Badge variant="secondary" className="mt-2">Mejorable</Badge>
+          <div className="text-sm text-muted-foreground">{t?.perfFID ?? "First Input Delay"}</div>
+          <Badge variant="secondary" className="mt-2">{t?.perfBadges?.needsImprovement ?? "Mejorable"}</Badge>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">0.05</div>
-              <div className="text-sm text-muted-foreground">Cumulative Layout Shift</div>
-              <Badge variant="default" className="mt-2">Excelente</Badge>
+          <div className="text-sm text-muted-foreground">{t?.perfCLS ?? "Cumulative Layout Shift"}</div>
+          <Badge variant="default" className="mt-2">{t?.perfBadges?.excellent ?? "Excelente"}</Badge>
             </div>
           </div>
         </CardContent>

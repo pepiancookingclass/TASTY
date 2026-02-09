@@ -37,8 +37,16 @@ export default function CreatorDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">Tus ganancias (90% de {formatCurrency(stats.totalOrderValue)})</p>
-            <p className="text-xs text-red-500">Comisión Tasty: {formatCurrency(stats.tastyCommission)}</p>
+            <p className="text-xs text-muted-foreground">
+              {dict.creatorDashboard.gainNote
+                ? dict.creatorDashboard.gainNote(formatCurrency(stats.totalOrderValue))
+                : `Tus ganancias (90% de ${formatCurrency(stats.totalOrderValue)})`}
+            </p>
+            <p className="text-xs text-red-500">
+              {dict.creatorDashboard.commissionNote
+                ? dict.creatorDashboard.commissionNote(formatCurrency(stats.tastyCommission))
+                : `Comisión Tasty: ${formatCurrency(stats.tastyCommission)}`}
+            </p>
           </CardContent>
         </Card>
         <Card>

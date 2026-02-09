@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,8 +22,10 @@ import {
 import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useDictionary } from '@/hooks/useDictionary';
 import { format, differenceInHours, addHours } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es as esLocale, enUS } from 'date-fns/locale';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -65,18 +67,22 @@ interface UserOrder {
   }>;
 }
 
-const statusConfig = {
-  'new': { label: 'Nuevo', color: 'bg-blue-100 text-blue-800', icon: Package },
-  'preparing': { label: 'En Preparación', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  'ready': { label: 'Listo', color: 'bg-green-100 text-green-800', icon: Package },
-  'out_for_delivery': { label: 'En Camino', color: 'bg-purple-100 text-purple-800', icon: MapPin },
-  'delivered': { label: 'Entregado', color: 'bg-emerald-100 text-emerald-800', icon: Package },
-  'cancelled': { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: AlertCircle },
-};
+const statusConfig = (labels: Record<string, string>) => ({
+  'new': { label: labels.new, color: 'bg-blue-100 text-blue-800', icon: Package },
+  'preparing': { label: labels.preparing, color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  'ready': { label: labels.ready, color: 'bg-green-100 text-green-800', icon: Package },
+  'out_for_delivery': { label: labels.out_for_delivery, color: 'bg-purple-100 text-purple-800', icon: MapPin },
+  'delivered': { label: labels.delivered, color: 'bg-emerald-100 text-emerald-800', icon: Package },
+  'cancelled': { label: labels.cancelled, color: 'bg-red-100 text-red-800', icon: AlertCircle },
+});
 
 export default function UserOrdersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const dict = useDictionary();
+  const t = dict.ordersPage;
+  const locale = useMemo(() => (language === 'es' ? esLocale : enUS), [language]);
   
   const [orders, setOrders] = useState<UserOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,8 +128,8 @@ export default function UserOrdersPage() {
       console.error('Error loading orders:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar tus pedidos"
+        title: t?.loadErrorTitle ?? "Error",
+        description: t?.loadErrorDesc ?? "No se pudieron cargar tus pedidos"
       });
     } finally {
       setLoading(false);
@@ -144,8 +150,8 @@ export default function UserOrdersPage() {
       if (error) throw error;
 
       toast({
-        title: "Pedido cancelado",
-        description: "Tu pedido ha sido cancelado exitosamente"
+        title: t?.cancelSuccessTitle ?? "Pedido cancelado",
+        description: t?.cancelSuccessDesc ?? "Tu pedido ha sido cancelado exitosamente"
       });
 
       // Recargar pedidos
@@ -154,8 +160,8 @@ export default function UserOrdersPage() {
       console.error('Error cancelling order:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo cancelar el pedido"
+        title: t?.cancelErrorTitle ?? "Error",
+        description: error.message || (t?.cancelErrorDesc ?? "No se pudo cancelar el pedido")
       });
     } finally {
       setCancellingOrderId(null);
@@ -171,7 +177,7 @@ export default function UserOrdersPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando tus pedidos...
+          {t?.loading ?? "Cargando tus pedidos..."}
         </div>
       </div>
     );
@@ -181,13 +187,13 @@ export default function UserOrdersPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Mis Pedidos</h1>
-          <p className="text-muted-foreground">Revisa el estado de tus deliciosos pedidos</p>
+          <h1 className="text-3xl font-bold">{t?.title ?? "Mis Pedidos"}</h1>
+          <p className="text-muted-foreground">{t?.subtitle ?? "Revisa el estado de tus pedidos"}</p>
         </div>
         <Button asChild>
           <Link href="/">
             <ShoppingBag className="mr-2 h-4 w-4" />
-            Hacer Nuevo Pedido
+            {t?.ctaNewOrder ?? "Hacer Nuevo Pedido"}
           </Link>
         </Button>
       </div>
@@ -195,21 +201,21 @@ export default function UserOrdersPage() {
       {orders.length === 0 ? (
         <div className="text-center py-16">
           <Package className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">No tienes pedidos aún</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t?.emptyTitle ?? "No tienes pedidos aún"}</h2>
           <p className="text-muted-foreground mb-6">
-            ¡Explora nuestros deliciosos productos hechos por creadores locales!
+            {t?.emptyDesc ?? "Explora nuestros deliciosos productos hechos por creadores locales."}
           </p>
           <Button asChild size="lg">
             <Link href="/">
               <ShoppingBag className="mr-2 h-4 w-4" />
-              Explorar Productos
+              {t?.emptyCta ?? "Explorar Productos"}
             </Link>
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {orders.map((order) => {
-            const statusInfo = statusConfig[order.status as keyof typeof statusConfig];
+            const statusInfo = statusConfig(t?.status || {})[order.status as keyof ReturnType<typeof statusConfig>];
             const StatusIcon = statusInfo?.icon || Package;
             const canCancel = canCancelOrder(order.delivery_date) && 
                              !['delivered', 'cancelled'].includes(order.status);
@@ -222,14 +228,14 @@ export default function UserOrdersPage() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <StatusIcon className="h-5 w-5" />
-                        Pedido #{order.id.slice(0, 8)}
+                        {t?.orderId ? t.orderId(order.id.slice(0, 8)) : `Pedido #${order.id.slice(0, 8)}`}
                       </CardTitle>
                       <div className="flex items-center gap-4 mt-2">
                         <Badge className={statusInfo?.color || 'bg-gray-100 text-gray-800'}>
                           {statusInfo?.label || order.status}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                          {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale })}
                         </span>
                       </div>
                     </div>
@@ -237,13 +243,13 @@ export default function UserOrdersPage() {
                       <p className="text-2xl font-bold text-green-600">
                         {formatPrice(order.total)}
                       </p>
-                      <p className="text-sm text-muted-foreground">Total</p>
+                      <p className="text-sm text-muted-foreground">{t?.totalLabel ?? "Total"}</p>
                       
                       {/* Desglose de costos */}
                       {order.subtotal > 0 && order.delivery_fee > 0 && (
                         <div className="text-xs text-muted-foreground space-y-0.5">
-                          <div>Productos: {formatPrice(order.subtotal)}</div>
-                          <div>Delivery: {formatPrice(order.delivery_fee)}</div>
+                          <div>{t?.productsBreakdown ?? "Productos:"} {formatPrice(order.subtotal)}</div>
+                          <div>{t?.deliveryBreakdown ?? "Envío:"} {formatPrice(order.delivery_fee)}</div>
                         </div>
                       )}
                     </div>
@@ -254,25 +260,29 @@ export default function UserOrdersPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Información de entrega */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold flex items-center gap-2">
+                        <h4 className="font-semibold flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Información de Entrega
+                        {t?.deliveryInfo ?? "Información de Entrega"}
                       </h4>
                       
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock className="h-4 w-4 text-blue-600" />
                           <span className="font-medium text-blue-800">
-                            Entrega programada
+                            {t?.scheduledDelivery ?? "Entrega programada"}
                           </span>
                         </div>
                         <p className="text-lg font-semibold text-blue-900">
-                          {format(new Date(order.delivery_date), "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es })}
+                          {format(
+                            new Date(order.delivery_date),
+                            language === 'es' ? "EEEE, dd 'de' MMMM 'a las' HH:mm" : "EEEE, MMM dd 'at' HH:mm",
+                            { locale }
+                          )}
                         </p>
                         <p className="text-sm text-blue-700 mt-1">
                           {hoursUntilDelivery > 0 
-                            ? `En ${Math.ceil(hoursUntilDelivery)} horas`
-                            : 'Fecha pasada'
+                            ? t?.hoursUntil?.(Math.ceil(hoursUntilDelivery)) ?? `En ${Math.ceil(hoursUntilDelivery)} horas`
+                            : t?.pastDate ?? 'Fecha pasada'
                           }
                         </p>
                       </div>
@@ -287,7 +297,9 @@ export default function UserOrdersPage() {
                         <div className="flex items-center gap-2">
                           <CreditCard className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">
-                            {order.payment_method === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}
+                            {order.payment_method === 'cash'
+                              ? t?.paymentMethod?.cash ?? 'Efectivo contra entrega'
+                              : t?.paymentMethod?.transfer ?? 'Transferencia bancaria'}
                           </span>
                         </div>
                       </div>
@@ -299,13 +311,15 @@ export default function UserOrdersPage() {
                             <AlertCircle className={`h-4 w-4 mt-0.5 ${canCancel ? 'text-amber-600' : 'text-red-600'}`} />
                             <div>
                               <p className={`text-sm font-medium ${canCancel ? 'text-amber-800' : 'text-red-800'}`}>
-                                {canCancel ? 'Puedes cancelar este pedido' : 'No se puede cancelar'}
+                                {canCancel
+                                  ? t?.cancelAllowedTitle ?? 'Puedes cancelar este pedido'
+                                  : t?.cancelNotAllowedTitle ?? 'No se puede cancelar'}
                               </p>
                               <p className={`text-xs ${canCancel ? 'text-amber-700' : 'text-red-700'}`}>
                                 {canCancel 
-                                  ? `Tienes ${Math.ceil(hoursUntilDelivery - 48)} horas más para cancelar`
-                                  : 'Los pedidos solo se pueden cancelar con 48 horas de anticipación'
-                                }
+                                  ? t?.cancelAllowedDesc?.(Math.ceil(hoursUntilDelivery - 48)) ??
+                                    `Tienes ${Math.ceil(hoursUntilDelivery - 48)} horas más para cancelar`
+                                  : t?.cancelNotAllowedDesc ?? 'Los pedidos solo se pueden cancelar con 48 horas de anticipación'}
                               </p>
                             </div>
                           </div>
@@ -317,7 +331,7 @@ export default function UserOrdersPage() {
                     <div className="space-y-4">
                       <h4 className="font-semibold flex items-center gap-2">
                         <Package className="h-4 w-4" />
-                        Productos ({order.items.length})
+                        {t?.productsTitle ? t.productsTitle(order.items.length) : `Productos (${order.items.length})`}
                       </h4>
                       
                       <div className="space-y-3">
@@ -341,13 +355,13 @@ export default function UserOrdersPage() {
                       {/* Desglose de costos */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span>Subtotal productos:</span>
+                          <span>{t?.subtotalLabel ?? "Subtotal productos:"}</span>
                           <span>{formatPrice(order.subtotal || 0)}</span>
                         </div>
                         
                         {order.iva_amount > 0 && (
                           <div className="flex justify-between items-center">
-                            <span>IVA (12%):</span>
+                            <span>{t?.ivaLabel ?? "IVA (12%):"}</span>
                             <span>{formatPrice(order.iva_amount)}</span>
                           </div>
                         )}
@@ -357,10 +371,12 @@ export default function UserOrdersPage() {
                           <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <h4 className="font-medium text-blue-800 flex items-center gap-2">
                               <Package className="h-4 w-4" />
-                              💳 Pagos por Entrega Separada
+                              {t?.deliverySeparateTitle ?? "💳 Pagos por Entrega Separada"}
                             </h4>
                             <p className="text-xs text-blue-700 mb-3">
-                              Recibirás {order.delivery_breakdown.length} entregas diferentes. Paga a cada creador por separado.
+                              {t?.deliverySeparateDesc
+                                ? t.deliverySeparateDesc(order.delivery_breakdown.length)
+                                : `Recibirás ${order.delivery_breakdown.length} entregas diferentes. Paga a cada creador por separado.`}
                             </p>
                             
                             {order.delivery_breakdown.map((delivery, index) => {
@@ -372,24 +388,38 @@ export default function UserOrdersPage() {
                               return (
                                 <div key={index} className="bg-white p-3 rounded border border-blue-100">
                                   <h5 className="font-medium text-gray-800 mb-2">
-                                    🚚 {delivery.creator_name.toUpperCase()}
+                                    {t?.deliveryCreatorHeading
+                                      ? t.deliveryCreatorHeading(delivery.creator_name)
+                                      : `🚚 ${delivery.creator_name.toUpperCase()}`}
                                   </h5>
                                   <div className="space-y-1 text-sm">
                                     <div className="flex justify-between">
-                                      <span className="text-gray-600">Sus productos:</span>
+                                      <span className="text-gray-600">
+                                        {t?.deliveryCreatorProducts ?? "Sus productos:"}
+                                      </span>
                                       <span>Q{creatorSubtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                      <span className="text-gray-600">IVA (12%):</span>
+                                      <span className="text-gray-600">
+                                        {t?.deliveryCreatorIva ?? "IVA (12%):"}
+                                      </span>
                                       <span>Q{creatorIva.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                      <span className="text-gray-600">Envío ({delivery.distance_km?.toFixed(1)}km):</span>
+                                      <span className="text-gray-600">
+                                        {t?.deliveryCreatorFee
+                                          ? t.deliveryCreatorFee(delivery.distance_km)
+                                          : `Envío (${delivery.distance_km?.toFixed(1)}km):`}
+                                      </span>
                                       <span>Q{delivery.delivery_fee.toFixed(2)}</span>
                                     </div>
                                     <Separator className="my-1" />
                                     <div className="flex justify-between font-semibold text-green-700">
-                                      <span>💰 Pagar a {delivery.creator_name}:</span>
+                                      <span>
+                                        {t?.deliveryCreatorPay
+                                          ? t.deliveryCreatorPay(delivery.creator_name)
+                                          : `💰 Pagar a ${delivery.creator_name}:`}
+                                      </span>
                                       <span>Q{creatorTotal.toFixed(2)}</span>
                                     </div>
                                   </div>
@@ -398,24 +428,34 @@ export default function UserOrdersPage() {
                             })}
                             
                             <div className="text-center text-xs text-blue-600 font-medium pt-2 border-t border-blue-200">
-                              ✅ Verificación: Suma de pagos = Q{order.total.toFixed(2)}
+                              {t?.deliverySumCheck
+                                ? t.deliverySumCheck(order.total.toFixed(2))
+                                : `✅ Verificación: Suma de pagos = Q${order.total.toFixed(2)}`}
                             </div>
                           </div>
                         ) : (
                           // SINGLE CREADOR: Desglose simple
                           <div className="space-y-1">
-                            <p className="text-sm font-medium text-muted-foreground">Desglose de pago:</p>
+                            <p className="text-sm font-medium text-muted-foreground">
+                              {t?.singlePaymentBreakdown ?? "Desglose de pago:"}
+                            </p>
                             <div className="pl-4 space-y-1 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Productos:</span>
+                                <span className="text-muted-foreground">
+                                  {t?.productsBreakdown ?? "Productos:"}
+                                </span>
                                 <span>Q{order.subtotal.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">IVA (12%):</span>
+                                <span className="text-muted-foreground">
+                                  {t?.ivaLabel ?? "IVA (12%):"}
+                                </span>
                                 <span>Q{order.iva_amount.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Envío:</span>
+                                <span className="text-muted-foreground">
+                                  {t?.deliveryBreakdown ?? "Envío:"}
+                                </span>
                                 <span>Q{order.delivery_fee.toFixed(2)}</span>
                               </div>
                             </div>
@@ -424,7 +464,7 @@ export default function UserOrdersPage() {
                         
                         {order.delivery_fee > 0 && (
                           <div className="flex justify-between items-center">
-                            <span>Total delivery:</span>
+                            <span>{t?.totalDelivery ?? "Total delivery:"}</span>
                             <span>{formatPrice(order.delivery_fee)}</span>
                           </div>
                         )}
@@ -432,7 +472,7 @@ export default function UserOrdersPage() {
                         <Separator />
                         
                         <div className="flex justify-between items-center font-semibold text-lg">
-                          <span>Total:</span>
+                          <span>{t?.totalBreakdown ?? "Total:"}</span>
                           <span className="text-green-600">{formatPrice(order.total)}</span>
                         </div>
                       </div>
@@ -450,10 +490,11 @@ export default function UserOrdersPage() {
                           </div>
                           <div className="flex-1">
                             <h4 className="font-medium text-green-800 mb-1">
-                              📱 Coordinar entrega por WhatsApp
+                              {t?.whatsappBlockTitle ?? "📱 Coordinar entrega por WhatsApp"}
                             </h4>
                             <p className="text-sm text-green-700 mb-3">
-                              Debes enviar este mensaje para reconfirmar y coordinar fecha y hora de entrega con el creador.
+                              {t?.whatsappBlockDesc ??
+                                "Debes enviar este mensaje para reconfirmar y coordinar fecha y hora de entrega con el creador."}
                             </p>
                             <Button 
                               onClick={() => {
@@ -462,7 +503,17 @@ export default function UserOrdersPage() {
                                   `• ${item.quantity}x ${item.product_name_es} - Q${(item.unit_price * item.quantity).toFixed(2)}`
                                 ).join('\n');
                                 
-                                const message = `Hola, te saluda *${order.customer_name}*
+                                const message = t?.whatsappMessage
+                                  ? t.whatsappMessage({
+                                      customer: order.customer_name,
+                                      items: itemsList,
+                                      subtotal: order.subtotal.toFixed(2),
+                                      delivery: order.delivery_fee.toFixed(2),
+                                      total: order.total.toFixed(2),
+                                      phone: user?.phone || (order as any)?.customer_phone || 'No proporcionado',
+                                      address: `${order.delivery_street}, ${order.delivery_city}, ${order.delivery_state}`,
+                                    })
+                                  : `Hola, te saluda *${order.customer_name}*
 
 Hice un pedido de:
 ${itemsList}
@@ -485,7 +536,7 @@ Agradeceré me apoyes para coordinar mi entrega.`;
                               }}
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
-                              📱 Enviar WhatsApp
+                              {t?.whatsappButton ?? "📱 Enviar WhatsApp"}
                             </Button>
                           </div>
                         </div>
@@ -504,28 +555,28 @@ Agradeceré me apoyes para coordinar mi entrega.`;
                             {cancellingOrderId === order.id ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Cancelando...
+                                {t?.cancelling ?? "Cancelando..."}
                               </>
                             ) : (
-                              'Cancelar Pedido'
+                              t?.cancelButton ?? 'Cancelar Pedido'
                             )}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Cancelar pedido?</AlertDialogTitle>
+                            <AlertDialogTitle>{t?.cancelDialogTitle ?? "¿Cancelar pedido?"}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              ¿Estás seguro de que quieres cancelar este pedido? 
-                              Esta acción no se puede deshacer y se notificará a los creadores.
+                              {t?.cancelDialogDesc ??
+                                "¿Estás seguro de que quieres cancelar este pedido? Esta acción no se puede deshacer y se notificará a los creadores."}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>No, mantener pedido</AlertDialogCancel>
+                            <AlertDialogCancel>{t?.cancelDialogKeep ?? "No, mantener pedido"}</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => cancelOrder(order.id)}
                               className="bg-red-600 hover:bg-red-700"
                             >
-                              Sí, cancelar pedido
+                              {t?.cancelDialogConfirm ?? "Sí, cancelar pedido"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -548,15 +599,15 @@ Agradeceré me apoyes para coordinar mi entrega.`;
                 <Gift className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-purple-900">¡Ofertas Especiales!</h3>
+                <h3 className="font-semibold text-purple-900">{t?.offersCardTitle ?? "¡Ofertas Especiales!"}</h3>
                 <p className="text-sm text-purple-700">
-                  Descubre descuentos exclusivos de nuestros creadores
+                  {t?.offersCardDesc ?? "Descubre descuentos exclusivos de nuestros creadores"}
                 </p>
               </div>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
               <Link href="/offers">
-                Ver Ofertas
+                {t?.offersCardCta ?? "Ver Ofertas"}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -570,15 +621,15 @@ Agradeceré me apoyes para coordinar mi entrega.`;
                 <Star className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-900">¡Nuevos Creadores!</h3>
+                <h3 className="font-semibold text-green-900">{t?.creatorsCardTitle ?? "¡Nuevos Creadores!"}</h3>
                 <p className="text-sm text-green-700">
-                  Explora productos únicos de creadores recién llegados
+                  {t?.creatorsCardDesc ?? "Explora productos únicos de creadores recién llegados"}
                 </p>
               </div>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
               <Link href="/creators">
-                Explorar Creadores
+                {t?.creatorsCardCta ?? "Explorar Creadores"}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -592,12 +643,16 @@ Agradeceré me apoyes para coordinar mi entrega.`;
           <div className="flex items-start gap-4">
             <AlertCircle className="h-6 w-6 text-blue-600 mt-1" />
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">Políticas de Pedidos</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">{t?.policiesTitle ?? "Políticas de Pedidos"}</h3>
               <div className="space-y-1 text-sm text-blue-800">
-                <p>• Los pedidos deben hacerse con <strong>mínimo 48 horas de anticipación</strong></p>
-                <p>• Puedes cancelar tu pedido hasta <strong>24 horas antes que inicie tu período de 48h</strong> de preparación y entrega</p>
-                <p>• Nuestros creadores necesitan tiempo para preparar productos frescos y de calidad</p>
-                <p>• Para pedidos urgentes, contacta directamente al creador por WhatsApp</p>
+                {(t?.policies ?? [
+                  '• Los pedidos deben hacerse con mínimo 48 horas de anticipación',
+                  '• Puedes cancelar tu pedido hasta 24 horas antes que inicie tu período de 48h de preparación y entrega',
+                  '• Nuestros creadores necesitan tiempo para preparar productos frescos y de calidad',
+                  '• Para pedidos urgentes, contacta directamente al creador por WhatsApp',
+                ]).map((p, idx) => (
+                  <p key={idx}>{p}</p>
+                ))}
               </div>
             </div>
           </div>

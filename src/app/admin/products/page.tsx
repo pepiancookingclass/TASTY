@@ -23,6 +23,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -62,6 +63,8 @@ export default function AdminProductsPage() {
   const { canAccessAdminPanel, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
+  const t = dict.admin.products;
   
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -379,13 +382,13 @@ export default function AdminProductsPage() {
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link href={`/admin/products/${product.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
-                    Ver
+                    {t?.view ?? "Ver"}
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link href={`/admin/products/${product.id}/edit`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    Editar
+                    {t?.edit ?? "Editar"}
                   </Link>
                 </Button>
               </div>
@@ -397,7 +400,7 @@ export default function AdminProductsPage() {
                   className="flex-1"
                   onClick={() => toggleAvailability(product.id, product.is_available)}
                 >
-                  {product.is_available ? 'Desactivar' : 'Activar'}
+                  {product.is_available ? (t?.deactivate ?? 'Desactivar') : (t?.activate ?? 'Activar')}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -415,19 +418,20 @@ export default function AdminProductsPage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+                      <AlertDialogTitle>{t?.deleteDialogTitle ?? "¿Eliminar producto?"}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        ¿Estás seguro de que quieres eliminar "{product.name_es}"? 
-                        Esta acción no se puede deshacer.
+                        {t?.deleteDialogDesc
+                          ? t.deleteDialogDesc(product.name_es)
+                          : `¿Estás seguro de que quieres eliminar "${product.name_es}"? Esta acción no se puede deshacer.`}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>{t?.deleteCancel ?? "Cancelar"}</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={() => deleteProduct(product.id)}
                         className="bg-red-600 hover:bg-red-700"
                       >
-                        Eliminar
+                        {t?.deleteConfirm ?? "Eliminar"}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -441,17 +445,17 @@ export default function AdminProductsPage() {
       {filteredProducts.length === 0 && (
         <div className="text-center py-16">
           <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">No se encontraron productos</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t?.emptyTitle ?? "No se encontraron productos"}</h2>
           <p className="text-muted-foreground mb-6">
             {searchTerm || categoryFilter !== 'all' || availabilityFilter !== 'all'
-              ? 'Intenta ajustar los filtros de búsqueda'
-              : 'Aún no hay productos registrados en la plataforma'
+              ? (t?.emptySearch ?? 'Intenta ajustar los filtros de búsqueda')
+              : (t?.emptyDesc ?? 'Aún no hay productos registrados en la plataforma')
             }
           </p>
           <Button asChild>
             <Link href="/admin/products/new">
               <Plus className="mr-2 h-4 w-4" />
-              Crear Primer Producto
+              {t?.emptyCta ?? "Crear Primer Producto"}
             </Link>
           </Button>
         </div>

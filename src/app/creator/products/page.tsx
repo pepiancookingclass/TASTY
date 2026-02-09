@@ -58,11 +58,12 @@ export default function CreatorProductsPage() {
         </div>
       ) : creatorProducts.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
-          <p className="text-muted-foreground mb-4">No tienes productos aún.</p>
+          <p className="text-muted-foreground mb-2">{dict.creatorProducts.emptyTitle}</p>
+          <p className="text-muted-foreground mb-4">{dict.creatorProducts.emptyDesc}</p>
           <Button asChild>
             <Link href="/creator/products/new">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Crear tu primer producto
+              {dict.creatorProducts.emptyCta}
             </Link>
           </Button>
         </div>

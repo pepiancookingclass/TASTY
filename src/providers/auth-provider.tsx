@@ -135,8 +135,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data;
   };
 
+  const clearClientAuthData = (reason: string) => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('tasty-cart');
+        sessionStorage.removeItem('tasty-cart-backup');
+        sessionStorage.removeItem('tasty-cart-cleared');
+        console.log('🧹 auth-provider: storages de carrito limpiados ->', reason);
+      }
+    } catch (err) {
+      console.error('⚠️ auth signOut: error limpiando storages', err);
+    }
+  };
+
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('🔒 auth-provider: iniciando signOut');
+      await supabase.auth.signOut();
+      console.log('✅ auth-provider: signOut exitoso');
+    } catch (error) {
+      console.error('❌ auth-provider: error al cerrar sesión', error);
+    } finally {
+      clearClientAuthData('signOut');
+      setSession(null);
+      setUser(null);
+    }
   };
 
   const signInWithGoogle = async () => {

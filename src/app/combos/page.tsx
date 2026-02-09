@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useDictionary } from '@/hooks/useDictionary';
 
 const categoryLabels = {
   'sweet_savory': 'Dulce & Salado',
@@ -63,6 +64,7 @@ const COMBO_PLACEHOLDER =
 export default function CombosPage() {
   const { toast } = useToast();
   const { trackPageView } = useAnalytics();
+  const dict = useDictionary();
   
   const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -260,11 +262,13 @@ export default function CombosPage() {
           <CardContent className="p-8 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-purple-600" />
-              <span className="text-lg font-semibold text-purple-900">¿Eres creador?</span>
+              <span className="text-lg font-semibold text-purple-900">
+                {dict.creatorCombos?.ctaTitle ?? "¿Eres creador?"}
+              </span>
             </div>
             <p className="text-purple-700 mb-6 max-w-2xl mx-auto">
-              ¡Colabora con otros creadores y crea combos únicos! 
-              Aumenta tus ventas y ofrece experiencias gastronómicas completas.
+              {dict.creatorCombos?.ctaDesc ??
+                "¡Colabora con otros creadores y crea combos únicos! Aumenta tus ventas y ofrece experiencias gastronómicas completas."}
             </p>
             <Button asChild size="lg">
               <Link href="/creator/dashboard">

@@ -18,9 +18,19 @@ type CartAction =
 
 // ✅ FASE 2: Función para backup silencioso en base de datos
 const backupCartToDatabase = async (state: CartState, userId?: string) => {
-  if (!userId || state.items.length === 0) return;
-  
+  if (!userId) return;
   try {
+    if (state.items.length === 0) {
+      console.log('🗑️ CartProvider: Carrito vacío, eliminando fila en BD para user:', userId);
+      const { error } = await supabase.from('user_carts').delete().eq('user_id', userId);
+      if (error) {
+        console.error('❌ CartProvider: Error eliminando carrito vacío en BD:', error);
+      } else {
+        console.log('✅ CartProvider: Carrito vacío eliminado en BD');
+      }
+      return;
+    }
+
     console.log('🗄️ CartProvider: Haciendo backup silencioso en BD para usuario:', userId);
     console.log('📊 CartProvider: Items a guardar en BD:', state.items.length, 'items:', state.items);
     
@@ -56,18 +66,19 @@ const restoreCartFromDatabase = async (userId: string): Promise<CartItem[] | nul
       .from('user_carts')
       .select('cart_data')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        console.log('📭 CartProvider: No hay carrito guardado en BD');
-        return null;
-      }
       console.error('❌ CartProvider: Error restaurando carrito:', error);
       return null;
     }
 
-    if (data?.cart_data && Array.isArray(data.cart_data)) {
+    if (!data) {
+      console.log('📭 CartProvider: No hay carrito guardado en BD');
+      return null;
+    }
+
+    if (data.cart_data && Array.isArray(data.cart_data)) {
       console.log('✅ CartProvider: Carrito encontrado en BD:', data.cart_data);
       return data.cart_data;
     }
@@ -187,13 +198,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const { user } = useAuth(); // ✅ FASE 2: Obtener usuario para backup
+  const prevUserIdRef = React.useRef<string | null>(null);
 
-  // ✅ MEJORADO: Cargar carrito con doble persistencia
+  // ✅ MEJORADO: Cargar carrito con doble persistencia y reset al cambiar usuario
   useEffect(() => {
     console.log('🔄 CartProvider: useEffect ejecutándose - Componente reinicializado');
     
     if (typeof window !== 'undefined') {
       try {
+        // Detectar cambio de usuario
+        const currentUserId = user?.id ?? null;
+        const prevUserId = prevUserIdRef.current;
+        if (prevUserId !== currentUserId) {
+          console.log('👥 CartProvider: cambio de usuario detectado', { prevUserId, currentUserId });
+          localStorage.removeItem('tasty-cart');
+          sessionStorage.removeItem('tasty-cart-backup');
+          sessionStorage.removeItem('tasty-cart-cleared');
+          dispatch({ type: 'CLEAR_CART' });
+        }
+        prevUserIdRef.current = currentUserId;
+
         // ✅ VERIFICAR SI EL CARRITO FUE LIMPIADO INTENCIONALMENTE (después de compra)
         const wasCleared = sessionStorage.getItem('tasty-cart-cleared');
         if (wasCleared === 'true') {
@@ -243,7 +267,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLoaded(true);
     }
-  }, []);
+  }, [user]);
 
   // ✅ FASE 2: Restaurar carrito desde BD cuando usuario se loguea
   useEffect(() => {

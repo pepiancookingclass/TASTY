@@ -29,6 +29,7 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/hooks/useUser';
 import { Product, User } from '@/lib/types';
+import { useDictionary } from '@/hooks/useDictionary';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -80,6 +81,7 @@ export default function NewComboPage() {
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
   
   const [loading, setLoading] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
@@ -137,8 +139,8 @@ export default function NewComboPage() {
       console.error('Error loading products:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar los productos"
+        title: dict.creatorCombos.errorTitle,
+        description: dict.creatorCombosNew?.errorLoadProducts ?? dict.creatorCombos.errorDesc
       });
     }
   };
@@ -216,7 +218,7 @@ export default function NewComboPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Un combo debe tener al menos 2 productos"
+        description: dict.creatorCombosNew?.errorMinProducts ?? "Un combo debe tener al menos 2 productos"
       });
       return;
     }
@@ -355,7 +357,7 @@ export default function NewComboPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
+                <Label htmlFor="category">{dict.creatorCombosNew?.categoryLabel ?? "Categoría"}</Label>
                   <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -369,7 +371,7 @@ export default function NewComboPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="discount">Descuento (%)</Label>
+                <Label htmlFor="discount">{dict.creatorCombosNew?.discountLabel ?? "Descuento (%)"}</Label>
                   <Input
                     id="discount"
                     type="number"
@@ -383,7 +385,7 @@ export default function NewComboPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="preparation">Tiempo Preparación (min)</Label>
+                <Label htmlFor="preparation">{dict.creatorCombosNew?.preparationLabel ?? "Tiempo Preparación (min)"}</Label>
                   <Input
                     id="preparation"
                     type="number"
@@ -394,12 +396,12 @@ export default function NewComboPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="maxOrders">Límite de Pedidos (opcional)</Label>
+                <Label htmlFor="maxOrders">{dict.creatorCombosNew?.maxOrdersLabel ?? "Límite de Pedidos (opcional)"}</Label>
                   <Input
                     id="maxOrders"
                     type="number"
                     min="0"
-                    placeholder="0 = sin límite"
+                    placeholder={dict.creatorCombosNew?.maxOrdersPlaceholder ?? "0 = sin límite"}
                     value={formData.max_orders}
                     onChange={(e) => setFormData(prev => ({ ...prev, max_orders: parseInt(e.target.value) || 0 }))}
                   />
@@ -407,7 +409,7 @@ export default function NewComboPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="availableUntil">Disponible hasta (opcional)</Label>
+                <Label htmlFor="availableUntil">{dict.creatorCombosNew?.availableUntilLabel ?? "Disponible hasta (opcional)"}</Label>
                 <Input
                   id="availableUntil"
                   type="datetime-local"
@@ -422,7 +424,7 @@ export default function NewComboPage() {
                   checked={formData.is_featured}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: !!checked }))}
                 />
-                <Label htmlFor="featured">Marcar como destacado</Label>
+                <Label htmlFor="featured">{dict.creatorCombosNew?.featuredLabel ?? "Marcar como destacado"}</Label>
               </div>
             </CardContent>
           </Card>
@@ -431,19 +433,24 @@ export default function NewComboPage() {
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Productos del Combo ({selectedProducts.length})</CardTitle>
+                <CardTitle>
+                  {dict.creatorCombosNew?.productsCardTitle
+                    ? dict.creatorCombosNew.productsCardTitle(selectedProducts.length)
+                    : `Productos del Combo (${selectedProducts.length})`}
+                </CardTitle>
                 <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="mr-2 h-4 w-4" />
-                      Agregar Producto
+                      {dict.creatorCombosNew?.addProduct ?? "Agregar Producto"}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Seleccionar Productos</DialogTitle>
+                      <DialogTitle>{dict.creatorCombosNew?.selectProductsTitle ?? "Seleccionar Productos"}</DialogTitle>
                       <DialogDescription>
-                        Busca y selecciona productos de cualquier creador para tu combo
+                        {dict.creatorCombosNew?.selectProductsDesc ??
+                          "Busca y selecciona productos de cualquier creador para tu combo"}
                       </DialogDescription>
                     </DialogHeader>
                     
@@ -451,7 +458,7 @@ export default function NewComboPage() {
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Buscar productos o creadores..."
+                          placeholder={dict.creatorCombosNew?.searchPlaceholder ?? "Buscar productos o creadores..."}
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="pl-10"
@@ -506,7 +513,9 @@ export default function NewComboPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <ShoppingBag className="mx-auto h-12 w-12 mb-4" />
                   <p>No has agregado productos aún</p>
-                  <p className="text-sm">Un combo necesita al menos 2 productos</p>
+                  <p className="text-sm">
+                    {dict.creatorCombosNew?.needsTwoProducts ?? "Un combo necesita al menos 2 productos"}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">

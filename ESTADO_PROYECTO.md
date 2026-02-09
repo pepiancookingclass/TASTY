@@ -101,6 +101,11 @@ App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Funct
 - `src/dictionaries/es.ts` → `categoryCarousel`, `categories`, `categoryPage`
 - `src/dictionaries/en.ts` → `categoryCarousel`, `categories`, `categoryPage`
 
+## ✅ ACTUALIZACIÓN 09 Feb 2026 - Bilingüe + Carrito
+- **Bilingüalización completada**: Todos los textos del frontend migrados a diccionarios ES/EN (checkout, carrito, orders, dashboards admin/creator, combos, formularios y toasts), con formato de fechas por locale. Archivos clave: `src/dictionaries/es.ts`, `src/dictionaries/en.ts`.
+- **Carrito por usuario, sin 406**: `CartProvider` ahora usa `.maybeSingle()` al restaurar para evitar 406 cuando no hay fila y sigue borrando la fila en BD cuando el carrito queda vacío; backup/restore por usuario confirmados.
+- **Logout limpio**: `auth-provider` usa `supabase.auth.signOut()` sin scope, con limpieza de storages y sin borrar carrito en BD para mantener persistencia por usuario.
+
 ### **2. REGISTRO DE USUARIOS - ARREGLADO**
 **Problema:** Error 500 "Database error saving new user" al registrarse
 **Causa:** Trigger `on_auth_user_created` estaba mal configurado o ausente
@@ -713,17 +718,14 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 **3. Fecha mínima 48h (fecha de entrega)**
 - ⚠️ Se clampéa la fecha al mínimo si el usuario elige menos, pero el warning sigue apareciendo en la UI. Revisar validación/estado del input de fecha/hora.
 
-**4. Carrito / limpieza**
-- ⚠️ Flujo checkout limpia; revisar flujo alterno si reaparece.
-
-**5. Validación dirección vs geolocalización (pendiente de implementar)**
-- ❌ No implementada. Plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500 m). Integrar en checkout sin romper el flujo.
+**4. Sistema de entrega por vehículo (moto vs carro)**
+- ❌ Pendiente implementar lógica de tarifas por vehículo según productos/creador. Plan detallado en `docs/plan-entregas-vehiculo.md` (flags por producto, tarifas paralelas de carro/moto, breakdown con `vehicle` y mensaje al cliente).
 
 **📋 ARCHIVOS AFECTADOS:**
 - ✅ **SQL Functions verificadas**: `send_order_confirmation_email()`, `trigger_send_emails()`
 - ✅ **Trigger verificado**: `send_emails_on_order_creation` 
 - 🔧 **Frontend modificado**: `src/lib/services/orders.ts` (logs agregados para debug)
-- ❌ **Pendiente**: `src/app/checkout/page.tsx` (limpieza carrito)
+- 📄 **Plan**: `docs/plan-entregas-vehiculo.md` (definición de moto vs carro)
 
 **🧪 PRUEBAS REALIZADAS POR AGENTE 4 (NO REPETIR):**
 1. ✅ Verificar existencia de trigger en tabla orders → `send_emails_on_order_creation` EXISTE
@@ -885,9 +887,9 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 - Necesita corrección urgente de tipos de datos en columna 13
 
 ### **TAREA 3: Bilingüalización completa de UI**
-**Estado:** ⏳ **PENDIENTE**  
+**Estado:** ✅ **COMPLETADO**  
 **Prioridad:** MEDIA  
-**Descripción:** Mover todos los textos duros a diccionarios ES/EN (checkout, carrito, orders, profile, creator/admin), incluir toasts/mensajes de validación (dirección vs ubicación y entrega no disponible) y plantillas de WhatsApp. Plan documentado en `docs/bilingualizacion.md`.
+**Descripción:** Todos los textos duros movidos a diccionarios ES/EN (checkout, carrito, orders, creator/admin, combos, dashboards, formularios, toasts, validaciones, fechas con locale). Plan en `docs/bilingualizacion.md`. Pendientes menores: textos de mock de analytics y `page-old` legacy sin prioridad.
 
 ### **TAREA 2: Mejorar Flujo WhatsApp Post-Pedido**
 **Estado:** ✅ **COMPLETADO** (PERO ROTO POR ERROR SQL)  
@@ -926,33 +928,6 @@ SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_em
 - Desglose por creador individual
 - Explicación de viajes separados
 - Costos transparentes por ubicación
-
-### **TAREA 5: Limpiar Carrito Después del Pedido**
-**Estado:** ❌ **CARRITO NO SE LIMPIA**  
-**Prioridad:** MEDIA
-
-**PROBLEMA:**
-- Después de crear pedido, carrito se queda con los mismos productos
-- Usuario ve productos que ya compró
-
-**SOLUCIÓN REQUERIDA:**
-- Limpiar carrito automáticamente después de pedido exitoso
-- Mostrar carrito vacío después de compra
-- Confirmar que productos fueron procesados
-
-### **TAREA 6: Agregar Desglose de Delivery en Detalles del Pedido**
-**Estado:** ❌ **INFORMACIÓN INCOMPLETA**  
-**Prioridad:** ALTA
-
-**PROBLEMA IDENTIFICADO:**
-- Página "Mis Pedidos" no muestra costo de delivery
-- Solo muestra productos y total final
-- Usuario no sabe cuánto pagó por delivery
-
-**SOLUCIÓN REQUERIDA:**
-- Mostrar subtotal de productos por separado
-- Mostrar costo de delivery itemizado
-- Explicar delivery por creador individual (Q31.15 + Q37.30 = Q68.45)
 
 ## 🔴 TAREAS PENDIENTES ANTERIORES (En orden de prioridad)
 
@@ -1426,12 +1401,19 @@ Los 2 problemas restantes requieren enfoque diferente:
    - Emails cliente/admin: siguen sin listar productos ni desglose de delivery; revisar plantillas en `supabase/functions/send-email/index.ts` (cliente y admin), el agente anterior no lo arregló.
    - Validación dirección vs geoloc: plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500m) pendiente de implementar sin romper checkout.
 
-### ✅ ACTUALIZACIÓN (23 Ene 2026 - Checkout sin crash)
-- 🔧 **Arreglo aplicado:** `useUser` ahora memoiza y trae `phone/address` del perfil; el prefill en `/checkout` solo setea si cambian los datos.  
-- 📱 **WhatsApp:** Plantilla ya incluye IVA y el teléfono si existe en el perfil.  
-- 🧪 **Pendiente de probar:** Abrir `/checkout` logueado, verificar prefill (nombre/tel/correo/dirección), calcular delivery, crear pedido y revisar que el mensaje de WhatsApp muestre IVA + teléfono.  
-- ⚠️ **Validación 500m geoloc vs dirección:** Está fuera porque antes rompió el checkout. Reintroducirla solo con pruebas controladas.
-- 😅 **Nota (Agente actual = “estúpido 5” sin resolver WhatsApp al 100%):** Si el perfil no tiene teléfono, el mensaje sigue poniendo “No proporcionado”. Propuesta pendiente de implementar: en `createOrder`, forzar teléfono con fallback en este orden `deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''` para que siempre se envíe el número escrito en el formulario aunque el perfil esté vacío. IVA ya está en la plantilla; si no aparece es por usar build viejo.
+### ✅ ACTUALIZACIÓN (09 Feb 2026)
+- 🔧 **CartProvider**: Restaurar carrito usa `.maybeSingle()` para evitar 406 cuando no hay fila; si el carrito queda vacío se elimina la fila en `user_carts`; limpieza de storages al cambiar de usuario; logout deja intacto el carrito en BD.
+- 🌐 **Bilingüalización completada**: Todo el frontend opera con diccionarios ES/EN y fechas por locale (checkout, carrito, orders, admin/creator, combos, formularios, toasts).
+- 🧪 **Pendiente de probar (QA rápido):** Checkout logueado (prefill, delivery, pedido, WhatsApp con IVA/teléfono), cambio de usuario con carrito vacío, y restore por usuario.
+- ☎️ **WhatsApp sin teléfono:** Aún falta fallback en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para evitar “No proporcionado”.
+
+### 🔴 Pendientes actuales (09 Feb 2026)
+- **Sistema de entrega por vehículo (moto vs carro)**: implementar tarifas paralelas y breakdown por `vehicle` (plan en `docs/plan-entregas-vehiculo.md`).
+- **Trigger/Edge emails pedidos**: sigue sin disparar desde la app; se envían manual, requiere solución definitiva.
+- **RLS order_items para creadores**: sigue arrojando `42P17 infinite recursion`; no ven pedidos en `/creator/orders`.
+- **WhatsApp fallback de teléfono**: pendiente en `createOrder`.
+- **QA**: verificar checkout completo (prefill, delivery, WhatsApp), restore de carrito por usuario y flow multiusuario.
+- **Textos menores**: mocks de analytics y `page-old` legacy sin prioridad.
 
 ## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
 

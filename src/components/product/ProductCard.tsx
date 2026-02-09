@@ -28,6 +28,7 @@ export function ProductCard({ product, creator }: ProductCardProps) {
   const { trackProductView, trackProductAddToCart } = useAnalytics();
   const productName = product.name[language];
   const productDescription = product.description[language];
+  const t = dict.productCard;
 
 
   const handleAddToCart = () => {
@@ -91,7 +92,9 @@ export function ProductCard({ product, creator }: ProductCardProps) {
         {/* Tiempo de preparación */}
         <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
-          <span>{product.preparationTime}h de preparación</span>
+          <span>
+            {(t?.preparationLabel ?? 'Preparación')}: {product.preparationTime}h
+          </span>
         </div>
         
          <div className="flex flex-wrap gap-2 mt-2 h-6">
@@ -115,7 +118,7 @@ export function ProductCard({ product, creator }: ProductCardProps) {
                     <AvatarFallback>{creator.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="text-xs text-muted-foreground font-medium group-hover:text-primary transition-colors">
-                  {dict.productCard.by} {creator.name}
+                  {t?.by ?? dict.productCard.by} {creator.name}
                 </span>
             </Link>
         )}

@@ -16,7 +16,7 @@ import { Loader2, ShoppingBag, MapPin, Clock, CreditCard, AlertCircle } from 'lu
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { addHours, format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es as esLocale, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { createOrder } from '@/lib/services/orders';
 import { useRouter } from 'next/navigation';
@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const router = useRouter();
   const dict = useDictionary();
+  const t = dict.checkout;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -122,7 +123,9 @@ export default function CheckoutPage() {
   // Política de 48 horas: la entrega debe ser mínimo 48 horas después del pedido
   const minimumDeliveryTime = 48; // horas
   const estimatedDeliveryDate = addHours(new Date(), minimumDeliveryTime);
-  const formattedDeliveryDate = format(estimatedDeliveryDate, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
+  const dateLocale = language === 'es' ? esLocale : enUS;
+  const dateFormatString = language === 'es' ? "EEEE, dd 'de' MMMM 'a las' HH:mm" : "EEEE, MMM dd 'at' HH:mm";
+  const formattedDeliveryDate = format(estimatedDeliveryDate, dateFormatString, { locale: dateLocale });
 
   const formatForInput = (d: Date) => {
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -159,7 +162,7 @@ export default function CheckoutPage() {
 
   const formatSelectedDateDisplay = () => {
     const d = getSelectedDeliveryDate();
-    return format(d, "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es });
+    return format(d, dateFormatString, { locale: dateLocale });
   };
 
   // Asegurar que los municipios se llenen cuando el departamento viene prellenado
@@ -393,7 +396,10 @@ export default function CheckoutPage() {
               }))
             );
             setDeliveryFee(0);
-            setDeliveryError(`❌ Entrega no disponible en tu ubicación. Contacta a servicio al cliente: +502 30635323 (WhatsApp: ${WHATSAPP_SUPPORT_URL}).`);
+            setDeliveryError(
+              t?.toastDeliveryUnavailable ??
+                `❌ Entrega no disponible en tu ubicación. Contacta a servicio al cliente: +502 30635323 (WhatsApp: ${WHATSAPP_SUPPORT_URL}).`
+            );
           } else {
             console.log(`✅ Checkout: ENTREGA DISPONIBLE - Total: Q${totalDeliveryFee}`);
             console.log('📊 Checkout: DETALLES ENTREGA EXITOSA:', {
@@ -432,7 +438,7 @@ export default function CheckoutPage() {
             }
           });
           setDeliveryFee(0);
-          setDeliveryError('Error calculando costo de entrega. Intenta de nuevo.');
+          setDeliveryError(t?.toastDeliveryErrorDesc ?? 'Error calculando costo de entrega. Intenta de nuevo.');
           setIsCalculatingDelivery(false);
         }
       }, 1500);
@@ -460,8 +466,8 @@ export default function CheckoutPage() {
     if (!authUser) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión para realizar un pedido.",
+        title: t?.toastLoginTitle ?? "Error",
+        description: t?.toastLoginDesc ?? "Debes iniciar sesión para realizar un pedido.",
       });
       router.push('/login');
       return;
@@ -471,8 +477,8 @@ export default function CheckoutPage() {
     if (!deliveryData.name || !deliveryData.phone || !deliveryData.street || !deliveryData.department || !deliveryData.municipality) {
       toast({
         variant: "destructive",
-        title: "Campos incompletos",
-        description: "Por favor completa todos los campos de entrega.",
+        title: t?.toastIncompleteTitle ?? "Campos incompletos",
+        description: t?.toastIncompleteDesc ?? "Por favor completa todos los campos de entrega.",
       });
       return;
     }
@@ -481,8 +487,8 @@ export default function CheckoutPage() {
     if (!finalLocation) {
       toast({
         variant: "destructive",
-        title: "Ubicación requerida",
-        description: "Por favor selecciona tu ubicación para calcular el costo exacto de delivery.",
+        title: t?.toastLocationRequiredTitle ?? "Ubicación requerida",
+        description: t?.toastLocationRequiredDesc ?? "Por favor selecciona tu ubicación para calcular el costo exacto de delivery.",
       });
       return;
     }
@@ -510,8 +516,8 @@ export default function CheckoutPage() {
       if (addressValidation.state === 'blocked') {
         toast({
           variant: "destructive",
-          title: dict.addressValidation?.warningTitle ?? "Tu dirección no coincide con tu ubicación",
-          description: dict.addressValidation?.warningBody ?? "Verifica tu dirección o contáctanos por WhatsApp.",
+          title: dict.addressValidation?.warningTitle ?? t?.toastLocationRequiredTitle ?? "Tu dirección no coincide con tu ubicación",
+          description: dict.addressValidation?.warningBody ?? t?.toastLocationRequiredDesc ?? "Verifica tu dirección o contáctanos por WhatsApp.",
         });
         return;
       }
@@ -567,8 +573,10 @@ export default function CheckoutPage() {
         sessionStorage.setItem('tasty-cart-cleared', 'true');
         
         toast({
-          title: "¡Pedido realizado!",
-          description: `Tu pedido #${result.order.id.slice(0, 8)} ha sido creado. Ve a "Mis Pedidos" para enviar el WhatsApp de coordinación.`,
+          title: t?.toastOrderSuccessTitle ?? "¡Pedido realizado!",
+          description: t?.toastOrderSuccessDesc
+            ? t.toastOrderSuccessDesc(result.order.id.slice(0, 8))
+            : `Tu pedido #${result.order.id.slice(0, 8)} ha sido creado. Ve a "Mis Pedidos" para enviar el WhatsApp de coordinación.`,
         });
         
         router.push('/user/orders');
@@ -579,8 +587,8 @@ export default function CheckoutPage() {
       console.error('Error creating order:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo procesar tu pedido. Intenta de nuevo.",
+        title: t?.toastOrderErrorTitle ?? "Error",
+        description: t?.toastOrderErrorDesc ?? "No se pudo procesar tu pedido. Intenta de nuevo.",
       });
     } finally {
       setIsProcessing(false);
@@ -611,10 +619,14 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-16">
           <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-          <h2 className="mt-6 font-headline text-2xl">Tu carrito está vacío</h2>
-          <p className="mt-2 text-muted-foreground">Agrega algunos productos antes de hacer tu pedido</p>
+          <h2 className="mt-6 font-headline text-2xl">
+            {t?.emptyTitle ?? "Tu carrito está vacío"}
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            {t?.emptyDescription ?? "Agrega algunos productos antes de hacer tu pedido"}
+          </p>
           <Button asChild className="mt-6">
-            <a href="/">Explorar Productos</a>
+            <a href="/">{t?.emptyCta ?? "Explorar Productos"}</a>
           </Button>
         </div>
       </div>
@@ -623,7 +635,9 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Hacer tu Pedido</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {t?.pageTitle ?? "Hacer tu Pedido"}
+      </h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Columna izquierda - Formulario */}
@@ -633,46 +647,46 @@ export default function CheckoutPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Información de Entrega
+                {t?.deliveryInfoTitle ?? "Información de Entrega"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nombre completo *</Label>
+                  <Label htmlFor="name">{t?.nameLabel ?? "Nombre completo *"}</Label>
                   <Input
                     id="name"
                     value={deliveryData.name}
                     onChange={(e) => updateDeliveryField('name', e.target.value)}
-                    placeholder="Tu nombre completo"
+                    placeholder={t?.namePlaceholder ?? "Tu nombre completo"}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono *</Label>
+                  <Label htmlFor="phone">{t?.phoneLabel ?? "Teléfono *"}</Label>
                   <Input
                     id="phone"
                     value={deliveryData.phone}
                     onChange={(e) => updateDeliveryField('phone', e.target.value)}
-                    placeholder="+502 1234-5678"
+                    placeholder={t?.phonePlaceholder ?? "+502 1234-5678"}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Label htmlFor="email">{t?.emailLabel ?? "Correo electrónico"}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={deliveryData.email}
                     onChange={(e) => updateDeliveryField('email', e.target.value)}
-                    placeholder="tu@email.com"
+                    placeholder={t?.emailPlaceholder ?? "tu@email.com"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="department">Departamento *</Label>
+                  <Label htmlFor="department">{t?.departmentLabel ?? "Departamento *"}</Label>
                   <Select value={deliveryData.department} onValueChange={handleDepartmentChange} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un departamento" />
+                      <SelectValue placeholder={t?.departmentPlaceholder ?? "Selecciona un departamento"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Guatemala">Guatemala</SelectItem>
@@ -681,7 +695,7 @@ export default function CheckoutPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="municipality">Municipio *</Label>
+                  <Label htmlFor="municipality">{t?.municipalityLabel ?? "Municipio *"}</Label>
                   <Select 
                     value={deliveryData.municipality} 
                     onValueChange={(value) => updateDeliveryField('municipality', value)}
@@ -689,7 +703,13 @@ export default function CheckoutPage() {
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={deliveryData.department ? "Selecciona un municipio" : "Primero selecciona un departamento"} />
+                      <SelectValue
+                        placeholder={
+                          deliveryData.department
+                            ? t?.municipalityLabel ?? "Selecciona un municipio"
+                            : t?.municipalityPlaceholder ?? "Primero selecciona un departamento"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {availableMunicipalities.map((municipality) => (
@@ -701,22 +721,22 @@ export default function CheckoutPage() {
                   </Select>
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="street">Dirección completa *</Label>
+                  <Label htmlFor="street">{t?.streetLabel ?? "Dirección completa *"}</Label>
                   <Input
                     id="street"
                     value={deliveryData.street}
                     onChange={(e) => updateDeliveryField('street', e.target.value)}
-                    placeholder="Calle, número de casa, zona, referencias"
+                    placeholder={t?.streetPlaceholder ?? "Calle, número de casa, zona, referencias"}
                     required
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="notes">Notas adicionales (opcional)</Label>
+                  <Label htmlFor="notes">{t?.notesLabel ?? "Notas adicionales (opcional)"}</Label>
                   <Textarea
                     id="notes"
                     value={deliveryData.notes}
                     onChange={(e) => updateDeliveryField('notes', e.target.value)}
-                    placeholder="Instrucciones especiales para la entrega..."
+                    placeholder={t?.notesPlaceholder ?? "Instrucciones especiales para la entrega..."}
                     rows={3}
                   />
                 </div>
@@ -727,14 +747,16 @@ export default function CheckoutPage() {
                     onClick={async () => {
                       console.log('✅ Checkout: Dirección confirmada por usuario:', deliveryData);
                       toast({
-                        title: "✅ Dirección guardada exitosamente",
-                        description: `${deliveryData.street}, ${deliveryData.municipality}, ${deliveryData.department}`,
+                        title: t?.saveAddressToastTitle ?? "✅ Dirección guardada exitosamente",
+                        description: t?.saveAddressToastDesc
+                          ? t.saveAddressToastDesc(deliveryData.street, deliveryData.municipality, deliveryData.department)
+                          : `${deliveryData.street}, ${deliveryData.municipality}, ${deliveryData.department}`,
                       });
                       await runAddressValidation();
                     }}
                     disabled={!deliveryData.name || !deliveryData.phone || !deliveryData.department || !deliveryData.municipality || !deliveryData.street}
                   >
-                    Guardar Cambios
+                    {t?.saveAddressButton ?? "Guardar Cambios"}
                   </Button>
                 </div>
               </div>
@@ -767,7 +789,7 @@ export default function CheckoutPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Ubicación para Entrega (Requerida)
+                {t?.locationCardTitle ?? "Ubicación para Entrega (Requerida)"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -777,9 +799,12 @@ export default function CheckoutPage() {
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-amber-600 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-amber-800">Ubicación requerida</h4>
+                        <h4 className="font-medium text-amber-800">
+                          {t?.locationRequiredTitle ?? "Ubicación requerida"}
+                        </h4>
                         <p className="text-sm text-amber-700 mt-1">
-                          Necesitamos tu ubicación exacta para calcular el costo de delivery y coordinar la entrega.
+                          {t?.locationRequiredDesc ??
+                            "Necesitamos tu ubicación exacta para calcular el costo de delivery y coordinar la entrega."}
                         </p>
                       </div>
                     </div>
@@ -800,12 +825,12 @@ export default function CheckoutPage() {
                       {isGettingLocation ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Obteniendo ubicación...
+                          {t?.useCurrentLocationLoading ?? "Obteniendo ubicación..."}
                         </>
                       ) : (
                         <>
                           <MapPin className="mr-2 h-4 w-4" />
-                          📍 Usar mi ubicación actual
+                          {t?.buttonUseCurrent ?? "📍 Usar mi ubicación actual"}
                         </>
                       )}
                     </Button>
@@ -821,15 +846,16 @@ export default function CheckoutPage() {
                       variant="outline"
                     >
                       <MapPin className="mr-2 h-4 w-4" />
-                      📌 Seleccionar en mapa
+                      {t?.buttonSelectOnMap ?? "📌 Seleccionar en mapa"}
                     </Button>
                   </div>
                   
                   {locationError && (
                     <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
-                      ❌ {locationError}
+                      {t?.locationErrorPrefix ?? "❌"} {locationError}
                       <p className="mt-2 text-xs">
-                        💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.
+                        {t?.locationErrorHint ??
+                          '💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.'}
                       </p>
                     </div>
                   )}
@@ -843,14 +869,16 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <h4 className="font-medium text-green-800">
-                          {userLocation ? '📍 Ubicación GPS confirmada' : '📌 Ubicación manual seleccionada'}
+                          {userLocation
+                            ? t?.gpsConfirmed ?? '📍 Ubicación GPS confirmada'
+                            : t?.manualSelected ?? '📌 Ubicación manual seleccionada'}
                         </h4>
                         <p className="text-sm text-green-700">
                           Lat: {finalLocation.lat.toFixed(6)}, Lng: {finalLocation.lng.toFixed(6)}
                         </p>
                         {manualLocation && (
                           <p className="text-xs text-green-600 mt-1">
-                            💡 Ubicación aproximada - Centro de Guatemala City
+                            {t?.approxHint ?? '💡 Ubicación aproximada - Centro de Guatemala City'}
                           </p>
                         )}
                         <div className="mt-3">
@@ -860,7 +888,7 @@ export default function CheckoutPage() {
                             size="sm"
                             onClick={() => setShowLocationSelector(true)}
                           >
-                            Cambiar ubicación
+                            {t?.changeLocation ?? "Cambiar ubicación"}
                           </Button>
                         </div>
                       </div>
@@ -869,7 +897,9 @@ export default function CheckoutPage() {
 
                   {/* Opciones de privacidad */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-3">🔒 Opciones de Privacidad</h4>
+                    <h4 className="font-medium text-blue-800 mb-3">
+                      {t?.privacyTitle ?? "🔒 Opciones de Privacidad"}
+                    </h4>
                     <div className="space-y-3">
                       <div className="flex items-start space-x-3">
                         <Checkbox
@@ -879,10 +909,10 @@ export default function CheckoutPage() {
                         />
                         <div className="space-y-1">
                           <Label htmlFor="save-location" className="text-sm font-medium text-blue-800">
-                            Guardar mi dirección y ubicación para futuros pedidos
+                            {t?.saveLocationLabel ?? "Guardar mi dirección y ubicación para futuros pedidos"}
                           </Label>
                           <p className="text-xs text-blue-600">
-                            Te permitirá hacer pedidos más rápido sin volver a ingresar tu dirección
+                            {t?.saveLocationDesc ?? "Te permitirá hacer pedidos más rápido sin volver a ingresar tu dirección"}
                           </p>
                         </div>
                       </div>
@@ -895,10 +925,10 @@ export default function CheckoutPage() {
                         />
                         <div className="space-y-1">
                           <Label htmlFor="auto-delete" className="text-sm font-medium text-blue-800">
-                            Eliminar automáticamente mis datos de ubicación después de la entrega
+                            {t?.autoDeleteLabel ?? "Eliminar automáticamente mis datos de ubicación después de la entrega"}
                           </Label>
                           <p className="text-xs text-blue-600">
-                            Máxima privacidad: tus datos se borran una vez completado el pedido
+                            {t?.autoDeleteDesc ?? "Máxima privacidad: tus datos se borran una vez completado el pedido"}
                           </p>
                         </div>
                       </div>
@@ -906,7 +936,8 @@ export default function CheckoutPage() {
                       {saveLocationData && autoDeleteAfterDelivery && (
                         <div className="bg-amber-50 border border-amber-200 rounded p-2">
                           <p className="text-xs text-amber-700">
-                            ⚠️ Nota: Si eliges ambas opciones, se guardará temporalmente y se eliminará después de la entrega
+                            {t?.privacyCombinedNote ??
+                              "⚠️ Nota: Si eliges ambas opciones, se guardará temporalmente y se eliminará después de la entrega"}
                           </p>
                         </div>
                       )}
@@ -932,7 +963,7 @@ export default function CheckoutPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Método de Pago
+                {t?.paymentTitle ?? "Método de Pago"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -941,18 +972,18 @@ export default function CheckoutPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Efectivo (Pago contra entrega)</SelectItem>
-                  <SelectItem value="transfer">Transferencia bancaria</SelectItem>
+                  <SelectItem value="cash">{t?.cashOption ?? "Efectivo (Pago contra entrega)"}</SelectItem>
+                  <SelectItem value="transfer">{t?.transferOption ?? "Transferencia bancaria"}</SelectItem>
                 </SelectContent>
               </Select>
               {paymentMethod === 'cash' && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  Pagarás en efectivo cuando recibas tu pedido.
+                  {t?.cashDesc ?? "Pagarás en efectivo cuando recibas tu pedido."}
                 </p>
               )}
               {paymentMethod === 'transfer' && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  Te enviaremos los datos bancarios después de confirmar tu pedido.
+                  {t?.transferDesc ?? "Te enviaremos los datos bancarios después de confirmar tu pedido."}
                 </p>
               )}
             </CardContent>
@@ -963,7 +994,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardHeader>
-              <CardTitle>Resumen del Pedido</CardTitle>
+              <CardTitle>{t?.summaryTitle ?? "Resumen del Pedido"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Productos agrupados por creador */}
@@ -971,7 +1002,7 @@ export default function CheckoutPage() {
                 {Object.entries(itemsByCreator).map(([creatorId, creatorItems]) => (
                   <div key={creatorId} className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground border-b pb-1">
-                      Productos del mismo creador
+                      {t?.creatorGroupTitle ?? "Productos del mismo creador"}
                     </div>
                     {creatorItems.map(({ product, quantity }) => {
                       const productName = product.name[language];
@@ -992,7 +1023,9 @@ export default function CheckoutPage() {
                             </p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              <span>Preparación: {product.preparationTime}h</span>
+                            <span>
+                              {(t?.preparationLabel ?? "Preparación") + ": "}{product.preparationTime}h
+                            </span>
                             </div>
                           </div>
                           <p className="text-sm font-medium">
@@ -1010,27 +1043,34 @@ export default function CheckoutPage() {
               {/* Totales */}
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Productos</span>
+                  <span>{t?.productsLabel ?? "Productos"}</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>I.V.A. (12%)</span>
+                  <span>{t?.ivaLabel ?? "I.V.A. (12%)"}</span>
                   <span>{formatPrice(ivaAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
-                  <span>Subtotal</span>
+                  <span>{t?.subtotalLabel ?? "Subtotal"}</span>
                   <span>{formatPrice(subtotalWithIva)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-sm">
-                  <span>Costo de entrega</span>
+                  <span>{t?.deliveryCostLabel ?? "Costo de entrega"}</span>
                   <span>
                     {isCalculatingDelivery ? (
-                      <span className="text-amber-600">Calculando...</span>
+                      <span className="text-amber-600">{t?.deliveryCalculating ?? "Calculando..."}</span>
                     ) : deliveryFee !== null ? (
-                      <span>{formatPrice(deliveryFee)} <span className="text-xs text-muted-foreground">(estimado)</span></span>
+                      <span>
+                        {formatPrice(deliveryFee)}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          {t?.deliveryEstimatedTag ?? "(estimado)"}
+                        </span>
+                      </span>
                     ) : (
-                      <span className="text-muted-foreground">Q 25.00 + ajuste por distancia</span>
+                      <span className="text-muted-foreground">
+                        {t?.deliveryPlaceholder ?? "Q 25.00 + ajuste por distancia"}
+                      </span>
                     )}
                   </span>
                 </div>
@@ -1041,10 +1081,13 @@ export default function CheckoutPage() {
                       <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                       <div className="space-y-2">
                         <p className="font-medium text-amber-800 mb-1">
-                          🚚 Delivery múltiple - {Object.keys(itemsByCreator).length} creadores
+                          {t?.deliveryMultipleTitle
+                            ? t.deliveryMultipleTitle(Object.keys(itemsByCreator).length)
+                            : `🚚 Delivery múltiple - ${Object.keys(itemsByCreator).length} creadores`}
                         </p>
                         <p className="text-amber-700">
-                          Tus productos vienen de <strong>{Object.keys(itemsByCreator).length} ubicaciones diferentes</strong> y requieren entregas separadas. Cada creador tiene su propia tarifa según distancia.
+                          {t?.deliveryMultipleDesc ??
+                            'Tus productos vienen de varias ubicaciones y requieren entregas separadas. Cada creador tiene su propia tarifa según distancia.'}
                         </p>
                         <div className="space-y-1 text-amber-800">
                           {(deliveryBreakdown?.length ? deliveryBreakdown : []).map((d, idx) => (
@@ -1059,7 +1102,8 @@ export default function CheckoutPage() {
                         </div>
                         {(!deliveryBreakdown || deliveryBreakdown.length === 0) && (
                           <p className="text-amber-700 text-xs">
-                            El costo final se mostrará por creador según la distancia calculada.
+                            {t?.deliveryMultipleFallback ??
+                              "El costo final se mostrará por creador según la distancia calculada."}
                           </p>
                         )}
                       </div>
@@ -1068,11 +1112,12 @@ export default function CheckoutPage() {
                 )}
                 
                 <div className="text-xs text-muted-foreground mt-2 p-2 bg-blue-50 rounded">
-                  💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación.
+                  {t?.finalCostNote ??
+                    "💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación."}
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
+                  <span>{t?.totalLabel ?? "Total"}</span>
                   <span>
                     {deliveryFee !== null ? (
                       formatPrice(total)
@@ -1089,17 +1134,19 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Clock className="h-4 w-4" />
-                  Entrega estimada
+                  {t?.estimatedDeliveryTitle ?? "Entrega estimada"}
                 </div>
                 <p className="text-sm text-muted-foreground">{formatSelectedDateDisplay()}</p>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
                   <p className="text-xs text-blue-700">
-                    ⏰ <strong>Política de entrega:</strong> Mínimo 48 horas de anticipación para garantizar la frescura de tus productos.
+                    {t?.policy48h ??
+                      "⏰ Política de entrega: Mínimo 48 horas de anticipación para garantizar la frescura de tus productos."}
                   </p>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
                   <p className="text-xs text-blue-700">
-                    📞 <strong>Nota importante:</strong> Al finalizar tu pedido te daremos el número de WhatsApp de servicio al cliente para que coordines tu día y hora de entrega específica.
+                    {t?.policyWhatsApp ??
+                      "📞 Nota importante: Al finalizar tu pedido te daremos el número de WhatsApp de servicio al cliente para que coordines tu día y hora de entrega específica."}
                   </p>
                 </div>
               </div>
@@ -1110,12 +1157,12 @@ export default function CheckoutPage() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <h4 className="font-medium text-amber-800 mb-2 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
-                  Políticas Importantes
+                  {t?.policiesTitle ?? "Políticas Importantes"}
                 </h4>
                 <div className="space-y-1 text-xs text-amber-700">
-                  <p>• <strong>Entrega mínima:</strong> 48 horas de anticipación</p>
-                  <p>• <strong>Cancelación:</strong> Hasta 24 horas antes que inicie tu período de 48h de preparación y entrega</p>
-                  <p>• <strong>Productos frescos:</strong> Preparados especialmente para ti</p>
+                  <p>{t?.policyMinDelivery ?? "• Entrega mínima: 48 horas de anticipación"}</p>
+                  <p>{t?.policyCancelation ?? "• Cancelación: Hasta 24 horas antes que inicie tu período de 48h de preparación y entrega"}</p>
+                  <p>{t?.policyFresh ?? "• Productos frescos: Preparados especialmente para ti"}</p>
                 </div>
               </div>
             </CardContent>
@@ -1134,8 +1181,8 @@ export default function CheckoutPage() {
                 if (!finalLocation) {
                   console.log('❌ Checkout: PEDIDO BLOQUEADO - No hay finalLocation');
                   toast({
-                    title: "❌ Ubicación requerida",
-                    description: "Selecciona tu ubicación en el mapa para continuar",
+                    title: t?.toastLocationRequiredTitle ?? "❌ Ubicación requerida",
+                    description: t?.toastLocationRequiredDesc ?? "Selecciona tu ubicación en el mapa para continuar",
                     variant: "destructive"
                   });
                   return;
@@ -1149,30 +1196,30 @@ export default function CheckoutPage() {
               {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Procesando pedido...
+                  {t?.ctaProcessing ?? "Procesando pedido..."}
                 </>
               ) : !finalLocation ? (
                 <>
                   <MapPin className="mr-2 h-4 w-4" />
-                  Ubicación requerida para continuar
+                  {t?.ctaLocationRequired ?? "Ubicación requerida para continuar"}
                 </>
               ) : deliveryFee === null ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Calculando delivery...
+                  {t?.ctaCalculatingDelivery ?? "Calculando delivery..."}
                 </>
               ) : deliveryError ? (
                 <>
-                  🚫 Entrega no disponible
+                  {t?.ctaUnavailable ?? "🚫 Entrega no disponible"}
                 </>
               ) : (
-                `Confirmar Pedido - ${formatPrice(total)}`
+                (t?.ctaConfirm ? t.ctaConfirm(formatPrice(total)) : `Confirmar Pedido - ${formatPrice(total)}`)
               )}
             </Button>
             
             {!finalLocation && (
               <p className="text-xs text-center text-muted-foreground mt-2">
-                💡 Selecciona tu ubicación arriba para habilitar el botón de pedido
+                {t?.hintSelectLocation ?? "💡 Selecciona tu ubicación arriba para habilitar el botón de pedido"}
               </p>
             )}
             
@@ -1182,13 +1229,14 @@ export default function CheckoutPage() {
                   {deliveryError}
                 </p>
                 <p className="text-xs text-red-600 mt-1">
-                  💡 Intenta con una ubicación más cercana a la capital o contacta a los creadores directamente.
+                  {t?.hintDeliveryUnavailable ??
+                    "💡 Intenta con una ubicación más cercana a la capital o contacta a los creadores directamente."}
                 </p>
               </div>
             )}
             {finalLocation && deliveryFee === null && (
               <p className="text-xs text-center text-muted-foreground mt-2">
-                ⏳ Calculando costo de delivery según tu ubicación...
+                {t?.hintCalculating ?? "⏳ Calculando costo de delivery según tu ubicación..."}
               </p>
             )}
             </CardFooter>

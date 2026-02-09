@@ -74,8 +74,10 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
       
       if (success) {
         toast({
-          title: 'Producto eliminado',
-          description: `"${productToDelete.name[language]}" ha sido eliminado.`,
+          title: dict.productTable.deleteToastTitle,
+          description: dict.productTable.deleteToastDesc
+            ? dict.productTable.deleteToastDesc(productToDelete.name[language])
+            : `"${productToDelete.name[language]}" ha sido eliminado.`,
         });
         onProductDeleted?.();
         router.refresh();
@@ -86,8 +88,8 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
       console.error('Error deleting product:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo eliminar el producto.',
+        title: dict.productTable.deleteErrorTitle,
+        description: dict.productTable.deleteErrorDesc,
       });
     } finally {
       setDeletingId(null);
@@ -101,14 +103,15 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
     <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+          <AlertDialogTitle>{dict.productTable.deleteDialogTitle}</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro que deseas eliminar "{productToDelete?.name[language]}"? 
-            Esta acción no se puede deshacer.
+            {dict.productTable.deleteDialogDesc
+              ? dict.productTable.deleteDialogDesc(productToDelete?.name[language] || '')
+              : `¿Estás seguro que deseas eliminar "${productToDelete?.name[language]}"? Esta acción no se puede deshacer.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel>{dict.productTable.deleteCancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -118,7 +121,7 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
             ) : (
               <Trash2 className="h-4 w-4 mr-2" />
             )}
-            Eliminar
+            {dict.productTable.deleteConfirm}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -131,7 +134,7 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
             <TableHead className="w-[80px] hidden sm:table-cell">{dict.productTable.image}</TableHead>
             <TableHead>{dict.productTable.productDetails}</TableHead>
             <TableHead className="hidden md:table-cell">{dict.productTable.type}</TableHead>
-            <TableHead className="hidden lg:table-cell">Preparación</TableHead>
+            <TableHead className="hidden lg:table-cell">{dict.productTable.preparation}</TableHead>
             <TableHead className="hidden sm:table-cell">{dict.productTable.price}</TableHead>
             <TableHead>
               <span className="sr-only">{dict.productTable.actions}</span>

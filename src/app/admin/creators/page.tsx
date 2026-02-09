@@ -24,6 +24,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -58,6 +59,8 @@ export default function AdminCreatorsPage() {
   const { canAccessAdminPanel, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
+  const t = dict.admin.creators;
   
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,8 +122,8 @@ export default function AdminCreatorsPage() {
       console.error('Error loading creators:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar los creadores"
+        title: t?.loadErrorTitle ?? "Error",
+        description: t?.loadErrorDesc ?? "No se pudieron cargar los creadores"
       });
     } finally {
       setLoading(false);
@@ -140,8 +143,8 @@ export default function AdminCreatorsPage() {
       if (error) throw error;
 
       toast({
-        title: "Creador eliminado",
-        description: "El creador ha sido eliminado exitosamente"
+        title: t?.deleteTitle ?? "Creador eliminado",
+        description: t?.deleteDesc ?? "El creador ha sido eliminado exitosamente"
       });
 
       loadCreators();
@@ -149,8 +152,8 @@ export default function AdminCreatorsPage() {
       console.error('Error deleting creator:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo eliminar el creador"
+        title: t?.deleteErrorTitle ?? "Error",
+        description: error.message || (t?.deleteErrorDesc ?? "No se pudo eliminar el creador")
       });
     } finally {
       setDeletingId(null);
@@ -175,7 +178,7 @@ export default function AdminCreatorsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando creadores...
+          {t?.loading ?? "Cargando creadores..."}
         </div>
       </div>
     );
@@ -192,16 +195,16 @@ export default function AdminCreatorsPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Users className="h-8 w-8" />
-            Gestionar Creadores
+            {t?.title ?? "Gestionar Creadores"}
           </h1>
           <p className="text-muted-foreground">
-            Administra todos los creadores de la plataforma
+            {t?.subtitle ?? "Administra todos los creadores de la plataforma"}
           </p>
         </div>
         <Button asChild>
           <Link href="/admin/creators/new">
             <Plus className="mr-2 h-4 w-4" />
-            Nuevo Creador
+            {t?.ctaNew ?? "Nuevo Creador"}
           </Link>
         </Button>
       </div>
@@ -214,7 +217,7 @@ export default function AdminCreatorsPage() {
               <Users className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">{creators.length}</p>
-                <p className="text-sm text-muted-foreground">Total Creadores</p>
+                <p className="text-sm text-muted-foreground">{t?.stats?.totalCreators ?? "Total Creadores"}</p>
               </div>
             </div>
           </CardContent>
@@ -227,7 +230,7 @@ export default function AdminCreatorsPage() {
                 <p className="text-2xl font-bold">
                   {creators.reduce((sum, c) => sum + (c.product_count || 0), 0)}
                 </p>
-                <p className="text-sm text-muted-foreground">Total Productos</p>
+                <p className="text-sm text-muted-foreground">{t?.stats?.totalProducts ?? "Total Productos"}</p>
               </div>
             </div>
           </CardContent>
@@ -240,7 +243,7 @@ export default function AdminCreatorsPage() {
                 <p className="text-2xl font-bold">
                   {creators.filter(c => c.has_delivery).length}
                 </p>
-                <p className="text-sm text-muted-foreground">Con Delivery</p>
+                <p className="text-sm text-muted-foreground">{t?.stats?.withDelivery ?? "Con Delivery"}</p>
               </div>
             </div>
           </CardContent>
@@ -253,7 +256,7 @@ export default function AdminCreatorsPage() {
                 <p className="text-2xl font-bold">
                   {new Set(creators.map(c => c.address_city).filter(Boolean)).size}
                 </p>
-                <p className="text-sm text-muted-foreground">Ciudades</p>
+                <p className="text-sm text-muted-foreground">{t?.stats?.cities ?? "Ciudades"}</p>
               </div>
             </div>
           </CardContent>
@@ -265,7 +268,7 @@ export default function AdminCreatorsPage() {
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar creadores por nombre, email o ciudad..."
+            placeholder={t?.searchPlaceholder ?? "Buscar creadores por nombre, email o ciudad..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -330,15 +333,15 @@ export default function AdminCreatorsPage() {
               <div className="flex justify-between text-sm bg-gray-50 rounded-lg p-3">
                 <div className="text-center">
                   <p className="font-semibold">{creator.product_count}</p>
-                  <p className="text-muted-foreground">Productos</p>
+                <p className="text-muted-foreground">{t?.cardProducts ?? "Productos"}</p>
                 </div>
                 <div className="text-center">
                   <p className="font-semibold">{creator.total_orders}</p>
-                  <p className="text-muted-foreground">Pedidos</p>
+                  <p className="text-muted-foreground">{t?.cardOrders ?? "Pedidos"}</p>
                 </div>
                 <div className="text-center">
                   <Badge variant={creator.has_delivery ? "default" : "secondary"}>
-                    {creator.has_delivery ? "Delivery" : "Sin delivery"}
+                  {creator.has_delivery ? (t?.cardDeliveryYes ?? "Delivery") : (t?.cardDeliveryNo ?? "Sin delivery")}
                   </Badge>
                 </div>
               </div>
@@ -348,13 +351,13 @@ export default function AdminCreatorsPage() {
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link href={`/admin/creators/${creator.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
-                    Ver
+                    {t?.view ?? "Ver"}
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link href={`/admin/creators/${creator.id}/edit`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    Editar
+                    {t?.edit ?? "Editar"}
                   </Link>
                 </Button>
                 <AlertDialog>
@@ -373,19 +376,20 @@ export default function AdminCreatorsPage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar creador?</AlertDialogTitle>
+                      <AlertDialogTitle>{t?.confirmDeleteTitle ?? "¿Eliminar creador?"}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        ¿Estás seguro de que quieres eliminar a {creator.name}? 
-                        Esta acción eliminará también todos sus productos y no se puede deshacer.
+                        {t?.confirmDeleteDesc
+                          ? t.confirmDeleteDesc
+                          : `¿Estás seguro de que quieres eliminar a ${creator.name}? Esta acción eliminará también todos sus productos y no se puede deshacer.`}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>{t?.deleteCancel ?? "Cancelar"}</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={() => deleteCreator(creator.id)}
                         className="bg-red-600 hover:bg-red-700"
                       >
-                        Eliminar
+                        {t?.delete ?? "Eliminar"}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -399,18 +403,18 @@ export default function AdminCreatorsPage() {
       {filteredCreators.length === 0 && (
         <div className="text-center py-16">
           <Users className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">No se encontraron creadores</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t?.emptyTitle ?? "No se encontraron creadores"}</h2>
           <p className="text-muted-foreground mb-6">
             {searchTerm 
-              ? 'Intenta con otros términos de búsqueda'
-              : 'Aún no hay creadores registrados en la plataforma'
+              ? (t?.emptySearch ?? 'Intenta con otros términos de búsqueda')
+              : (t?.emptyDesc ?? 'Aún no hay creadores registrados en la plataforma')
             }
           </p>
           {!searchTerm && (
             <Button asChild>
               <Link href="/admin/creators/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Crear Primer Creador
+                {t?.emptyCta ?? "Crear Primer Creador"}
               </Link>
             </Button>
           )}

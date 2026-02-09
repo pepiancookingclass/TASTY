@@ -23,6 +23,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
 import Image from 'next/image';
 import {
   AlertDialog,
@@ -65,6 +66,8 @@ export default function PendingCreatorsPage() {
   const { canManageAllCreators, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
   const { toast } = useToast();
+  const dict = useDictionary();
+  const t = dict.admin.creatorsPending;
   
   const [creators, setCreators] = useState<PendingCreator[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +98,8 @@ export default function PendingCreatorsPage() {
       console.error('Error fetching pending creators:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar las solicitudes pendientes.",
+        title: t?.loadErrorTitle ?? "Error",
+        description: t?.loadErrorDesc ?? "No se pudieron cargar las solicitudes pendientes.",
       });
     } finally {
       setLoading(false);
@@ -120,8 +123,8 @@ export default function PendingCreatorsPage() {
       if (error) throw error;
 
       toast({
-        title: "✅ Creador Aprobado",
-        description: "El creador ha sido aprobado y se han enviado los emails correspondientes.",
+        title: t?.approveTitle ?? "✅ Creador Aprobado",
+        description: t?.approveDesc ?? "El creador ha sido aprobado y se han enviado los emails correspondientes.",
       });
 
       // Recargar la lista
@@ -130,8 +133,8 @@ export default function PendingCreatorsPage() {
       console.error('Error approving creator:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo aprobar el creador. Intenta de nuevo.",
+        title: t?.approveErrorTitle ?? "Error",
+        description: t?.approveErrorDesc ?? "No se pudo aprobar el creador. Intenta de nuevo.",
       });
     } finally {
       setProcessingId(null);
@@ -150,8 +153,8 @@ export default function PendingCreatorsPage() {
       if (error) throw error;
 
       toast({
-        title: "❌ Creador Rechazado",
-        description: "La solicitud ha sido rechazada y se han enviado los emails correspondientes.",
+        title: t?.rejectTitle ?? "❌ Creador Rechazado",
+        description: t?.rejectDesc ?? "La solicitud ha sido rechazada y se han enviado los emails correspondientes.",
       });
 
       // Recargar la lista
@@ -161,8 +164,8 @@ export default function PendingCreatorsPage() {
       console.error('Error rejecting creator:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo rechazar el creador. Intenta de nuevo.",
+        title: t?.rejectErrorTitle ?? "Error",
+        description: t?.rejectErrorDesc ?? "No se pudo rechazar el creador. Intenta de nuevo.",
       });
     } finally {
       setProcessingId(null);
@@ -192,14 +195,14 @@ export default function PendingCreatorsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="font-headline text-4xl font-bold mb-2">Solicitudes de Creadores</h1>
+          <h1 className="font-headline text-4xl font-bold mb-2">{t?.title ?? "Solicitudes de Creadores"}</h1>
           <p className="text-muted-foreground">
-            Gestiona las solicitudes pendientes de nuevos creadores
+            {t?.subtitle ?? "Gestiona las solicitudes pendientes de nuevos creadores"}
           </p>
         </div>
         <Badge variant="secondary" className="text-lg px-4 py-2">
           <Clock className="w-4 h-4 mr-2" />
-          {filteredCreators.length} Pendientes
+          {filteredCreators.length} {t?.pendingBadge ?? "Pendientes"}
         </Badge>
       </div>
 
@@ -209,7 +212,7 @@ export default function PendingCreatorsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre, email o Instagram..."
+              placeholder={t?.searchPlaceholder ?? "Buscar por nombre, email o Instagram..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -404,23 +407,25 @@ export default function PendingCreatorsPage() {
                         ) : (
                           <Check className="w-4 h-4 mr-2" />
                         )}
-                        Aprobar
+                      {t?.approveCta ?? "Aprobar"}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>¿Aprobar este creador?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Se activará el perfil de creador para <strong>{creator.name}</strong> y se enviarán emails de bienvenida.
-                        </AlertDialogDescription>
+                      <AlertDialogTitle>{t?.approveTitleDialog ?? "¿Aprobar este creador?"}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t?.approveDescDialog
+                          ? t.approveDescDialog
+                          : `Se activará el perfil de creador para ${creator.name} y se enviarán emails de bienvenida.`}
+                      </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>{t?.cancel ?? "Cancelar"}</AlertDialogCancel>
                         <AlertDialogAction 
                           onClick={() => handleApprove(creator.id)}
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          Sí, Aprobar
+                        {t?.approveConfirm ?? "Sí, Aprobar"}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -438,22 +443,22 @@ export default function PendingCreatorsPage() {
                         ) : (
                           <X className="w-4 h-4 mr-2" />
                         )}
-                        Rechazar
+                      {t?.rejectCta ?? "Rechazar"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Rechazar Solicitud</DialogTitle>
-                        <DialogDescription>
-                          Proporciona una razón para el rechazo. Esto se enviará al solicitante.
-                        </DialogDescription>
+                      <DialogTitle>{t?.rejectDialogTitle ?? "Rechazar Solicitud"}</DialogTitle>
+                      <DialogDescription>
+                        {t?.rejectDialogDesc ?? "Proporciona una razón para el rechazo. Esto se enviará al solicitante."}
+                      </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="reason">Razón del rechazo</Label>
+                        <Label htmlFor="reason">{t?.rejectReasonLabel ?? "Razón del rechazo"}</Label>
                           <Textarea
                             id="reason"
-                            placeholder="Ej: Las fotos de los productos no tienen la calidad suficiente..."
+                          placeholder={t?.rejectReasonPlaceholder ?? "Ej: Las fotos de los productos no tienen la calidad suficiente..."}
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             rows={4}
@@ -461,15 +466,15 @@ export default function PendingCreatorsPage() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setRejectionReason('')}>
-                          Cancelar
+                      <Button variant="outline" onClick={() => setRejectionReason('')}>
+                        {t?.cancel ?? "Cancelar"}
                         </Button>
                         <Button 
                           variant="destructive" 
                           onClick={() => handleReject(creator.id, rejectionReason)}
                           disabled={!rejectionReason.trim()}
                         >
-                          Rechazar Solicitud
+                        {t?.rejectSubmit ?? "Rechazar Solicitud"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

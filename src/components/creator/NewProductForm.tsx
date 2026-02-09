@@ -101,8 +101,8 @@ export function NewProductForm() {
     if (!user) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión para crear un producto.",
+        title: dict.creatorProductsForm?.loginErrorTitle ?? "Error",
+        description: dict.creatorProductsForm?.loginErrorDesc ?? "Debes iniciar sesión para crear un producto.",
       });
       return;
     }
@@ -140,7 +140,7 @@ export function NewProductForm() {
       if (product) {
         toast({
           title: dict.creatorProducts.new.details.toast.submit_title,
-          description: "Tu producto ha sido creado exitosamente.",
+          description: dict.creatorProductsForm?.successDesc ?? "Tu producto ha sido creado exitosamente.",
         });
         router.push('/creator/products');
       } else {
@@ -150,8 +150,8 @@ export function NewProductForm() {
       console.error('Error creating product:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo crear el producto. Intenta de nuevo.",
+        title: dict.creatorProductsForm?.errorTitle ?? "Error",
+        description: dict.creatorProductsForm?.errorDesc ?? "No se pudo crear el producto. Intenta de nuevo.",
       });
     } finally {
       setIsSubmitting(false);

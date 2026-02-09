@@ -197,8 +197,8 @@ export default function CreatorCombosPage() {
       if (error) throw error;
 
       toast({
-        title: "Combo eliminado",
-        description: "El combo ha sido eliminado exitosamente"
+        title: dict.creatorCombos.deleteToastTitle,
+        description: dict.creatorCombos.deleteToastDesc
       });
 
       loadCombos();
@@ -206,8 +206,8 @@ export default function CreatorCombosPage() {
       console.error('Error deleting combo:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo eliminar el combo"
+        title: dict.creatorCombos.deleteErrorTitle,
+        description: error.message || dict.creatorCombos.deleteErrorDesc
       });
     } finally {
       setDeletingId(null);
@@ -226,7 +226,9 @@ export default function CreatorCombosPage() {
 
       toast({
         title: "Estado actualizado",
-        description: `Combo ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`
+        description: dict.creatorCombos.statusUpdatedDesc
+          ? dict.creatorCombos.statusUpdatedDesc(!currentStatus)
+          : `Combo ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`
       });
 
       loadCombos();
@@ -234,8 +236,8 @@ export default function CreatorCombosPage() {
       console.error('Error updating combo status:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo actualizar el estado"
+        title: dict.creatorCombos.statusErrorTitle,
+        description: error.message || dict.creatorCombos.statusErrorDesc
       });
     }
   };
@@ -535,24 +537,16 @@ export default function CreatorCombosPage() {
         <CardContent className="p-8">
           <div className="text-center">
             <h3 className="text-xl font-semibold text-purple-900 mb-4">
-              ¿Cómo funcionan los Combos Colaborativos?
+              {dict.creatorCombos.infoTitle}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-purple-700">
-              <div className="text-center">
-                <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <p className="font-medium mb-1">1. Colabora</p>
-                <p>Invita a otros creadores a unirse a tu combo</p>
-              </div>
-              <div className="text-center">
-                <Gift className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <p className="font-medium mb-1">2. Combina</p>
-                <p>Crea ofertas atractivas con productos complementarios</p>
-              </div>
-              <div className="text-center">
-                <Percent className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <p className="font-medium mb-1">3. Gana Más</p>
-                <p>Aumenta tus ventas y llega a nuevos clientes</p>
-              </div>
+              {dict.creatorCombos.infoSteps?.map((step, idx) => (
+                <div key={idx} className="text-center">
+                  <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="font-medium mb-1">{step.title}</p>
+                  <p>{step.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>

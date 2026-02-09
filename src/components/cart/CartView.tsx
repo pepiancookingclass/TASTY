@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useLanguage } from '@/hooks/useLanguage';
 import { addHours, format } from 'date-fns';
+import { es as esLocale, enUS } from 'date-fns/locale';
 import { useDictionary } from '@/hooks/useDictionary';
 import { createOrder } from '@/lib/services/orders';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +33,8 @@ export function CartView() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [deliveryDateInput, setDeliveryDateInput] = useState<string>('');
+  const locale = language === 'es' ? esLocale : enUS;
+  const dateFormat = language === 'es' ? "EEEE, d 'de' MMMM 'a las' h:mm a" : "EEEE, MMM d 'at' h:mm a";
 
   const formatForInput = (d: Date) => {
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -63,7 +66,10 @@ export function CartView() {
   
   // 🚚 FECHA DE ENTREGA: Siempre 48h mínimas + coordinación con servicio al cliente
   const minimumDeliveryTime = useMemo(() => addHours(new Date(), 48), []); // 48h mínimas SIEMPRE
-  const formattedDeliveryDate = useMemo(() => format(minimumDeliveryTime, "EEEE, MMM d 'at' h:mm a"), [minimumDeliveryTime]);
+  const formattedDeliveryDate = useMemo(
+    () => format(minimumDeliveryTime, dateFormat, { locale }),
+    [minimumDeliveryTime, dateFormat, locale]
+  );
   const minimumDeliveryInput = useMemo(() => formatForInput(minimumDeliveryTime), [minimumDeliveryTime]);
 
   // Cargar fecha guardada (si existe) o usar 48h por defecto
@@ -182,7 +188,7 @@ export function CartView() {
             <div className="flex items-center gap-2 pb-2 border-b">
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">
-                Productos del mismo creador
+                {dict.cartView.creatorGroupTitle}
               </span>
             </div>
             {creatorItems.map(({ product, quantity }) => {
@@ -203,7 +209,9 @@ export function CartView() {
                     <p className="text-muted-foreground">{formatPrice(product.price)}</p>
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{product.preparationTime}h preparación</span>
+                      <span>
+                        {dict.cartView.preparationLabel}: {product.preparationTime}h
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -237,24 +245,24 @@ export function CartView() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
-              <span>Productos</span>
+              <span>{dict.cartView?.productsLabel ?? 'Productos'}</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>I.V.A. (12%)</span>
+              <span>{dict.cartView?.ivaLabel ?? 'I.V.A. (12%)'}</span>
               <span>{formatPrice(ivaAmount)}</span>
             </div>
             <div className="flex justify-between text-sm font-medium">
-              <span>Subtotal</span>
+              <span>{dict.cartView?.subtotal ?? 'Subtotal'}</span>
               <span>{formatPrice(subtotalWithIva)}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span>Delivery (estimado)</span>
+              <span>{dict.cartView?.deliveryEstimatedLabel ?? 'Delivery (estimado)'}</span>
               <span>{formatPrice(deliveryFee)}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              💡 El costo final se calculará por distancia en el checkout
+              {dict.cartView?.deliveryDistanceNote ?? '💡 El costo final se calculará por distancia en el checkout'}
             </p>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
@@ -265,8 +273,14 @@ export function CartView() {
              <div className="space-y-3">
                {/* ⏰ MOSTRAR ESFUERZO DEL CREADOR */}
                <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
-                 <p className="text-xs text-amber-700 font-medium">⏰ Tiempo de preparación total:</p>
-                 <p className="text-sm font-semibold text-amber-800">{totalPreparationTime}h de trabajo artesanal</p>
+                 <p className="text-xs text-amber-700 font-medium">
+                   {dict.cartView?.totalPreparationTitle ?? '⏰ Tiempo de preparación total:'}
+                 </p>
+                 <p className="text-sm font-semibold text-amber-800">
+                   {dict.cartView?.totalPreparationDesc
+                     ? dict.cartView.totalPreparationDesc(totalPreparationTime)
+                     : `${totalPreparationTime}h de trabajo artesanal`}
+                 </p>
                </div>
                
               {/* 🚚 FECHA DE ENTREGA */}
@@ -274,7 +288,7 @@ export function CartView() {
                 <p className="font-semibold text-foreground">{dict.cartView.estimatedDelivery}</p>
                 <p>{formattedDeliveryDate}</p>
                 <p className="text-xs">
-                  📞 Basado en 48h mínimas + coordinación con servicio al cliente
+                  {dict.cartView?.deliveryCoordNote ?? '📞 Basado en 48h mínimas + coordinación con servicio al cliente'}
                 </p>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-foreground">{dict.cartView.deliveryDateLabel}</label>
@@ -305,7 +319,7 @@ export function CartView() {
               size="lg"
             >
               <Link href="/checkout">
-                Hacer tu Pedido
+                {dict.cartView?.checkoutCta ?? 'Hacer tu Pedido'}
               </Link>
             </Button>
           </CardFooter>
