@@ -34,6 +34,7 @@ const formSchema = z.object({
   isVegan: z.boolean().optional(),
   isDairyFree: z.boolean().optional(),
   isNutFree: z.boolean().optional(),
+  deliveryVehicle: z.enum(['moto', 'auto']).optional(),
 });
 
 export function NewProductForm() {
@@ -58,6 +59,7 @@ export function NewProductForm() {
       isVegan: false,
       isDairyFree: false,
       isNutFree: false,
+      deliveryVehicle: "moto",
     },
   });
 
@@ -135,6 +137,7 @@ export function NewProductForm() {
           isDairyFree: values.isDairyFree || false,
           isNutFree: values.isNutFree || false,
         },
+        deliveryVehicle: values.deliveryVehicle || 'moto',
       });
 
       if (product) {
@@ -259,6 +262,27 @@ export function NewProductForm() {
                         </FormItem>
                     )} />
                 </div>
+                
+                <FormField control={form.control} name="deliveryVehicle" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Medio de Entrega</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value || 'moto'}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona el medio de entrega" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="moto">🏍️ Moto (productos pequeños/medianos)</SelectItem>
+                                <SelectItem value="auto">🚗 Auto (productos grandes/frágiles)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormDescription>
+                            Selecciona auto si el producto es grande, frágil o requiere más espacio. Los productos de moto tienen tarifas de delivery más económicas.
+                        </FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )} />
                
                 <FormField control={form.control} name="productIngredients_en" render={({ field }) => (
                     <FormItem>

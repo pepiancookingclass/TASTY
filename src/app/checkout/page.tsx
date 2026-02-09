@@ -94,9 +94,10 @@ export default function CheckoutPage() {
     creator_name: string;
     delivery_fee: number;
     distance_km: number;
+    vehicle?: string;
   }>>([]);
   const [addressValidation, setAddressValidation] = useState<{
-    state: 'idle' | 'checking' | 'ok' | 'blocked';
+    state: 'idle' | 'checking' | 'ok' | 'blocked' | 'pending_verification';
     distanceKm?: number;
     message?: string;
   }>({ state: 'idle' });
@@ -252,6 +253,21 @@ export default function CheckoutPage() {
       });
       return { ok: false };
     }
+    
+    // Si hay warning (timeout, error de red), permitir pero marcar para verificación
+    if (validation.warning) {
+      setAddressValidation({
+        state: 'pending_verification',
+        distanceKm: validation.distanceKm,
+        message: validation.warning,
+      });
+      toast({
+        title: dict.addressValidation?.pendingVerificationTitle ?? "📋 Verificación pendiente",
+        description: dict.addressValidation?.pendingVerificationBody ?? "Tu fecha y dirección de entrega será verificada por nuestro equipo de servicio al cliente.",
+      });
+      return { ok: true };
+    }
+    
     setAddressValidation({
       state: 'ok',
       distanceKm: validation.distanceKm,
@@ -310,20 +326,50 @@ export default function CheckoutPage() {
             source: userLocation ? 'GPS' : 'Manual'
           });
           
+          // Obtener nombres de creadores
+          const { data: creatorsData } = await supabase
+            .from('users')
+            .select('id, name')
+            .in('id', creatorIds);
+          const creatorNames: Record<string, string> = {};
+          (creatorsData || []).forEach((c: { id: string; name: string }) => {
+            creatorNames[c.id] = c.name || 'Creador';
+          });
+          console.log('👤 Checkout: Nombres de creadores:', creatorNames);
+          
           let totalDeliveryFee = 0;
           let allCreatorsWithinRange = true;
-          const deliveryResults = [];
+          const deliveryResults: Array<{
+            creatorId: string;
+            creator_name: string;
+            delivery_fee: string;
+            distance_km: string;
+            creator_location: string;
+            is_within_radius: boolean;
+            vehicle_used: string;
+          }> = [];
           
           // Calcular delivery por cada creador usando función SQL
           for (const creatorId of creatorIds) {
             console.log(`🚚 Checkout: Calculando delivery para creador ${creatorId}`);
             console.log(`📍 Checkout: Ubicación cliente:`, { lat: finalLocation.lat, lng: finalLocation.lng });
             
+            // Determinar vehículo para este creador: si al menos un producto requiere auto, usar auto
+            const creatorItems = items.filter(item => item.product.creatorId === creatorId);
+            console.log(`📦 Checkout: Productos del creador ${creatorId}:`, creatorItems.map(i => ({
+              name: i.product.name.es,
+              vehicle: i.product.deliveryVehicle || 'moto (default)'
+            })));
+            const requiresAuto = creatorItems.some(item => item.product.deliveryVehicle === 'auto');
+            const vehicleForCreator = requiresAuto ? 'auto' : 'moto';
+            console.log(`🚗 Checkout: Vehículo determinado para creador ${creatorId}: ${vehicleForCreator} (requiresAuto=${requiresAuto})`);
+            
             const { data, error } = await supabase
               .rpc('calculate_creator_delivery_fee', {
                 creator_uuid: creatorId,
                 client_latitude: finalLocation.lat,
-                client_longitude: finalLocation.lng
+                client_longitude: finalLocation.lng,
+                vehicle: vehicleForCreator
               });
 
             console.log(`🔍 Checkout: Respuesta SQL para creador ${creatorId}:`, { data, error });
@@ -345,7 +391,11 @@ export default function CheckoutPage() {
             }
 
             const deliveryInfo = data[0];
-            deliveryResults.push({ creatorId, ...deliveryInfo });
+            deliveryResults.push({ 
+              creatorId, 
+              creator_name: creatorNames[creatorId] || 'Creador',
+              ...deliveryInfo 
+            });
             
             console.log(`📊 Checkout: Resultado delivery creador ${creatorId}:`, {
               delivery_fee: deliveryInfo.delivery_fee,
@@ -416,12 +466,18 @@ export default function CheckoutPage() {
             setDeliveryError(null);
             
             // Guardar desglose de delivery
-            setDeliveryBreakdown(deliveryResults.map(r => ({
+            const breakdown = deliveryResults.map(r => ({
               creator_id: r.creatorId,
               creator_name: r.creator_name || 'Creador',
               delivery_fee: parseFloat(r.delivery_fee),
-              distance_km: parseFloat(r.distance_km)
-            })));
+              distance_km: parseFloat(r.distance_km),
+              vehicle: r.vehicle_used || 'moto'
+            }));
+            console.log('📊 Checkout: BREAKDOWN FINAL:', breakdown);
+            console.log('💰 Checkout: RESUMEN TARIFAS:', breakdown.map(b => 
+              `${b.creator_name}: ${b.vehicle === 'auto' ? '🚗 AUTO' : '🏍️ MOTO'} = Q${b.delivery_fee} (${b.distance_km}km)`
+            ));
+            setDeliveryBreakdown(breakdown);
           }
           
           setIsCalculatingDelivery(false);
@@ -1093,7 +1149,7 @@ export default function CheckoutPage() {
                           {(deliveryBreakdown?.length ? deliveryBreakdown : []).map((d, idx) => (
                             <div key={`${d.creator_id || idx}`} className="flex justify-between">
                               <span>
-                                {d.creator_name || `Creador ${idx + 1}`}
+                                {d.vehicle === 'auto' ? '🚗' : '🏍️'} {d.creator_name || `Creador ${idx + 1}`}
                                 {Number.isFinite(d.distance_km) && ` · ${Number(d.distance_km).toFixed(1)} km`}
                               </span>
                               <span>Q {Number(d.delivery_fee || 0).toFixed(2)}</span>
@@ -1164,6 +1220,9 @@ export default function CheckoutPage() {
                   <p>{t?.policyCancelation ?? "• Cancelación: Hasta 24 horas antes que inicie tu período de 48h de preparación y entrega"}</p>
                   <p>{t?.policyFresh ?? "• Productos frescos: Preparados especialmente para ti"}</p>
                 </div>
+                <p className="mt-3 text-xs text-amber-800 italic">
+                  {t?.handmadeNotice ?? "🤲 Debido a que todos nuestros productos son hechos a mano y con amor, los tiempos de entrega pueden variar y deben ser acordados con el creador, basado en su disponibilidad y demanda. Nuestro departamento de servicio al cliente te ayudará con eso."}
+                </p>
               </div>
             </CardContent>
             <CardFooter>

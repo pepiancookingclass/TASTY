@@ -1,6 +1,7 @@
 const dictionary = {
   loading: 'Cargando...',
   hero: {
+    badge: '✨ Productos hechos a mano de alta calidad',
     headline: 'Sabores Artesanales, Directo de Casa',
     subheadline:
       'Descubre platillos únicos, hechos a mano con pasión por creadores locales.',
@@ -124,6 +125,8 @@ const dictionary = {
     errorTitle: 'No se pudo validar la distancia',
     errorBody: 'Intenta de nuevo o continúa bajo tu responsabilidad.',
     retry: 'Reintentar validación',
+    pendingVerificationTitle: '📋 Verificación pendiente',
+    pendingVerificationBody: 'Tu fecha y dirección de entrega será verificada por nuestro equipo de servicio al cliente.',
   },
   creatorSkills: {
     pastry: 'Repostería y Postres',
@@ -580,6 +583,11 @@ const dictionary = {
         ingredients_en_help: 'This will be used for dietary flags if provided.',
         ingredients_es: 'Ingredientes (Español, Opcional)',
         ingredients_es_placeholder: 'Lista de ingredientes, separados por comas...',
+        deliveryVehicle: 'Medio de Entrega',
+        deliveryVehiclePlaceholder: 'Selecciona el medio de entrega',
+        deliveryVehicleMoto: '🏍️ Moto (productos pequeños/medianos)',
+        deliveryVehicleAuto: '🚗 Auto (productos grandes/frágiles)',
+        deliveryVehicleHelp: 'Selecciona auto si el producto es grande, frágil o requiere más espacio. Los productos de moto tienen tarifas de delivery más económicas.',
         submit: 'Crear Producto',
         toast: {
           missing_info_title: 'Falta Información',
@@ -920,6 +928,7 @@ const dictionary = {
     policyMinDelivery: '• Entrega mínima: 48 horas de anticipación',
     policyCancelation: '• Cancelación: Hasta 24 horas antes que inicie tu período de 48h de preparación y entrega',
     policyFresh: '• Productos frescos: Preparados especialmente para ti',
+    handmadeNotice: '🤲 Debido a que todos nuestros productos son hechos a mano y con amor, los tiempos de entrega pueden variar y deben ser acordados con el creador, basado en su disponibilidad y demanda. Nuestro departamento de servicio al cliente te ayudará con eso.',
     ctaProcessing: 'Procesando pedido...',
     ctaLocationRequired: 'Ubicación requerida para continuar',
     ctaCalculatingDelivery: 'Calculando delivery...',

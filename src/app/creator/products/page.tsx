@@ -18,7 +18,7 @@ export default function CreatorProductsPage() {
   const dict = useDictionary();
   
   // Cargar productos del creador actual
-  const { products: creatorProducts, loading: productsLoading } = useProductsByCreator(authUser?.id || '');
+  const { products: creatorProducts, loading: productsLoading, refetch } = useProductsByCreator(authUser?.id || '');
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -68,7 +68,7 @@ export default function CreatorProductsPage() {
           </Button>
         </div>
       ) : (
-        <ProductTable products={creatorProducts} />
+        <ProductTable products={creatorProducts} onProductDeleted={refetch} />
       )}
     </div>
   );

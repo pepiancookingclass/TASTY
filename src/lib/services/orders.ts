@@ -50,6 +50,13 @@ export function generateCustomerWhatsAppUrl(orderData: {
   subtotal?: number;
   ivaAmount?: number;
   deliveryFee?: number;
+  deliveryBreakdown?: Array<{
+    creator_id: string;
+    creator_name: string;
+    delivery_fee: number;
+    distance_km: number;
+    vehicle?: string;
+  }>;
 }) {
   // Construir lista de productos
   const itemsList = orderData.items.map(item => 
@@ -71,6 +78,20 @@ export function generateCustomerWhatsAppUrl(orderData: {
   const phone = (orderData.customerPhone || '').trim();
   const phoneSection = `📱 Mi número de celular es: ${phone || '(sin teléfono capturado, contáctame por WhatsApp)'}`;
 
+  // Construir sección de entregas por creador con vehículo
+  let deliverySection = '';
+  if (orderData.deliveryBreakdown && orderData.deliveryBreakdown.length > 1) {
+    deliverySection = '\n🚚 *ENTREGAS SEPARADAS:*\n';
+    orderData.deliveryBreakdown.forEach(d => {
+      const vehicleText = d.vehicle === 'auto' ? 'Auto' : 'Moto';
+      deliverySection += `• ${d.creator_name}: Q${d.delivery_fee.toFixed(2)} (${vehicleText})\n`;
+    });
+  } else if (orderData.deliveryBreakdown && orderData.deliveryBreakdown.length === 1) {
+    const d = orderData.deliveryBreakdown[0];
+    const vehicleText = d.vehicle === 'auto' ? 'Auto' : 'Moto';
+    deliverySection = `\n🚚 *Tipo de entrega:* ${vehicleText}`;
+  }
+
   // Construir mensaje en líneas para asegurar saltos y presencia de IVA
   const messageLines = [
     `Hola, te saluda *${orderData.customerName}*`,
@@ -83,7 +104,7 @@ export function generateCustomerWhatsAppUrl(orderData: {
     `• IVA (12%): Q${calculatedIva.toFixed(2)}`,
     `• Delivery: Q${calculatedDeliveryFee.toFixed(2)}`,
     `• *TOTAL: Q${orderData.total.toFixed(2)}*`,
-    '',
+    deliverySection,
     `💳 *Pago:* ${orderData.paymentMethod === 'cash' ? 'Efectivo contra entrega' : 'Transferencia bancaria'}`,
     phoneSection,
     `📍 Mi dirección de entrega es: ${orderData.deliveryAddress}`,
@@ -136,6 +157,7 @@ export interface CreateOrderInput {
     creator_name: string;
     delivery_fee: number;
     distance_km: number;
+    vehicle?: string;
   }>;
 }
 
@@ -293,6 +315,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     unit_price: item.product.price,
     product_name_en: item.product.name.en,
     product_name_es: item.product.name.es,
+    delivery_vehicle: item.product.deliveryVehicle || 'moto',
   }));
 
   console.log('📦 INSERTANDO ORDER_ITEMS:', orderItems.length, 'productos');
@@ -361,7 +384,8 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
     paymentMethod: input.paymentMethod || 'cash',
     subtotal: subtotal,
     ivaAmount: ivaAmount,
-    deliveryFee: deliveryFee
+    deliveryFee: deliveryFee,
+    deliveryBreakdown: input.deliveryBreakdown
   });
 
   console.log('📱 WHATSAPP URL GENERADA:', customerWhatsAppUrl.substring(0, 200) + '...');

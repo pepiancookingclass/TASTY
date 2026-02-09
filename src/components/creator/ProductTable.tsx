@@ -21,15 +21,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useToast } from '@/hooks/use-toast';
@@ -46,7 +44,6 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
   const dict = useDictionary();
   const { toast } = useToast();
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   
   const formatPrice = (price: number) => {
@@ -64,68 +61,67 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
     setProductToDelete(product);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!productToDelete) return;
-
-    setDeletingId(productToDelete.id);
-
-    try {
-      const success = await deleteProduct(productToDelete.id);
-      
-      if (success) {
+    
+    const productId = productToDelete.id;
+    const productName = productToDelete.name[language];
+    
+    // Cerrar el diálogo INMEDIATAMENTE
+    setProductToDelete(null);
+    
+    // Ejecutar eliminación en background
+    deleteProduct(productId)
+      .then((success) => {
+        if (success) {
+          toast({
+            title: dict.productTable.deleteToastTitle,
+            description: dict.productTable.deleteToastDesc
+              ? dict.productTable.deleteToastDesc(productName)
+              : `"${productName}" ha sido eliminado.`,
+          });
+          onProductDeleted?.();
+        } else {
+          throw new Error('No se pudo eliminar');
+        }
+      })
+      .catch((error) => {
+        console.error('Error deleting product:', error);
         toast({
-          title: dict.productTable.deleteToastTitle,
-          description: dict.productTable.deleteToastDesc
-            ? dict.productTable.deleteToastDesc(productToDelete.name[language])
-            : `"${productToDelete.name[language]}" ha sido eliminado.`,
+          variant: 'destructive',
+          title: dict.productTable.deleteErrorTitle,
+          description: dict.productTable.deleteErrorDesc,
         });
-        onProductDeleted?.();
-        router.refresh();
-      } else {
-        throw new Error('No se pudo eliminar');
-      }
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        variant: 'destructive',
-        title: dict.productTable.deleteErrorTitle,
-        description: dict.productTable.deleteErrorDesc,
       });
-    } finally {
-      setDeletingId(null);
-      setProductToDelete(null);
-    }
   };
 
   return (
     <>
-    {/* Dialog de confirmación */}
-    <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{dict.productTable.deleteDialogTitle}</AlertDialogTitle>
-          <AlertDialogDescription>
+    {/* Dialog de confirmación - usando Dialog simple en lugar de AlertDialog */}
+    <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{dict.productTable.deleteDialogTitle}</DialogTitle>
+          <DialogDescription>
             {dict.productTable.deleteDialogDesc
               ? dict.productTable.deleteDialogDesc(productToDelete?.name[language] || '')
               : `¿Estás seguro que deseas eliminar "${productToDelete?.name[language]}"? Esta acción no se puede deshacer.`}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{dict.productTable.deleteCancel}</AlertDialogCancel>
-          <AlertDialogAction
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => setProductToDelete(null)}>
+            {dict.productTable.deleteCancel}
+          </Button>
+          <Button
+            variant="destructive"
             onClick={handleConfirmDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deletingId ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
+            <Trash2 className="h-4 w-4 mr-2" />
             {dict.productTable.deleteConfirm}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     
     <div className="border rounded-lg w-full">
       <Table>

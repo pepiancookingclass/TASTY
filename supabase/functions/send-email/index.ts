@@ -181,6 +181,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         unit_price,
         product_name_es,
         product_name_en,
+        delivery_vehicle,
         products (
           id,
           name_es,
@@ -234,6 +235,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       subtotal: number
       totalHours: number
       deliveryFee: number
+      vehicle: string
     }>()
 
     items.forEach(item => {
@@ -241,12 +243,14 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       const creator = product?.users as any
       if (creator?.id) {
         if (!creatorMap.has(creator.id)) {
-          // Buscar delivery fee del breakdown si existe
+          // Buscar delivery fee y vehicle del breakdown si existe
           let creatorDeliveryFee = 0
+          let creatorVehicle = 'moto' // default
           if (order.delivery_breakdown && Array.isArray(order.delivery_breakdown)) {
             const breakdown = order.delivery_breakdown.find((b: any) => b.creator_id === creator.id)
             if (breakdown) {
               creatorDeliveryFee = breakdown.delivery_fee || 0
+              creatorVehicle = breakdown.vehicle || 'moto'
             }
           }
           
@@ -257,13 +261,18 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
             items: [],
             subtotal: 0,
             totalHours: 0,
-            deliveryFee: creatorDeliveryFee
+            deliveryFee: creatorDeliveryFee,
+            vehicle: creatorVehicle
           })
         }
         const creatorData = creatorMap.get(creator.id)!
         creatorData.items.push(item)
         creatorData.subtotal += item.quantity * item.unit_price
         creatorData.totalHours += (product?.preparation_time || 0) * item.quantity
+        // Si algún item requiere auto, actualizar el vehículo del creador
+        if ((item as any).delivery_vehicle === 'auto') {
+          creatorData.vehicle = 'auto'
+        }
       }
     })
 
@@ -301,11 +310,12 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         const productsList = creator.items.map(item => 
           `${item.product_name_es || (item.products as any)?.name_es || 'Producto'} (${item.quantity})`
         ).join(' + ')
+        const vehicleText = creator.vehicle === 'auto' ? 'Auto' : 'Moto'
         
         clientPaymentSection += `🚚 <strong>CUANDO LLEGUE ${creator.name.toUpperCase()}:</strong><br>`
         clientPaymentSection += `• ${productsList}<br>`
         clientPaymentSection += `• Total productos: Q${creator.subtotal.toFixed(2)}<br>`
-        clientPaymentSection += `• Delivery: Q${creator.deliveryFee.toFixed(2)}<br>`
+        clientPaymentSection += `• Delivery (${vehicleText}): Q${creator.deliveryFee.toFixed(2)}<br>`
         clientPaymentSection += `• IVA (12%): Q${creatorIva.toFixed(2)}<br>`
         clientPaymentSection += `• 💰 <strong>Pagas a ${creator.name}: Q${creatorTotal.toFixed(2)}</strong><br>`
         clientPaymentSection += `• Incluye impuestos y envío<br><br>`
@@ -383,10 +393,11 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       const ganancia90 = creator.subtotal * 0.9
       const comisionTasty = creator.subtotal * 0.1
       totalComisionTasty += comisionTasty
+      const vehicleText = creator.vehicle === 'auto' ? 'Auto' : 'Moto'
       
       adminCreatorsSection += `📦 <strong>${creator.name.toUpperCase()}:</strong><br>`
       adminCreatorsSection += `• Productos: Q${creator.subtotal.toFixed(2)} | Ganancia (90%): Q${ganancia90.toFixed(2)} | Comisión TASTY: Q${comisionTasty.toFixed(2)}<br>`
-      adminCreatorsSection += `• Delivery: Q${creator.deliveryFee.toFixed(2)} | IVA (12%): Q${creatorIva.toFixed(2)}<br>`
+      adminCreatorsSection += `• Delivery (${vehicleText}): Q${creator.deliveryFee.toFixed(2)} | IVA (12%): Q${creatorIva.toFixed(2)}<br>`
       adminCreatorsSection += `• ITEMS:<br>`
       adminCreatorsSection += creator.items.map(it => {
         const name = it.product_name_es || (it.products as any)?.name_es || 'Producto'
@@ -459,6 +470,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       const creatorTotal = creatorData.subtotal + creatorIva + creatorData.deliveryFee
       const ganancia90 = creatorData.subtotal * 0.9
       const comisionTasty = creatorData.subtotal * 0.1
+      const vehicleText = creatorData.vehicle === 'auto' ? 'Auto' : 'Moto'
 
       // Construir lista de productos del creador
       const creatorProductsList = creatorData.items.map(item => {
@@ -481,7 +493,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         💰 <strong>TU PARTE FINANCIERA DEL PEDIDO:</strong><br>
         • Valor de tus productos: Q${creatorData.subtotal.toFixed(2)}<br>
         • IVA de tus productos (12%): Q${creatorIva.toFixed(2)}<br>
-        • Tu delivery específico: Q${creatorData.deliveryFee.toFixed(2)}<br>
+        • Delivery (${vehicleText}): Q${creatorData.deliveryFee.toFixed(2)}<br>
         • <strong>TOTAL QUE EL CLIENTE TE PAGARÁ: Q${creatorTotal.toFixed(2)}</strong><br><br>
         🏦 <strong>TUS GANANCIAS:</strong><br>
         • Tu ganancia (90%): Q${ganancia90.toFixed(2)}<br>

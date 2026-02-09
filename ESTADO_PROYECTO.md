@@ -1,6 +1,6 @@
 # 🍳 TASTY - Plan de Trabajo para Agentes
 
-> **Última actualización:** 20 Enero 2026 - AGENTE 7 (Claude Opus 4)  
+> **Última actualización:** 09 Febrero 2026 - AGENTE 8 (Claude Opus 4.5)  
 > **Contexto:** Proyecto migrado de Firebase a Supabase  
 > **Idioma:** Siempre responder en ESPAÑOL
 
@@ -8,11 +8,14 @@
 
 ## 📋 RESUMEN RÁPIDO - LEE ESTO PRIMERO
 
-**Actualización 03 Feb 2026 (Agente actual):**
-- Defaults de delivery para creadores fijados en la UI: radio 25 km, base Q25, Q3/km.
-- Trigger en BD `trg_set_creator_delivery_defaults` (función `set_creator_delivery_defaults`) rellena automáticamente esos valores cuando se asigna rol `creator`.
-- Proyecto Vercel activo: `tasty-lat` (dominio principal actual). `tasty` queda como secundario; auto-deploy desactivar en caso de ahorrar builds.
-- Validación dirección vs ubicación ajustada: intento por zona, fallback municipio+depto, tolerancia aproximada 3 km; probado ok (zona 15, zona 11, Antigua) y mensajes con WhatsApp soporte.
+**Actualización 09 Feb 2026 (Agente 8 - Claude Opus 4.5):**
+- ✅ **Sistema de entrega por vehículo (moto vs auto)**: Implementado completo. Creadores pueden marcar productos como moto o auto, checkout usa tarifa correcta, emails y WhatsApp muestran tipo de vehículo.
+- ✅ **Bottom Navigation Bar móvil**: Panel de creadores ahora tiene navegación inferior en móviles (antes hamburguesa confusa).
+- ✅ **Nombres de creadores en checkout**: Breakdown de delivery ahora muestra nombres reales (Valentina Davila) en vez de "CREADOR".
+- ✅ **Mensaje productos artesanales**: Aviso en checkout sobre tiempos de entrega variables.
+- ✅ **Validación dirección mejorada**: Timeout no bloquea checkout, marca como "pending_verification".
+- 🔴 **BUG pendiente**: Eliminar producto deja página trabada (overlay invisible).
+- Proyecto Vercel activo: `tasty-lat`. Validación dirección con tolerancia 3km + fallback.
 
 ### **¿QUÉ FUNCIONA? (NO TOCAR)**
 | Sistema | Estado | Archivos |
@@ -1407,13 +1410,50 @@ Los 2 problemas restantes requieren enfoque diferente:
 - 🧪 **Pendiente de probar (QA rápido):** Checkout logueado (prefill, delivery, pedido, WhatsApp con IVA/teléfono), cambio de usuario con carrito vacío, y restore por usuario.
 - ☎️ **WhatsApp sin teléfono:** Aún falta fallback en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para evitar “No proporcionado”.
 
-### 🔴 Pendientes actuales (09 Feb 2026)
-- **Sistema de entrega por vehículo (moto vs carro)**: implementar tarifas paralelas y breakdown por `vehicle` (plan en `docs/plan-entregas-vehiculo.md`).
-- **Trigger/Edge emails pedidos**: sigue sin disparar desde la app; se envían manual, requiere solución definitiva.
+### 🔴 Pendientes actuales (09 Feb 2026 - Actualizado)
+
+#### ✅ COMPLETADO HOY:
+- **Sistema de entrega por vehículo (moto vs auto)**: ✅ **IMPLEMENTADO COMPLETO**
+  - SQL: columnas `_auto` y `_moto` en `users`, `delivery_vehicle` en `products` y `order_items`
+  - Funciones SQL actualizadas: `calculate_creator_delivery_fee(vehicle)` 
+  - Frontend: selector moto/auto en formulario de productos, checkout determina vehículo por creador
+  - Emails: Edge Function actualizada con `Delivery (Moto)` / `Delivery (Auto)` por creador
+  - WhatsApp: mensaje incluye tipo de vehículo y entregas separadas por creador
+  - Checkout: muestra nombres reales de creadores (no "CREADOR")
+- **Bottom Navigation Bar (Panel Creador)**: ✅ Implementado para móviles, resuelve confusión hamburguesa-en-hamburguesa
+- **Mensaje productos artesanales**: ✅ Añadido en checkout sobre tiempos de entrega variables
+
+#### 🟡 PENDIENTES DE REVISIÓN/QA:
+- **WhatsApp IVA y teléfono**: El código está correcto pero pendiente verificar en próximo pedido real
+- **Nombres de creadores en página confirmación**: Corregido, pendiente verificar en próximo pedido
+- **Validación dirección timeout**: Ahora permite continuar con `pending_verification` en vez de bloquear; muestra mensaje de verificación manual
+
+#### 🔴 PENDIENTES SIN RESOLVER:
+- **BUG: Eliminación de productos bloquea página**: Al eliminar producto desde `/creator/products`, la página queda "trabada" (no se puede hacer clic). El producto SÍ se elimina. Sospecha: overlay invisible de `DropdownMenu` no se cierra. Ver sección "🐛 BUG SIN RESOLVER" más arriba.
+- **Sistema de Combos**: Revisar todo el flujo de creación, edición y compra de combos. Verificar que funcione correctamente.
 - **RLS order_items para creadores**: sigue arrojando `42P17 infinite recursion`; no ven pedidos en `/creator/orders`.
-- **WhatsApp fallback de teléfono**: pendiente en `createOrder`.
-- **QA**: verificar checkout completo (prefill, delivery, WhatsApp), restore de carrito por usuario y flow multiusuario.
+- **Trigger/Edge emails pedidos**: funciona llamando desde app, pero no hay trigger automático.
+- **Dominio + Resend**: comprar dominio y conectarlo con Resend para enviar correos a destinatarios reales.
 - **Textos menores**: mocks de analytics y `page-old` legacy sin prioridad.
+
+### 🐛 BUG SIN RESOLVER: Eliminación de productos bloquea la página
+
+**Archivo:** `src/components/creator/ProductTable.tsx`
+
+**Síntoma:** Después de eliminar un producto desde `/creator/products`, la página queda "bloqueada" - no se pueden hacer clicks en ningún elemento. El producto SÍ se elimina correctamente y el `refetch` funciona (los logs muestran `🔄 useProductsByCreator: refetch triggered`), pero hay un overlay invisible que bloquea toda interacción. Requiere refresh manual.
+
+**Lo que se intentó (sin éxito):**
+1. Añadir `e.preventDefault()` en `AlertDialogAction` - empeoró
+2. Quitar `e.preventDefault()` - sigue bloqueado
+3. Cerrar diálogo ANTES de la operación async con `.then()` - sigue bloqueado
+4. Cambiar de `AlertDialog` a `Dialog` con `Button` normales - sigue bloqueado
+
+**Sospecha:** El problema puede ser la interacción entre `DropdownMenu` (menú de 3 puntos) → `Dialog`. Al abrir el Dialog desde dentro del DropdownMenu, puede quedar un overlay del Dropdown activo.
+
+**Sugerencia:** Probar cerrar explícitamente el `DropdownMenu` antes de abrir el Dialog de confirmación, o usar un estado separado para controlar ambos componentes y asegurar que el Dropdown se cierre completamente antes de mostrar el Dialog.
+
+### 🟡 Pendientes baja prioridad (futuro)
+- **Videos cortos de productos**: Permitir a creadores subir clips de 10-15 segundos para mostrar productos. Requiere: límite de tamaño (~10MB), upload a Supabase Storage, generación de thumbnails. Considerar Cloudinary/Mux para compresión automática si crece la demanda.
 
 ## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
 

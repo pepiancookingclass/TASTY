@@ -1,4 +1,6 @@
 
+export type DeliveryVehicle = 'moto' | 'auto';
+
 export type Product = {
   id: string;
   name: {
@@ -25,6 +27,7 @@ export type Product = {
     isDairyFree: boolean;
     isNutFree: boolean;
   };
+  deliveryVehicle?: DeliveryVehicle; // 'moto' (default) or 'auto'
 };
 
 export type Promotion = {

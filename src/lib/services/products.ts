@@ -29,6 +29,7 @@ function transformProduct(data: any): Product {
       isDairyFree: data.is_dairy_free || false,
       isNutFree: data.is_nut_free || false,
     },
+    deliveryVehicle: data.delivery_vehicle || 'moto',
   };
 }
 
@@ -116,6 +117,7 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       is_vegan: product.dietaryFlags.isVegan,
       is_dairy_free: product.dietaryFlags.isDairyFree,
       is_nut_free: product.dietaryFlags.isNutFree,
+      delivery_vehicle: product.deliveryVehicle || 'moto',
     })
     .select()
     .single();
@@ -155,6 +157,7 @@ export async function updateProduct(id: string, product: Partial<Product>): Prom
     updateData.is_dairy_free = product.dietaryFlags.isDairyFree;
     updateData.is_nut_free = product.dietaryFlags.isNutFree;
   }
+  if (product.deliveryVehicle) updateData.delivery_vehicle = product.deliveryVehicle;
 
   const { data, error } = await supabase
     .from('products')

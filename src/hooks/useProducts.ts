@@ -65,6 +65,12 @@ export function useProductsByType(type: Product['type']) {
 export function useProductsByCreator(creatorId: string) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = () => {
+    console.log('🔄 useProductsByCreator: refetch triggered');
+    setRefreshKey(prev => prev + 1);
+  };
 
   useEffect(() => {
     async function fetchProducts() {
@@ -88,8 +94,8 @@ export function useProductsByCreator(creatorId: string) {
     if (creatorId) {
       fetchProducts();
     }
-  }, [creatorId]);
+  }, [creatorId, refreshKey]);
 
-  return { products, loading };
+  return { products, loading, refetch };
 }
 

@@ -1,6 +1,7 @@
 const dictionary = {
   loading: 'Loading...',
   hero: {
+    badge: '✨ Handmade & High Quality Products',
     headline: 'Artisan Flavors, Straight From Home',
     subheadline:
       'Discover unique, handcrafted dishes made with passion by local creators.',
@@ -132,6 +133,8 @@ const dictionary = {
     errorTitle: 'Distance could not be validated',
     errorBody: 'Try again or continue at your own risk.',
     retry: 'Retry validation',
+    pendingVerificationTitle: '📋 Pending verification',
+    pendingVerificationBody: 'Your delivery date and address will be verified by our customer service team.',
   },
   creatorSkills: {
     pastry: 'Pastry & Desserts',
@@ -588,6 +591,11 @@ const dictionary = {
         ingredients_en_help: 'This will be used for dietary flags if provided.',
         ingredients_es: 'Ingredients (Spanish, Optional)',
         ingredients_es_placeholder: 'List of ingredients, separated by comas...',
+        deliveryVehicle: 'Delivery Method',
+        deliveryVehiclePlaceholder: 'Select delivery method',
+        deliveryVehicleMoto: '🏍️ Motorcycle (small/medium products)',
+        deliveryVehicleAuto: '🚗 Car (large/fragile products)',
+        deliveryVehicleHelp: 'Select car if the product is large, fragile, or requires more space. Motorcycle products have lower delivery rates.',
         submit: 'Create Product',
         toast: {
           missing_info_title: 'Missing Information',
@@ -920,6 +928,7 @@ const dictionary = {
     policyMinDelivery: '• Minimum delivery: 48 hours in advance',
     policyCancelation: '• Cancellation: Up to 24 hours before your 48h prep window begins',
     policyFresh: '• Fresh products: Prepared especially for you',
+    handmadeNotice: '🤲 Because all our products are handmade with love, delivery times may vary and must be agreed upon with the creator, based on their availability and demand. Our customer service team will help you with that.',
     ctaProcessing: 'Processing order...',
     ctaLocationRequired: 'Location required to continue',
     ctaCalculatingDelivery: 'Calculating delivery...',

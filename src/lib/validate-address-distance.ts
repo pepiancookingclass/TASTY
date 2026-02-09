@@ -20,7 +20,7 @@ export type AddressValidationResult = {
 
 const cache = new Map<string, { lat: number; lon: number }>();
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const DEFAULT_TIMEOUT_MS = 8000;
+const DEFAULT_TIMEOUT_MS = 12000;
 const USER_AGENT = 'tasty-clean/checkout-validation';
 const APPROX_THRESHOLD_KM = 3; // tolerancia de validación aproximada
 
@@ -282,12 +282,16 @@ export async function validateAddressDistance(
       finalLocation,
       error,
     });
+    // En caso de timeout o error de red, NO bloquear el checkout
+    // Solo registrar el warning y permitir continuar
     if (error?.name === 'AbortError') {
-      return { ok: false, warning: 'Validación tardó demasiado (timeout)' };
+      console.warn('⚠️ VALIDACIÓN: Timeout - permitiendo checkout con warning');
+      return { ok: true, warning: 'Validación tardó demasiado (timeout) - se permitió continuar' };
     }
+    console.warn('⚠️ VALIDACIÓN: Error de red - permitiendo checkout con warning');
     return {
-      ok: false,
-      error: 'Error validando dirección con Nominatim',
+      ok: true,
+      warning: 'No se pudo validar dirección (error de red) - se permitió continuar',
     };
   }
 }
