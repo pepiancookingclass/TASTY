@@ -8,7 +8,7 @@
 
 ## 📋 RESUMEN RÁPIDO - LEE ESTO PRIMERO
 
-**Actualización 09 Feb 2026 (Agente 8 - Claude Opus 4.5):**
+**Actualización 09 Feb 2026 (Agente 8 - Claude Opus 4.5) - PUSH REALIZADO:**
 - ✅ **Sistema de entrega por vehículo (moto vs auto)**: Implementado completo. Creadores pueden marcar productos como moto o auto, checkout usa tarifa correcta, emails y WhatsApp muestran tipo de vehículo.
 - ✅ **Bottom Navigation Bar móvil**: Panel de creadores ahora tiene navegación inferior en móviles (antes hamburguesa confusa).
 - ✅ **Nombres de creadores en checkout**: Breakdown de delivery ahora muestra nombres reales (Valentina Davila) en vez de "CREADOR".
@@ -16,6 +16,7 @@
 - ✅ **Validación dirección mejorada**: Timeout no bloquea checkout, marca como "pending_verification".
 - 🔴 **BUG pendiente**: Eliminar producto deja página trabada (overlay invisible).
 - Proyecto Vercel activo: `tasty-lat`. Validación dirección con tolerancia 3km + fallback.
+- **Git push:** `feat: sistema entrega moto/auto + mejoras checkout y emails` (09 Feb 2026)
 
 ### **¿QUÉ FUNCIONA? (NO TOCAR)**
 | Sistema | Estado | Archivos |
@@ -1429,9 +1430,9 @@ Los 2 problemas restantes requieren enfoque diferente:
 - **Validación dirección timeout**: Ahora permite continuar con `pending_verification` en vez de bloquear; muestra mensaje de verificación manual
 
 #### 🔴 PENDIENTES SIN RESOLVER:
-- **BUG: Eliminación de productos bloquea página**: Al eliminar producto desde `/creator/products`, la página queda "trabada" (no se puede hacer clic). El producto SÍ se elimina. Sospecha: overlay invisible de `DropdownMenu` no se cierra. Ver sección "🐛 BUG SIN RESOLVER" más arriba.
+- **~~BUG: Eliminación de productos bloquea página~~**: ✅ RESUELTO (13 Feb 2026). El `DropdownMenu` no se cerraba al abrir el `Dialog`. Fix: controlar el dropdown con estado explícito y cerrarlo antes de abrir el diálogo.
 - **Sistema de Combos**: Revisar todo el flujo de creación, edición y compra de combos. Verificar que funcione correctamente.
-- **RLS order_items para creadores**: sigue arrojando `42P17 infinite recursion`; no ven pedidos en `/creator/orders`.
+- **~~RLS order_items para creadores~~**: ✅ RESUELTO. El código actual hace queries separadas sin joins, evitando la recursión. Creadores ven pedidos correctamente.
 - **Trigger/Edge emails pedidos**: funciona llamando desde app, pero no hay trigger automático.
 - **Dominio + Resend**: comprar dominio y conectarlo con Resend para enviar correos a destinatarios reales.
 - **Textos menores**: mocks de analytics y `page-old` legacy sin prioridad.

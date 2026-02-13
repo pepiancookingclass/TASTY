@@ -45,6 +45,7 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
   const { toast } = useToast();
   const router = useRouter();
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-GT', {
@@ -58,7 +59,16 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
   };
 
   const handleDeleteClick = (product: Product) => {
-    setProductToDelete(product);
+    console.log('🗑️ ProductTable: abrir diálogo eliminar', {
+      productId: product.id,
+      name: product.name[language],
+    });
+    // Cerrar el dropdown PRIMERO, luego abrir el diálogo
+    setOpenDropdownId(null);
+    // Pequeño delay para asegurar que el dropdown se cierre completamente
+    setTimeout(() => {
+      setProductToDelete(product);
+    }, 50);
   };
 
   const handleConfirmDelete = () => {
@@ -67,6 +77,11 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
     const productId = productToDelete.id;
     const productName = productToDelete.name[language];
     
+    console.log('🗑️ ProductTable: confirmar eliminación', {
+      productId,
+      productName,
+    });
+
     // Cerrar el diálogo INMEDIATAMENTE
     setProductToDelete(null);
     
@@ -74,6 +89,7 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
     deleteProduct(productId)
       .then((success) => {
         if (success) {
+          console.log('🗑️ ProductTable: eliminación exitosa', { productId, productName });
           toast({
             title: dict.productTable.deleteToastTitle,
             description: dict.productTable.deleteToastDesc
@@ -87,6 +103,11 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
       })
       .catch((error) => {
         console.error('Error deleting product:', error);
+        console.log('🛑 ProductTable: eliminación falló', {
+          productId,
+          productName,
+          errorMessage: error?.message,
+        });
         toast({
           variant: 'destructive',
           title: dict.productTable.deleteErrorTitle,
@@ -98,7 +119,15 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
   return (
     <>
     {/* Dialog de confirmación - usando Dialog simple en lugar de AlertDialog */}
-    <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+    <Dialog 
+      open={!!productToDelete} 
+      onOpenChange={(open) => {
+        if (!open) {
+          console.log('🗑️ ProductTable: cerrando diálogo de eliminación');
+          setProductToDelete(null);
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{dict.productTable.deleteDialogTitle}</DialogTitle>
@@ -192,7 +221,10 @@ export function ProductTable({ products, onProductDeleted }: ProductTableProps) 
                 {formatPrice(product.price)}
               </TableCell>
               <TableCell>
-                <DropdownMenu>
+                <DropdownMenu 
+                  open={openDropdownId === product.id} 
+                  onOpenChange={(open) => setOpenDropdownId(open ? product.id : null)}
+                >
                   <DropdownMenuTrigger asChild>
                     <Button aria-haspopup="true" size="icon" variant="ghost">
                       <MoreHorizontal className="h-4 w-4" />

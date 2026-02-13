@@ -76,7 +76,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         .select('id')
         .eq('creator_id', user.id);
 
-      if (creatorProductsError) throw creatorProductsError;
+      if (creatorProductsError) {
+        console.error('❌ CreatorOrders: error obteniendo productos del creador', {
+          message: creatorProductsError.message,
+          details: creatorProductsError.details,
+          hint: creatorProductsError.hint,
+          code: creatorProductsError.code,
+        });
+        throw creatorProductsError;
+      }
 
       const creatorProductIds = (creatorProducts || []).map((p) => p.id);
 
@@ -94,7 +102,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         .select('order_id')
         .in('product_id', creatorProductIds);
 
-      if (itemsForCreatorError) throw itemsForCreatorError;
+      if (itemsForCreatorError) {
+        console.error('❌ CreatorOrders: error obteniendo order_items', {
+          message: itemsForCreatorError.message,
+          details: itemsForCreatorError.details,
+          hint: itemsForCreatorError.hint,
+          code: itemsForCreatorError.code,
+        });
+        throw itemsForCreatorError;
+      }
 
       const orderIds = Array.from(new Set((creatorItems || []).map((row) => row.order_id)));
 
@@ -113,7 +129,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         .in('id', orderIds)
         .order('created_at', { ascending: false });
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('❌ CreatorOrders: error obteniendo órdenes', {
+          message: orderError.message,
+          details: orderError.details,
+          hint: orderError.hint,
+          code: orderError.code,
+        });
+        throw orderError;
+      }
 
       const transformedOrders: Order[] = [];
 
@@ -125,7 +149,18 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
           .eq('order_id', order.id)
           .in('product_id', creatorProductIds);
 
-        if (!itemsError && items) {
+        if (itemsError) {
+          console.error('❌ CreatorOrders: error obteniendo items de la orden', {
+            orderId: order.id,
+            message: itemsError.message,
+            details: itemsError.details,
+            hint: itemsError.hint,
+            code: itemsError.code,
+          });
+          continue;
+        }
+
+        if (items) {
           console.log('✅ CreatorOrders: items cargados', items.length, 'para orden', order.id);
           const transformedOrder = transformOrderFromDB(order, items);
           transformedOrders.push(transformedOrder);
