@@ -10,7 +10,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'https://aitmxnfljglwpkpibgek.supabase.co'
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const FROM_EMAIL = 'TASTY <onboarding@resend.dev>'
+const FROM_EMAIL = 'TASTY <notifications@tasty.lat>'
 const ADMIN_EMAIL = 'pepiancookingclass@gmail.com'
 
 interface WelcomeEmailRequest {
@@ -197,9 +197,9 @@ async function processWelcomeEmails(userId: string): Promise<{ success: boolean;
       `
     }
 
-    // TEMPORAL: Enviar a pepiancookingclass para testing (Resend limitation)
-    const testEmail = ADMIN_EMAIL // Cambiar a userData.email cuando tengamos dominio verificado
-    const userEmailResult = await sendEmailWithResend(testEmail, userSubject, userHtml)
+    // Enviar al usuario real (fallback al admin si falta email)
+    const userEmail = userData.email || ADMIN_EMAIL
+    const userEmailResult = await sendEmailWithResend(userEmail, userSubject, userHtml)
     if (userEmailResult.success) {
       emailsSent++
       console.log('✅ EMAIL USUARIO ENVIADO')

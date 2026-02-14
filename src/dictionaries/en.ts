@@ -122,7 +122,7 @@ const dictionary = {
   creatorShowcase: {
     headline: 'Meet Our Creators',
     tagline: 'The heart and soul behind our homemade delights.',
-    specialty: 'Specializing in lovingly crafted treats.',
+    specialty: 'Specializing in lovingly crafted products.',
     viewProfile: 'View Profile',
     productCount: (count: number) => `${count} products`,
   },

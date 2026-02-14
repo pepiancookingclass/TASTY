@@ -10,7 +10,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'https://aitmxnfljglwpkpibgek.supabase.co'
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const FROM_EMAIL = 'TASTY <onboarding@resend.dev>'
+const FROM_EMAIL = 'TASTY <notifications@tasty.lat>'
 const ADMIN_EMAIL = 'pepiancookingclass@gmail.com' // Email verificado en Resend
 
 interface EmailRequest {
@@ -360,7 +360,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     `
 
     // Para ver el correo de cliente en sandbox, enviamos al ADMIN_EMAIL (Resend limita destinos no verificados)
-    const clientResult = await sendEmailWithResend(ADMIN_EMAIL, clientSubject, clientHtml)
+    const clientResult = await sendEmailWithResend(order.customer_email || ADMIN_EMAIL, clientSubject, clientHtml)
     if (clientResult.success) {
       emailsSent++
       console.log('✅ EMAIL CLIENTE ENVIADO')
@@ -441,7 +441,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       • Total productos: ${items.length}<br>
       • Total creadores: ${numCreators}<br><br>
       ---<br>
-      Panel Admin: https://tasty.com/admin<br>
+      Panel Admin: https://tasty.lat/admin<br>
       Sistema TASTY - Control Administrativo
     `
 
@@ -520,12 +520,12 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         • Tu ganancia neta final: Q${ganancia90.toFixed(2)}<br><br>
         ¡Gracias por ser parte de TASTY! 🍰<br><br>
         ---<br>
-        Panel Creador: https://tasty.com/creator<br>
+        Panel Creador: https://tasty.lat/creator<br>
         WhatsApp Soporte: +502 30635323<br>
         Equipo TASTY
       `
 
-      const creatorResult = await sendEmailWithResend(ADMIN_EMAIL, creatorSubject, creatorHtml)
+      const creatorResult = await sendEmailWithResend(creatorData.email || ADMIN_EMAIL, creatorSubject, creatorHtml)
       if (creatorResult.success) {
         emailsSent++
         console.log(`✅ EMAIL CREADOR ${creatorData.name} ENVIADO`)

@@ -1,233 +1,44 @@
-# 🍳 TASTY - Plan de Trabajo para Agentes
+# 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 09 Febrero 2026 - AGENTE 8 (Claude Opus 4.5)  
-> **Contexto:** Proyecto migrado de Firebase a Supabase  
+> **Última actualización:** 13 Febrero 2026  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
 
-## 📋 RESUMEN RÁPIDO - LEE ESTO PRIMERO
+## 📋 RESUMEN EJECUTIVO
 
-**Actualización 09 Feb 2026 (Agente 8 - Claude Opus 4.5) - PUSH REALIZADO:**
-- ✅ **Sistema de entrega por vehículo (moto vs auto)**: Implementado completo. Creadores pueden marcar productos como moto o auto, checkout usa tarifa correcta, emails y WhatsApp muestran tipo de vehículo.
-- ✅ **Bottom Navigation Bar móvil**: Panel de creadores ahora tiene navegación inferior en móviles (antes hamburguesa confusa).
-- ✅ **Nombres de creadores en checkout**: Breakdown de delivery ahora muestra nombres reales (Valentina Davila) en vez de "CREADOR".
-- ✅ **Mensaje productos artesanales**: Aviso en checkout sobre tiempos de entrega variables.
-- ✅ **Validación dirección mejorada**: Timeout no bloquea checkout, marca como "pending_verification".
-- 🔴 **BUG pendiente**: Eliminar producto deja página trabada (overlay invisible).
-- Proyecto Vercel activo: `tasty-lat`. Validación dirección con tolerancia 3km + fallback.
-- **Git push:** `feat: sistema entrega moto/auto + mejoras checkout y emails` (09 Feb 2026)
+**TASTY** es un marketplace de comida artesanal en Guatemala. Conecta creadores (pasteleros, cocineros) con clientes.
 
-### **¿QUÉ FUNCIONA? (NO TOCAR)**
-| Sistema | Estado | Archivos |
-|---------|--------|----------|
-| ✅ Emails de ÓRDENES | FUNCIONA | `supabase/functions/send-email/index.ts` |
-| ✅ Emails de BIENVENIDA | FUNCIONA | `supabase/functions/send-welcome-email/index.ts` |
-| ✅ Registro de usuarios | FUNCIONA | Trigger `on_auth_user_created` en Supabase |
-| ✅ Carrito persistente | FUNCIONA | `src/context/CartProvider.tsx` |
-| ✅ Carrusel de categorías | FUNCIONA | `src/components/category/CategoryCarousel.tsx` |
-| ✅ Páginas por categoría | FUNCIONA | `src/app/products/[category]/page.tsx` |
-| ✅ Traducciones ES/EN | FUNCIONA | `src/dictionaries/es.ts`, `src/dictionaries/en.ts` |
-
-### **¿QUÉ PUEDES MODIFICAR?**
-- Páginas en `src/app/`
-- Componentes en `src/components/`
-- Traducciones en `src/dictionaries/`
-- Estilos CSS
-
-### **¿QUÉ NO DEBES TOCAR?**
-- Edge Functions en `supabase/functions/` (a menos que te lo pidan)
-- `src/lib/services/orders.ts`
-- `src/context/CartProvider.tsx`
-- `src/providers/auth-provider.tsx`
-- Triggers de base de datos
+### ✅ **LO QUE FUNCIONA (NO TOCAR)**
+| Sistema | Estado | Archivo Principal |
+|---------|--------|-------------------|
+| Emails de pedidos | ✅ FUNCIONA | `supabase/functions/send-email/index.ts` |
+| Emails de bienvenida | ✅ FUNCIONA | `supabase/functions/send-welcome-email/index.ts` |
+| Carrito persistente | ✅ FUNCIONA | `src/context/CartProvider.tsx` |
+| Checkout completo | ✅ FUNCIONA | `src/app/checkout/page.tsx` |
+| Traducciones ES/EN | ✅ FUNCIONA | `src/dictionaries/es.ts`, `en.ts` |
+| Panel creador | ✅ FUNCIONA | `src/app/creator/*` |
+| Sistema delivery moto/auto | ✅ FUNCIONA | Calculado por creador |
 
 ---
 
-## 🚨🚨🚨 ADVERTENCIA CRÍTICA - LEER ANTES DE HACER CUALQUIER CAMBIO 🚨🚨🚨
-
-### ⚠️ SISTEMA DE EMAILS - NO TOCAR SIN ENTENDER
-
-**El sistema de emails fue arreglado por el AGENTE 6 después de que 5 agentes anteriores fallaron.**
-
-**ARQUITECTURA ACTUAL (FUNCIONA - NO CAMBIAR):**
-```
-App (orders.ts) → INSERT orden → INSERT order_items → fetch() a Edge Function → Resend API → ✅ EMAILS ENVIADOS
-```
-
-**ARCHIVOS CRÍTICOS QUE NO DEBES MODIFICAR SIN RAZÓN:**
-1. `supabase/functions/send-email/index.ts` - Edge Function que envía emails de ÓRDENES
-2. `supabase/functions/send-welcome-email/index.ts` - Edge Function que envía emails de BIENVENIDA
-3. `src/lib/services/orders.ts` - Lógica de creación de órdenes
-4. `src/context/CartProvider.tsx` - Persistencia del carrito
-5. `src/providers/auth-provider.tsx` - Autenticación y llamada a welcome emails
-
-**¿POR QUÉ FUNCIONA ASÍ?**
-- Supabase usa **PgBouncer (connection pooling)** en modo transaction
-- Las funciones SQL con `http()` o `net.http_post()` **FALLAN SILENCIOSAMENTE** a través del pooler
-- Por eso los triggers de email NUNCA funcionaron desde la app (solo desde SQL Editor)
-- La solución fue: **llamar directamente a la Edge Function desde la app, NO usar triggers**
-
-**SI NECESITAS MODIFICAR EMAILS:**
-1. Solo modifica los archivos en `supabase/functions/send-email/` o `supabase/functions/send-welcome-email/`
-2. La Edge Function obtiene datos directamente de la BD y envía con Resend
-3. NO agregues triggers de email - NUNCA FUNCIONARÁN desde la app
-4. Despliega la Edge Function en Supabase Dashboard después de modificar
-
-**ZONA HORARIA:**
-- Guatemala = UTC-6
-- Las funciones `formatDateGuatemala()` y `getCurrentDateGuatemala()` en la Edge Function ya manejan esto
-
----
-
-## ✅ CAMBIOS DEL AGENTE 7 (20 Enero 2026 - Claude Opus 4)
-
-### **1. CARRUSEL DE CATEGORÍAS - NUEVO**
-**Archivos creados:**
-- `src/components/category/CategoryCarousel.tsx` - Carrusel horizontal con 4 categorías
-- `src/app/products/[category]/page.tsx` - Página dinámica para filtrar productos
-
-**Cómo funciona:**
-- Carrusel en el home con 4 categorías: Dulces, Salados, Artesanías, Otros
-- Cada categoría lleva a `/products/[category]` (ej: `/products/dulce`)
-- Las páginas filtran productos por tipo:
-  - `dulce` → tipos: `pastry`, `dessert`, `cookie`
-  - `salado` → tipos: `savory`
-  - `handcrafts` → tipos: `handmade`
-  - `otros` → todo lo demás
-
-**Imágenes:**
-- Vienen de Supabase Storage: `https://aitmxnfljglwpkpibgek.supabase.co/storage/v1/object/public/images/categories/`
-- Archivos: `dulce.jpg`, `salado.jpg`, `handcraft.jpg` (sin 's'), `otros.jpeg`
-- Si no hay imagen, usa emoji con gradiente como fallback
-
-**Traducciones agregadas en:**
-- `src/dictionaries/es.ts` → `categoryCarousel`, `categories`, `categoryPage`
-- `src/dictionaries/en.ts` → `categoryCarousel`, `categories`, `categoryPage`
-
-## ✅ ACTUALIZACIÓN 09 Feb 2026 - Bilingüe + Carrito
-- **Bilingüalización completada**: Todos los textos del frontend migrados a diccionarios ES/EN (checkout, carrito, orders, dashboards admin/creator, combos, formularios y toasts), con formato de fechas por locale. Archivos clave: `src/dictionaries/es.ts`, `src/dictionaries/en.ts`.
-- **Carrito por usuario, sin 406**: `CartProvider` ahora usa `.maybeSingle()` al restaurar para evitar 406 cuando no hay fila y sigue borrando la fila en BD cuando el carrito queda vacío; backup/restore por usuario confirmados.
-- **Logout limpio**: `auth-provider` usa `supabase.auth.signOut()` sin scope, con limpieza de storages y sin borrar carrito en BD para mantener persistencia por usuario.
-
-### **2. REGISTRO DE USUARIOS - ARREGLADO**
-**Problema:** Error 500 "Database error saving new user" al registrarse
-**Causa:** Trigger `on_auth_user_created` estaba mal configurado o ausente
-**Solución:** Se restauró el trigger con la función `handle_new_user()` correcta
-
-**SQL ejecutado (restaurar-trigger-basico-usuarios.sql):**
-```sql
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.users (id, email, name, roles, created_at, updated_at)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'name', 'Usuario'),
-    ARRAY['user'],
-    NOW(),
-    NOW()
-  )
-  ON CONFLICT (id) DO NOTHING;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-```
-
-### **3. EMAILS DE BIENVENIDA - NUEVO SISTEMA**
-**Archivo creado:** `supabase/functions/send-welcome-email/index.ts`
-
-**Cómo funciona:**
-1. Usuario se registra en `/signup`
-2. `auth-provider.tsx` llama a `supabase.auth.signUp()`
-3. Trigger `on_auth_user_created` crea usuario en `public.users`
-4. `auth-provider.tsx` llama fetch() a Edge Function `send-welcome-email`
-5. Edge Function envía 2 emails:
-   - Email de bienvenida al usuario (o creador si tiene rol)
-   - Notificación al admin de nuevo usuario
-
-**IMPORTANTE:** Los emails van a `pepiancookingclass@gmail.com` temporalmente porque Resend solo permite enviar a dominios verificados en plan gratuito.
-
-**Para cambiar a producción:** En `send-welcome-email/index.ts`, cambiar línea ~180:
-```typescript
-// TEMPORAL: Redirigir email de usuario a ADMIN_EMAIL para pruebas
-const userEmailRecipient = ADMIN_EMAIL; // userData.email; // Original
-```
-Cambiar a:
-```typescript
-const userEmailRecipient = userData.email;
-```
-
----
-
-## 🏗️ INSTRUCCIONES PARA AGENTES (ARQUITECTO → ALBAÑILES)
-
-> **CONTEXTO:** Este documento fue escrito por un agente senior (Opus 4) para guiar a agentes menos capaces (Sonnet 4, Sonnet 3.5, Haiku, etc). Si eres un agente leyendo esto, SIGUE ESTAS INSTRUCCIONES AL PIE DE LA LETRA.
-
----
-
-## 🔴 REGLAS DE ORO - MEMORÍZALAS
-
-### **REGLA 1: NO ROMPAS LO QUE FUNCIONA**
-```
-❌ MAL: "Voy a refactorizar este código para mejorarlo"
-✅ BIEN: "El código funciona, solo modifico lo que me pidieron"
-```
-
-### **REGLA 2: LEE ANTES DE ESCRIBIR**
-```
-❌ MAL: Modificar un archivo sin leerlo primero
-✅ BIEN: Leer el archivo completo, entender cómo funciona, luego modificar
-```
-
-### **REGLA 3: UN CAMBIO A LA VEZ**
-```
-❌ MAL: Modificar 5 archivos "para estar seguro"
-✅ BIEN: Modificar 1 archivo, probar, confirmar que funciona, luego el siguiente
-```
-
-### **REGLA 4: PREGUNTA SI NO ENTIENDES**
-```
-❌ MAL: Adivinar qué quiere el usuario
-✅ BIEN: Preguntar "¿Te refieres a X o a Y?"
-```
-
-### **REGLA 5: NO ELIMINES CÓDIGO SIN RAZÓN**
-```
-❌ MAL: "Elimino este trigger porque da error"
-✅ BIEN: "El trigger da error, investigo POR QUÉ y lo arreglo"
-```
-
----
-
-## 🚫 ARCHIVOS QUE NO DEBES TOCAR (A MENOS QUE TE LO PIDAN EXPLÍCITAMENTE)
+## 🔴 ARCHIVOS QUE NUNCA DEBES MODIFICAR
 
 | Archivo | Razón |
 |---------|-------|
-| `supabase/functions/send-email/index.ts` | Sistema de emails de ÓRDENES - FUNCIONA |
-| `supabase/functions/send-welcome-email/index.ts` | Sistema de emails de BIENVENIDA - FUNCIONA |
-| `src/lib/services/orders.ts` | Lógica de creación de órdenes - FUNCIONA |
-| `src/context/CartProvider.tsx` | Persistencia del carrito - FUNCIONA |
-| `src/providers/auth-provider.tsx` | Autenticación - FUNCIONA |
-| `next.config.ts` | Configuración de Next.js - NO TOCAR |
+| `supabase/functions/send-email/index.ts` | Sistema de emails FUNCIONA |
+| `supabase/functions/send-welcome-email/index.ts` | Emails de bienvenida FUNCIONA |
+| `src/lib/services/orders.ts` | Creación de órdenes FUNCIONA |
+| `src/context/CartProvider.tsx` | Carrito FUNCIONA |
+| `src/providers/auth-provider.tsx` | Autenticación FUNCIONA |
+| `next.config.ts` | Configuración Next.js |
 
 ---
 
-## ✅ ARCHIVOS QUE SÍ PUEDES MODIFICAR LIBREMENTE
+## ✅ ARCHIVOS QUE SÍ PUEDES MODIFICAR
 
-| Archivo | Para qué |
-|---------|----------|
+| Directorio | Para qué |
+|------------|----------|
 | `src/app/*/page.tsx` | Páginas de la app |
 | `src/components/**/*.tsx` | Componentes de UI |
 | `src/dictionaries/*.ts` | Traducciones ES/EN |
@@ -236,1241 +47,191 @@ const userEmailRecipient = userData.email;
 
 ---
 
-### 📋 PROCEDIMIENTO OBLIGATORIO ANTES DE CUALQUIER CAMBIO:
+## 🤖 INSTRUCCIONES PARA IA ECONÓMICA
 
-**PASO 1: ENTENDER EL PROBLEMA (NO SALTAR)**
+### TU TRABAJO ES SIMPLE:
+1. **Leer este archivo COMPLETO antes de hacer cualquier cosa**
+2. **Solo modificar lo que te pidan**
+3. **NO refactorizar, NO "mejorar" código que funciona**
+4. **Preguntar si no entiendes**
+
+### REGLAS OBLIGATORIAS:
+
+#### REGLA 1: LEE ANTES DE ESCRIBIR
 ```
-❌ MAL: "El usuario dice que X no funciona, voy a cambiar código"
-✅ BIEN: "El usuario dice que X no funciona, voy a investigar POR QUÉ"
+❌ MAL: Modificar un archivo sin leerlo
+✅ BIEN: Leer el archivo COMPLETO, entender, luego modificar
 ```
 
-**PASO 2: INVESTIGAR ANTES DE ACTUAR**
-1. Lee los logs del usuario COMPLETOS
-2. Busca el archivo relevante y LÉELO antes de modificar
-3. Pregúntate: "¿Cuál es la CAUSA RAÍZ?" (no el síntoma)
-4. Si no entiendes algo, PREGUNTA al usuario antes de hacer cambios
-
-**PASO 3: HACER UN SOLO CAMBIO A LA VEZ**
+#### REGLA 2: UN CAMBIO A LA VEZ
 ```
 ❌ MAL: Modificar 5 archivos "para estar seguro"
-✅ BIEN: Modificar 1 archivo, probar, confirmar que funciona
+✅ BIEN: Modificar 1 archivo, probar, confirmar
 ```
 
-**PASO 4: PROBAR ANTES DE DECIR "LISTO"**
+#### REGLA 3: NO ELIMINES CÓDIGO
 ```
-❌ MAL: "Ya hice el cambio, debería funcionar"
-✅ BIEN: "Hice el cambio, haz build y prueba X específicamente"
-```
-
----
-
-### 🚫 ERRORES QUE NO DEBES COMETER:
-
-| Error | Por qué es malo | Qué hacer en su lugar |
-|-------|-----------------|----------------------|
-| Hacer la misma prueba varias veces | Gastas recursos del usuario sin resolver | Cambia de enfoque, investiga más profundo |
-| Decir "está arreglado" sin probar | El usuario pierde confianza | Siempre di "prueba X para confirmar" |
-| Agregar código sin entender el problema | Creas más bugs | Primero entiende, luego codifica |
-| Modificar archivos "por si acaso" | Puedes romper algo que funcionaba | Solo toca lo necesario |
-| Ignorar este archivo MD | Repites errores de agentes anteriores | LEE TODO antes de empezar |
-
----
-
-### 🔍 CÓMO INVESTIGAR CORRECTAMENTE:
-
-**1. Cuando algo "no funciona":**
-```
-1. ¿Cuál es el error exacto? (código, mensaje, log)
-2. ¿Dónde ocurre? (frontend, backend, base de datos)
-3. ¿Cuándo empezó a fallar? (siempre falló o algo lo rompió)
-4. ¿Funciona en otro contexto? (ej: manual vs automático)
+❌ MAL: "Este código parece obsoleto, lo elimino"
+✅ BIEN: Preguntar al usuario antes de eliminar algo
 ```
 
-**2. Cuando el usuario reporta un bug:**
+#### REGLA 4: RESPONDE EN ESPAÑOL
 ```
-1. Pide los logs completos si no los envió
-2. Reproduce el flujo mentalmente
-3. Identifica el archivo responsable
-4. Lee el código ANTES de proponer cambios
-```
-
-**3. Cuando no sabes qué hacer:**
-```
-❌ MAL: Intentar cosas aleatorias
-✅ BIEN: Decir "No estoy seguro, déjame investigar X primero"
+❌ MAL: Responder en inglés
+✅ BIEN: Todo en español
 ```
 
 ---
 
-### 📁 ESTRUCTURA DEL PROYECTO (CONOCE TU TERRENO):
+## 📋 TAREAS PENDIENTES (Priorizadas)
 
-| Directorio | Contenido | Cuándo tocarlo |
-|------------|-----------|----------------|
-| `src/app/` | Páginas de Next.js | Cambios de UI/rutas |
-| `src/components/` | Componentes React | Cambios de UI |
-| `src/lib/` | Utilidades y servicios | Lógica de negocio |
-| `src/context/` | Providers de React | Estado global |
-| `src/hooks/` | Custom hooks | Lógica reutilizable |
-| `supabase/functions/` | Edge Functions | Lógica del servidor |
-| `*.sql` | Scripts de base de datos | Cambios de esquema |
+### 🔥 PRIORIDAD ALTA (Para Lanzamiento)
 
----
+#### 1. Dominio + Resend (CONFIGURACIÓN EXTERNA)
+- **Estado:** ✅ COMPLETADO (13 Feb 2026) — Dominio `tasty.lat` verificado en Resend, FROM `notifications@tasty.lat`, destinos reales habilitados (cliente/creadores) y admin sigue recibiendo copia.
+- **Notas:** `send-email` y `send-welcome-email` redeployadas con nuevo FROM; links en correos ya usan `tasty.lat`.
+- **Impacto:** Correo real habilitado; mantener API key y dominio en Resend.
 
-### ⚡ REGLAS DE ORO:
+#### 2. QA WhatsApp (SOLO PROBAR)
+- **Qué verificar en próximo pedido real:**
+  - ✅ Mensaje incluye IVA
+  - ✅ Mensaje incluye teléfono del cliente
+  - ✅ Mensaje incluye tipo de vehículo (Moto/Auto)
+  - ✅ Mensaje incluye nombres reales de creadores
+- **Archivo:** `src/lib/services/orders.ts` → `generateCustomerWhatsAppUrl()`
+- **Acción:** Solo probar, código ya está correcto
 
-1. **KISS** - Keep It Simple, Stupid. No sobrecomplicar.
-2. **Una cosa a la vez** - Un cambio, una prueba, un resultado.
-3. **Pregunta si no sabes** - Es mejor preguntar que romper algo.
-4. **Lee antes de escribir** - Siempre lee el código existente primero.
-5. **Documenta lo que haces** - Actualiza este archivo cuando termines.
+#### 3. QA Checkout Completo (SOLO PROBAR)
+- **Qué verificar:**
+  - Prefill de datos desde perfil
+  - Delivery calcula por distancia
+  - Nombres de creadores en breakdown (no "CREADOR")
+  - Validación de dirección no bloquea (usa `pending_verification`)
+- **Acción:** Solo probar en navegador
 
----
+### 🟡 PRIORIDAD MEDIA
 
-### 🎯 REGLAS TÉCNICAS ESPECÍFICAS:
+#### 4. Warning de Delivery Alto (> Q100)
+- **Problema:** Si un creador está en Antigua Guatemala y el cliente en Ciudad Guatemala, el delivery puede superar Q100. El usuario no recibe aviso y puede sorprenderse.
+- **Solución propuesta:**
+  1. En checkout, si el delivery de UN creador supera Q100, mostrar warning:
+     - "⚠️ El delivery de [Nombre Creador] es Q[XX]. Debido a la distancia, verificaremos disponibilidad de entrega antes de confirmar tu pedido."
+  2. Opcionalmente bloquear pedidos con delivery > Q150 (o umbral configurable)
+  3. Agregar nota en el email al cliente si hay delivery alto
+- **Archivos a modificar:**
+  - `src/app/checkout/page.tsx` - Mostrar warning si `creatorDeliveryFee > 100`
+  - `src/lib/services/orders.ts` - Agregar flag `high_delivery_warning` al mensaje WhatsApp
+- **Lógica:**
+  ```typescript
+  // En checkout, al calcular breakdown por creador:
+  if (creatorDeliveryFee > 100) {
+    showWarning = true
+    warningCreators.push({ name: creatorName, fee: creatorDeliveryFee })
+  }
+  ```
+- **UX sugerida:** Banner amarillo debajo del breakdown de delivery con el warning
 
-1. **Responder siempre en español**
-2. **Código simple** - No sobrecomplicar, soluciones directas
-3. **Usar Supabase directo** en cliente cuando sea posible (evitar APIs innecesarias)
-4. **Usar `<img>` nativo** para previews de blob URLs (Next.js Image no los soporta)
-5. **Probar después de cada cambio**
-6. **Actualizar este archivo** cuando completes una tarea
-7. **NO TOCAR el sistema de emails** sin leer la advertencia de arriba
-8. **Zona horaria Guatemala = UTC-6** - Restar 6 horas a cualquier fecha
+#### 6. Sistema de Combos
+- **Estado:** Implementado pero sin QA reciente
+- **Qué hacer:** Probar flujo completo:
+  1. Crear combo desde `/creator/combos/new`
+  2. Ver combo público en `/combos`
+  3. Comprar combo (agregar al carrito, checkout)
+- **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
----
+### ⚪ PRIORIDAD BAJA (Futuro)
 
-## ✅ YA COMPLETADO
-
-- [x] Migración Firebase → Supabase (Auth, DB, Storage)
-- [x] Autenticación email/password y Google OAuth
-- [x] Sistema de roles (customer, creator, admin, agent)
-- [x] CRUD de productos
-- [x] Panel de creador básico
-- [x] Fotos de workspace (FUNCIONA BIEN)
-- [x] Internacionalización ES/EN
-- [x] **Sistema de fotos de perfil** - Upload y visualización funcionando
-- [x] **Bug de tildes en nombres** - RLS Policies arregladas
-- [x] **Página de perfil completa** - Reestructurada desde cero
-- [x] **Campo Instagram** - Agregado a DB y formulario
-- [x] **Dropdowns de Guatemala** - Departamentos y municipios
-- [x] **Geolocalización** - Para usuarios (no creadores)
-- [x] **Moneda en Quetzales (GTQ)** - Cambiado en toda la app
-- [x] **Sistema de carrito multi-creador** - Agrupación por creadores
-- [x] **Página de checkout completa** - `/checkout` con formulario de entrega
-- [x] **Panel de pedidos para usuarios** - `/user/orders` con políticas 48h
-- [x] **Sistema de ofertas** - Página `/offers` con motivación de compra
-- [x] **Funciones SQL de pedidos** - Gestión completa de estados
-- [x] **Validación de transiciones** - Estados de pedidos con reglas
-- [x] **Sistema de Analytics completo** - Dashboard para admin/agente
-- [x] **Sistema de permisos granular** - Roles diferenciados
-- [x] **Combos colaborativos** - Sistema completo entre creadores
-- [x] **Tiempo de preparación** - Visible en todos los productos
-- [x] **PROBLEMA AUTENTICACIÓN RESUELTO** - Sistema 100% funcional (29/12/24)
+#### 7. Videos Cortos de Productos
+- **Descripción:** Permitir clips de 10-15 segundos
+- **Complejidad:** Alta (requiere storage, thumbnails, compresión)
+- **Acción:** Dejar para después del lanzamiento
 
 ---
 
-## ✅ NUEVAS FUNCIONALIDADES COMPLETADAS (Diciembre 2024)
+## 🏗️ ARQUITECTURA CLAVE
 
-### 📊 Sistema de Analytics Completo
-**Estado:** ✅ **COMPLETADO**  
-**Descripción:** Dashboard completo para admin/agente con métricas avanzadas
-- Vercel Analytics y Speed Insights integrados
-- Página `/admin/analytics` con gráficos interactivos
-- Tracking de eventos personalizados (productos, pedidos, creadores)
-- KPIs: visitantes únicos, conversión, tiempo en sitio
-- Análisis por dispositivos, fuentes de tráfico, horarios
-- Métricas de rendimiento web (FCP, LCP, FID, CLS)
+### Sistema de Emails
+```
+App (orders.ts) → INSERT orden → INSERT items → fetch() Edge Function → Resend API → ✅ EMAILS
+```
 
-### 🔐 Sistema de Permisos Granular
-**Estado:** ✅ **COMPLETADO**  
-**Descripción:** Control de acceso diferenciado por roles
-- **CREADORES:** Solo sus propios productos y pedidos
-- **ADMIN/AGENTE:** Gestión completa de todos los creadores
-- Navegación dinámica según permisos
-- Páginas `/admin/creators` y `/admin/products`
-- Hook `usePermissions()` para control granular
+**¿Por qué así?**
+- Supabase usa PgBouncer (connection pooling)
+- Triggers SQL con `http()` NO FUNCIONAN a través del pooler
+- Solución: Llamar Edge Function directamente desde la app
 
-### 🎁 Sistema de Combos Colaborativos
-**Estado:** ✅ **COMPLETADO**  
-**Descripción:** Combos donde varios creadores trabajan juntos
-- Base de datos completa (combos, combo_items, combo_creators)
-- Página pública `/combos` con filtros avanzados
-- Página detalle `/combos/[id]` con info completa
-- Panel creador `/creator/combos` para gestionar colaboraciones
-- Cálculo automático de ganancias por creador
-- Ofertas limitadas con contador de tiempo
+### Sistema de Delivery
+```
+Producto tiene delivery_vehicle (moto/auto) → Checkout agrupa por creador → 
+Calcula tarifa por vehículo → Muestra breakdown → Guarda en order
+```
 
-### ⏰ Tiempo de Preparación Visible
-**Estado:** ✅ **COMPLETADO**  
-**Descripción:** Tiempo de preparación mostrado en todos los productos
-- ProductCard: Tiempo visible en tarjetas
-- CartView: Tiempo en cada producto del carrito
-- ProductTable: Nueva columna en panel creador
-- Checkout: Tiempo en resumen de pedido
-- Formato consistente con ícono de reloj
+**Archivos clave:**
+- `src/app/checkout/page.tsx` - Cálculo de delivery
+- `supabase/functions/send-email/index.ts` - Muestra vehículo en emails
 
-### 👥 Panel de Pedidos para Usuarios
-**Estado:** ✅ **COMPLETADO**  
-**Descripción:** Panel completo para que usuarios vean sus pedidos
-- Página `/user/orders` con diseño atractivo
-- Políticas de 48 horas claramente visibles
-- Cancelación inteligente con validaciones
-- Estados de pedidos en tiempo real
-- Motivación para nuevas compras
+### Zona Horaria
+- **Guatemala = UTC-6**
+- Funciones `formatDateGuatemala()` y `getCurrentDateGuatemala()` ya lo manejan
 
 ---
 
-## 🧪 **CAMBIOS RECIENTES PARA PROBAR (14 Enero 2025)**
-
-### **✅ PROBLEMAS CRÍTICOS RESUELTOS:**
-1. **✅ Suma de horas artesanales** - Ahora suma correctamente (8h + 10h = 18h)
-2. **✅ Persistencia de carrito** - RESUELTO: Backup en BD + onConflict arreglado
-3. **✅ Redirect loop después de login** - Ya no manda siempre a `/user/profile`
-4. **✅ Política de cancelación** - Actualizada: "24h antes que inicie período de 48h"
-5. **✅ Delivery en checkout** - Muestra "Q 25.00 + ajuste por distancia"
-6. **✅ Errores Vercel 404** - Eliminados completamente
-7. **✅ Función privacy 404** - Corregida con enum correcto
-8. **✅ Loop infinito en CartView** - RESUELTO: useEffect optimizado
-9. **✅ Geolocalización timeout** - RESUELTO: Timeout aumentado a 30s
-10. **✅ Mapa no detecta clicks** - RESUELTO: useMapEvents implementado correctamente
-
-### **🚨 PROBLEMAS CRÍTICOS IDENTIFICADOS (15 Enero 2025 - 19:20):**
-
-#### **✅ RESUELTO: ERROR SUPABASE schema "net" does not exist**
-- **Estado**: ✅ RESUELTO - Órdenes se crean correctamente
-- **Solución**: Eliminadas funciones que usaban `net.http_post()`, reemplazadas por `http()`
-- **Resultado**: Sistema de emails funcionando
-
-#### **✅ SOLUCIÓN DEFINITIVA DE EMAILS (16 Enero 2026 - AGENTE 6):**
-
-## 🎉 **SISTEMA DE EMAILS 100% FUNCIONAL**
-
-### **RESUMEN DE LO QUE HIZO AGENTE 6:**
-
-**PROBLEMA QUE RESOLVIÓ:**
-- 5 agentes anteriores NO pudieron hacer funcionar los emails desde la app
-- Los triggers SQL con `http()` NUNCA funcionan a través de PgBouncer (connection pooling)
-- La solución NO es arreglar triggers - es ELIMINARLOS y llamar directamente a Edge Function
-
-**ARQUITECTURA IMPLEMENTADA:**
-```
-1. App crea orden en tabla `orders`
-2. App inserta items en tabla `order_items` 
-3. App llama fetch() a Edge Function con order_uuid
-4. Edge Function consulta BD directamente
-5. Edge Function envía emails con Resend API
-6. ✅ EMAILS LLEGAN (cliente + admin + creadores)
-```
-
-**ARCHIVOS CLAVE:**
-
-| Archivo | Función |
-|---------|---------|
-| `supabase/functions/send-email/index.ts` | Edge Function que envía emails |
-| `src/lib/services/orders.ts` | Llama a Edge Function después de insertar orden+items |
-| `src/context/CartProvider.tsx` | Maneja persistencia del carrito |
-| `src/app/checkout/page.tsx` | Limpia carrito después de compra |
-
-**CARACTERÍSTICAS DE LOS EMAILS:**
-
-1. **Email CLIENTE:**
-   - Desglose por creador (cuánto pagar a cada uno)
-   - Información de entregas separadas si hay múltiples creadores
-   - Zona horaria Guatemala (UTC-6)
-
-2. **Email ADMIN:**
-   - Desglose financiero completo por creador
-   - Comisiones TASTY calculadas
-   - Información de contacto del cliente
-
-3. **Email CREADOR (uno por cada creador):**
-   - Solo SUS productos específicos
-   - Su parte financiera (subtotal + IVA + delivery)
-   - Cuánto le pagará el cliente
-   - Su ganancia neta (90%)
-   - Comisión TASTY a transferir (10%)
-
-**ZONA HORARIA:**
-- Funciones `formatDateGuatemala()` y `getCurrentDateGuatemala()` restan 6 horas
-- Todas las fechas en emails muestran hora de Guatemala
-
-**SI NECESITAS MODIFICAR EMAILS:**
-1. Edita SOLO `supabase/functions/send-email/index.ts`
-2. Copia el código y pégalo en Supabase Dashboard → Edge Functions → send-email → Deploy
-3. NO toques `orders.ts` a menos que sepas lo que haces
-
-### **OTROS ARREGLOS DEL AGENTE 6:**
-
-1. **Carrito se limpia después de compra:**
-   - `checkout.tsx`: Limpia `user_carts` (tabla correcta, antes era `cart_items`)
-   - `checkout.tsx`: Agrega flag `tasty-cart-cleared` en sessionStorage
-   - `CartProvider.tsx`: Respeta la flag y no restaura después de compra
-
-2. **WhatsApp con IVA:**
-   - `orders.ts`: La función `generateCustomerWhatsAppUrl()` ya incluye IVA
-   - Línea 84: `• IVA (12%): Q${calculatedIva.toFixed(2)}`
-
-3. **Order items se insertan ANTES de llamar Edge Function:**
-   - Antes: fetch() se llamaba antes de insertar items (Edge Function encontraba 0 items)
-   - Ahora: fetch() se llama DESPUÉS de insertar items (Edge Function encuentra todos los items)
-
-### **ESTADO ACTUAL DE PROBLEMAS (16 Enero 2026):**
-
-**1. ✅ EMAILS SE ENVÍAN AUTOMÁTICAMENTE:**
-- **Estado**: ✅ **RESUELTO POR AGENTE 6**
-- **Solución**: Edge Function envía directamente con Resend (no usa triggers SQL)
-- **Emails funcionando**: Cliente + Admin + Creadores (con desglose financiero)
-
-**2. ✅ CARRITO SE LIMPIA CORRECTAMENTE:**
-- **Estado**: ✅ **RESUELTO POR AGENTE 6**
-- **Solución**: 
-  - Limpia tabla `user_carts` (antes era `cart_items` que no existía)
-  - Agrega flag `tasty-cart-cleared` para evitar restauración
-  - CartProvider respeta la flag
-
-**3. ✅ WHATSAPP CON IVA:**
-- **Estado**: ✅ **RESUELTO** (código ya lo tiene, solo necesita rebuild)
-- **Ubicación**: `orders.ts` línea 84
-- **Formato**: `• IVA (12%): Q${calculatedIva.toFixed(2)}`
-
-## ✅ **PROBLEMAS RESUELTOS POR AGENTE 6 (16 Enero 2026):**
-
-### **RESUMEN EJECUTIVO:**
-- ✅ Emails funcionando (cliente + admin + creadores)
-- ✅ Carrito se limpia después de compra
-- ✅ WhatsApp incluye IVA
-- ✅ Zona horaria Guatemala corregida
-- ✅ Desglose por creador en emails
-
-### **LECCIONES APRENDIDAS (PARA FUTUROS AGENTES):**
-
-1. **Los triggers SQL con http() NO funcionan desde la app** - Es una limitación de PgBouncer
-2. **La solución correcta es llamar Edge Function directamente** - No intentar arreglar triggers
-3. **Los order_items deben insertarse ANTES de llamar a la Edge Function** - Si no, no encuentra productos
-4. **La tabla de backup del carrito es `user_carts`** - No `cart_items`
-
----
-
-#### **📋 HISTORIAL DE CAMBIOS AGENTE 6:**
-
-### **🔧 ARCHIVOS MODIFICADOS (15 Enero 2025):**
-- `src/components/cart/CartView.tsx` - ✅ Suma horas + separación conceptos (loop resuelto)
-- `src/context/CartProvider.tsx` - ✅ Persistencia mejorada con backup BD (funciona)
-- `src/providers/auth-provider.tsx` - ✅ Redirect condicional + validación eventos
-- `src/app/login/page.tsx` - ✅ Manejo returnUrl
-- `src/app/checkout/page.tsx` - ✅ Validación finalLocation + logs detallados
-- `src/app/user/orders/page.tsx` - ✅ Política cancelación
-- `src/components/ui/privacy-settings.tsx` - ✅ Parámetros RPC corregidos
-- `src/app/layout.tsx` - ✅ Vercel Analytics eliminados
-- `src/hooks/useGeolocation.ts` - ✅ Timeout 30s + logs (funciona)
-- `src/components/ui/location-selector.tsx` - ✅ useMapEvents + logs (funciona)
-- `src/lib/services/orders.ts` - ✅ Logs detallados + campos verificados
-- `src/app/user/profile/page.tsx` - ✅ Configuración ubicación creador agregada
-
-### **🚨 PROBLEMA CRÍTICO PARA EL PRÓXIMO AGENTE:**
-
-#### **1. ERROR SUPABASE AL CREAR ÓRDENES (CRÍTICO):**
-- **Error**: `schema "net" does not exist` - Código 3F000
-- **Problema**: Supabase busca esquema `net` que no existe en la instancia
-- **Síntoma**: Error 400 al crear órdenes, datos son correctos
-- **Causa probable**: Trigger corrupto, función RPC con dependencia `net`, o extensión faltante
-- **Datos verificados**: Todos los campos del código existen en tabla `orders`
-- **Soluciones**: Deshabilitar triggers, instalar extensión `net`, o revisar funciones RPC
-- **Estado**: Código perfecto, problema de configuración Supabase
-
-#### **✅ PROBLEMAS RESUELTOS EN ESTA SESIÓN:**
-
-#### **1. LOOP INFINITO EN CARTVIEW - ✅ RESUELTO:**
-- **Archivo**: `src/components/cart/CartView.tsx`
-- **Solución aplicada**: useEffect optimizado con dependencias correctas
-
-#### **2. CARRITO NO PERSISTE - ✅ RESUELTO:**
-- **Archivo**: `src/context/CartProvider.tsx`
-- **Solución aplicada**: Backup en BD + `onConflict: 'user_id'` para evitar error 409
-- **Evidencia**: Logs muestran "✅ CartProvider: Backup en BD exitoso - Guardados 2 items"
-
-#### **3. GEOLOCALIZACIÓN TIMEOUT - ✅ RESUELTO:**
-- **Archivo**: `src/hooks/useGeolocation.ts`
-- **Solución aplicada**: Timeout aumentado de 10s a 30s
-- **Evidencia**: Logs muestran "✅ useGeolocation: Ubicación obtenida exitosamente"
-
-#### **4. MAPA NO DETECTA CLICKS - ✅ RESUELTO:**
-- **Archivo**: `src/components/ui/location-selector.tsx`
-- **Solución aplicada**: Componente `MapClickHandler` con `useMapEvents` (sin dynamic import)
-- **Evidencia**: Logs muestran "🖱️ MapClickHandler: ¡CLICK DETECTADO VÍA useMapEvents!" y "✅ LocationSelector: Confirmando ubicación"
-
-#### **5. BOTÓN "CONFIRMAR PEDIDO" NO FUNCIONA - ✅ RESUELTO:**
-- **Archivo**: `src/app/checkout/page.tsx` línea 319
-- **Problema**: `handlePlaceOrder` validaba `userLocation` (GPS) en lugar de `finalLocation` (GPS + manual)
-- **Solución aplicada**: Cambiado a `if (!finalLocation)` - permite ubicación manual
-- **Estado**: ✅ RESUELTO - Botón funciona con ubicación manual
-
-#### **6. ERROR CREAR ÓRDENES - ❌ NUEVO PROBLEMA:**
-- **Error**: `schema "net" does not exist` (código 3F000) 
-- **Problema**: Error interno de Supabase, no del código
-- **Datos verificados**: Todos los campos correctos, estructura perfecta
-- **Causa**: Trigger, función RPC, o extensión `net` faltante en Supabase
-- **Solución pendiente**: Revisar configuración de Supabase
-
-### **📝 LOGS DE DEBUGGING ACTUALIZADOS (15 Enero 2025 - 17:52):**
-```
-✅ Carrito funciona: "✅ CartProvider: Backup en BD exitoso - Guardados 2 items"
-✅ GPS funciona: "✅ useGeolocation: Ubicación obtenida exitosamente"
-✅ Mapa detecta clicks: "🖱️ MapClickHandler: ¡CLICK DETECTADO VÍA useMapEvents!"
-✅ Ubicación confirmada: "✅ LocationSelector: Confirmando ubicación"
-✅ Delivery calculado: "✅ Checkout: ENTREGA DISPONIBLE - Total: Q54.98"
-✅ Botón funciona: "🛒 Checkout: INTENTANDO HACER PEDIDO"
-✅ Datos correctos: Todos los campos verificados en tabla orders
-❌ ERROR SUPABASE: "schema 'net' does not exist" - Código 3F000
-```
-
-### **📋 PLAN DE PRUEBAS ACTUALIZADO (15 Enero 2025):**
-1. **✅ Carrito**: Suma de horas artesanales funciona (8h + 10h = 18h)
-2. **✅ Persistencia**: FUNCIONA - Carrito se guarda en BD correctamente
-3. **✅ Login**: Desde carrito → login → regresa al carrito correctamente
-4. **✅ Checkout**: Muestra "Q 25.00 + ajuste por distancia" correctamente
-5. **✅ Políticas**: Texto "24h antes que inicie período de 48h" correcto
-6. **✅ Privacy**: No hay errores 404 en configuración de privacidad
-7. **✅ Vercel**: No hay errores 404 de scripts en desarrollo
-8. **✅ Geolocalización**: FUNCIONA - "Mi ubicación actual" detecta GPS en 30s
-9. **✅ Mapa manual**: FUNCIONA - Permite colocar marcador y confirmar ubicación
-10. **✅ Cálculo delivery**: FUNCIONA - Calcula Q54.98 correctamente
-11. **✅ Botón "Confirmar Pedido"**: FUNCIONA - Acepta ubicación manual
-12. **✅ Validación datos**: FUNCIONA - Todos los campos son correctos
-13. **❌ CREAR ORDEN**: ERROR SUPABASE - schema "net" does not exist
-
----
-
-## 🚨 PROBLEMAS PARCIALMENTE RESUELTOS (16 Enero 2026)
-
-### **✅ PROGRESO REALIZADO**
-**Estado:** 🟡 **PARCIALMENTE FUNCIONAL**  
-**Agente anterior:** Corrigió varios problemas críticos
-
-**✅ PROBLEMAS RESUELTOS:**
-- ✅ RLS `order_items` simplificado y `user_carts` con policies limpias (406 resuelto con fila por usuario)
-- ✅ Selector de fecha/hora de entrega: carrito y checkout usan el mismo valor (mín 48h) y se envía a la orden
-- ✅ Checkout autorrellena teléfono/dirección desde perfil si están vacíos
-- ✅ WhatsApp: usa subtotal/IVA/delivery reales y no muestra “No proporcionado” en teléfono
-- ✅ Emails cliente/admin/creador ahora incluyen productos y desglose (subtotal, IVA, delivery) y delivery/IVA para creadores
-- ✅ Panel creador: su “Tu parte” y 10% se calculan sobre sus productos (no sobre el total) y solo carga sus items en orders
-- ✅ **Error 42804** - Función `get_user_orders_with_breakdown()` corregida
-- ✅ **"Mis Pedidos" CARGA** - Ya no da error 400
-- ✅ **IVA separado** - Se muestra correctamente en interfaz
-- ✅ **Delivery breakdown** - Nombres reales de creadores
-- ✅ **Subtotal correcto** - Ya no Q0.00
-- ✅ **Trigger emails** - No envía duplicados por cambios de estado
-
-### **🔍 INVESTIGACIÓN COMPLETA DE EMAILS (16 Enero 2026 - 22:30)**
-
-**✅ DIAGNÓSTICO REALIZADO:**
-
-**1. TRIGGER EXISTE Y ESTÁ ACTIVO:**
-```sql
--- RESULTADO: ✅ CONFIRMADO
-SELECT trigger_name FROM information_schema.triggers 
-WHERE event_object_table = 'orders';
--- send_emails_on_order_creation | INSERT | AFTER | EXECUTE FUNCTION trigger_send_emails()
-```
-
-**2. FUNCIÓN TRIGGER EXISTE:**
-```sql
--- RESULTADO: ✅ CONFIRMADO  
-SELECT routine_name FROM information_schema.routines 
-WHERE routine_name = 'trigger_send_emails';
--- trigger_send_emails | FUNCTION | trigger
-```
-
-**3. FUNCIÓN EMAIL EXISTE:**
-```sql
--- RESULTADO: ✅ CONFIRMADO
-SELECT routine_name FROM information_schema.routines 
-WHERE routine_name = 'send_order_confirmation_email';
--- send_order_confirmation_email | FUNCTION | void
-```
-
-**4. FUNCIÓN FUNCIONA MANUALMENTE:**
-```sql
--- RESULTADO: ✅ CONFIRMADO - ENVIÓ 4 EMAILS
-PERFORM send_order_confirmation_email(order_uuid);
--- SUCCESS: Emails enviados a pepiancookingclass@gmail.com
-```
-
-**5. PERMISOS CORRECTOS:**
-```sql
--- RESULTADO: ✅ CONFIRMADO
-SELECT security_definer FROM pg_proc WHERE proname = 'send_order_confirmation_email';
--- security_definer: true | permissions: todos los roles tienen acceso
-```
-
-**❌ PROBLEMA REAL IDENTIFICADO:**
-- **Trigger NO se ejecuta desde aplicación** pero SÍ desde Supabase SQL Editor
-- **Función SQL funciona perfectamente** cuando se ejecuta manual
-- **Logs agregados en aplicación** para confirmar si trigger se dispara
-
-### **❌ PROBLEMAS PENDIENTES CRÍTICOS (ACTUALIZADO 26 Ene 2026)**
-**Estado:** 🔥 **REQUIERE ATENCIÓN INMEDIATA**
-
-**1. Emails de pedido (cliente/admin)**
-- ✅ Plantillas corregidas en `supabase/functions/send-email/index.ts`: lista de productos y delivery por creador en cliente y admin.
-- ⚠️ En sandbox se envía al ADMIN_EMAIL (Resend limita destinos); en prod, apuntar a `order.customer_email`.
-
-**2. WhatsApp SIN TELÉFONO / SIN IVA**
-- ❌ El mensaje de WhatsApp sigue saliendo sin teléfono/IVA en el texto final, aunque los logs tienen el número y el cálculo del IVA. Varios intentos fallidos; NO resuelto. El agente 8 tampoco lo logró.
-- Se necesita un enfoque nuevo (no es tema de “build”).
-
-**3. Fecha mínima 48h (fecha de entrega)**
-- ⚠️ Se clampéa la fecha al mínimo si el usuario elige menos, pero el warning sigue apareciendo en la UI. Revisar validación/estado del input de fecha/hora.
-
-**4. Sistema de entrega por vehículo (moto vs carro)**
-- ❌ Pendiente implementar lógica de tarifas por vehículo según productos/creador. Plan detallado en `docs/plan-entregas-vehiculo.md` (flags por producto, tarifas paralelas de carro/moto, breakdown con `vehicle` y mensaje al cliente).
-
-**📋 ARCHIVOS AFECTADOS:**
-- ✅ **SQL Functions verificadas**: `send_order_confirmation_email()`, `trigger_send_emails()`
-- ✅ **Trigger verificado**: `send_emails_on_order_creation` 
-- 🔧 **Frontend modificado**: `src/lib/services/orders.ts` (logs agregados para debug)
-- 📄 **Plan**: `docs/plan-entregas-vehiculo.md` (definición de moto vs carro)
-
-**🧪 PRUEBAS REALIZADAS POR AGENTE 4 (NO REPETIR):**
-1. ✅ Verificar existencia de trigger en tabla orders → `send_emails_on_order_creation` EXISTE
-2. ✅ Verificar existencia de función trigger_send_emails → EXISTE con `SECURITY DEFINER = true`
-3. ✅ Verificar existencia de función send_order_confirmation_email → EXISTE 
-4. ✅ Probar función manualmente → FUNCIONA PERFECTO (envía 4 emails)
-5. ✅ Verificar permisos SECURITY DEFINER → `prosecdef = true` CORRECTO
-6. ✅ Verificar políticas RLS en tabla orders → CORRECTAS
-7. ✅ Verificar Edge Function desplegada → FUNCIONA (status 200, email enviado)
-8. ✅ Verificar extensión HTTP → INSTALADA (version 1.6)
-9. ✅ Probar Edge Function directamente → FUNCIONA (messageId confirmado)
-10. ✅ Logs agregados en aplicación → CONFIRMA que orden se crea pero trigger NO se ejecuta
-11. ✅ Verificar RESEND_API_KEY → CONFIGURADA correctamente
-12. ❌ **PROBLEMA CONFIRMADO**: Trigger NO se ejecuta desde aplicación, SÍ desde manual
-
-**🚨 CONCLUSIÓN DEL AGENTE 4:**
-**LA IA ES DEMASIADO ESTÚPIDA PARA RESOLVER ESTE PROBLEMA BÁSICO**
-- Todo funciona manual ✅
-- Trigger no se ejecuta desde app ❌  
-- Necesita INTELIGENCIA SUPERIOR para resolver
-
----
-
-## 📊 ESTRUCTURA DE TABLAS PRINCIPALES
-
-### **TABLA: orders**
-```sql
-| column_name                | data_type                   | is_nullable |
-| -------------------------- | --------------------------- | ----------- |
-| id                         | uuid                        | NO          |
-| user_id                    | uuid                        | YES         |
-| customer_name              | text                        | NO          |
-| status                     | USER-DEFINED                | YES         |
-| total                      | numeric                     | NO          |
-| order_date                 | timestamp with time zone    | YES         |
-| delivery_date              | timestamp with time zone    | YES         |
-| delivery_street            | text                        | YES         |
-| delivery_city              | text                        | YES         |
-| delivery_state             | text                        | YES         |
-| delivery_zip               | text                        | YES         |
-| delivery_country           | text                        | YES         |
-| created_at                 | timestamp with time zone    | YES         |
-| updated_at                 | timestamp with time zone    | YES         |
-| delivery_latitude          | numeric                     | YES         |
-| delivery_longitude         | numeric                     | YES         |
-| save_location_data         | boolean                     | YES         |
-| auto_delete_after_delivery | boolean                     | YES         |
-| status_updated_at          | timestamp without time zone | YES         |
-| status_updated_by          | uuid                        | YES         |
-| previous_status            | character varying           | YES         |
-| customer_phone             | character varying           | YES         |
-| customer_email             | character varying           | YES         |
-| payment_method             | character varying           | YES         |
-| delivery_notes             | text                        | YES         |
-| subtotal                   | numeric                     | YES         |
-| iva_amount                 | numeric                     | YES         |
-| delivery_fee               | numeric                     | YES         |
-| delivery_breakdown         | jsonb                       | YES         |
-```
-
-### **TABLA: order_items**
-```sql
-| column_name     | data_type                | is_nullable |
-| --------------- | ------------------------ | ----------- |
-| id              | uuid                     | NO          |
-| order_id        | uuid                     | NO          |
-| product_id      | uuid                     | YES         |
-| quantity        | integer                  | NO          |
-| unit_price      | numeric                  | NO          |
-| product_name_en | text                     | YES         |
-| product_name_es | text                     | YES         |
-| created_at      | timestamp with time zone | YES         |
-```
-
-### **TABLA: products**
-```sql
-| column_name      | data_type                | is_nullable |
-| ---------------- | ------------------------ | ----------- |
-| id               | uuid                     | NO          |
-| name_en          | text                     | NO          |
-| name_es          | text                     | NO          |
-| type             | USER-DEFINED             | NO          |
-| price            | numeric                  | NO          |
-| image_url        | text                     | YES         |
-| image_hint       | text                     | YES         |
-| description_en   | text                     | YES         |
-| description_es   | text                     | YES         |
-| ingredients_en   | text                     | YES         |
-| ingredients_es   | text                     | YES         |
-| creator_id       | uuid                     | YES         |
-| preparation_time | integer                  | YES         |
-| is_gluten_free   | boolean                  | YES         |
-| is_vegan         | boolean                  | YES         |
-| is_dairy_free    | boolean                  | YES         |
-| is_nut_free      | boolean                  | YES         |
-| created_at       | timestamp with time zone | YES         |
-| updated_at       | timestamp with time zone | YES         |
-```
-
-### **TABLA: users** (campos relevantes)
-```sql
-| column_name                | data_type | is_nullable |
-| -------------------------- | --------- | ----------- |
-| id                         | uuid      | NO          |
-| name                       | text      | YES         |
-| email                      | text      | YES         |
-| phone                      | text      | YES         |
-| creator_latitude           | numeric   | YES         |
-| creator_longitude          | numeric   | YES         |
-| creator_delivery_radius    | integer   | YES         |
-| creator_base_delivery_fee  | numeric   | YES         |
-| creator_per_km_fee         | numeric   | YES         |
-```
-
-### **FUNCIONES SQL PRINCIPALES**
-- `get_user_orders_with_breakdown(user_uuid UUID)` - Obtiene pedidos con desglose
-- `send_order_confirmation_email(order_uuid UUID)` - Envía emails de confirmación
-- `calculate_creator_delivery_fee(creator_uuid UUID, client_latitude DECIMAL, client_longitude DECIMAL)` - Calcula delivery por creador
-
----
-
-## 🔴 TAREAS PENDIENTES (20 Enero 2026)
-
-### **TAREA 1: Verificar dominio en Resend para emails reales**
-**Estado:** ⏳ **PENDIENTE**  
-**Prioridad:** MEDIA
-
-**PROBLEMA:**
-- Emails de bienvenida solo van a `pepiancookingclass@gmail.com` (plan gratuito Resend)
-- Para enviar a usuarios reales, necesitas verificar tu dominio en resend.com/domains
-
-**SOLUCIÓN:**
-1. Ir a https://resend.com/domains
-2. Agregar tu dominio (ej: tasty.gt)
-3. Configurar DNS según instrucciones
-4. Cambiar en `send-welcome-email/index.ts` línea ~180: `const userEmailRecipient = userData.email;`
-
-### **TAREA 2: Selector de Fecha de Entrega**
-**Estado:** ❌ **PENDIENTE**  
-**Prioridad:** MEDIA
-
-**FUNCIONALIDAD NUEVA REQUERIDA:**
-- Agregar selector de fecha en checkout (mínimo 48h adelante)
-- Habilitar botón cancelar solo si entrega > 48h
-- Mejorar experiencia de usuario con pedidos anticipados
-
-**FUNCIONALIDADES IMPLEMENTADAS:**
-- ✅ **Emails completos** con desglose detallado para cliente, admin y creador
-- ✅ **Dirección automática** guardada en perfil después de cada pedido
-- ✅ **Desglose en "Mis Pedidos"** (subtotal + delivery separados)
-- ✅ **Carrito limpio** automáticamente después del pedido
-- ✅ **Delivery múltiple** explicado claramente en checkout
-- ✅ **WhatsApp mejorado** con botones e instrucciones en "Mis Pedidos"
-- ✅ **Mensaje WhatsApp** con desglose completo (productos + delivery)
-
-**❌ BLOQUEADO POR ERROR SQL CRÍTICO:**
-- Función `get_user_orders_with_breakdown()` tiene tipos de datos incorrectos
-- "Mis Pedidos" no carga (Error 42804: character varying vs text)
-- Necesita corrección urgente de tipos de datos en columna 13
-
-### **TAREA 3: Bilingüalización completa de UI**
-**Estado:** ✅ **COMPLETADO**  
-**Prioridad:** MEDIA  
-**Descripción:** Todos los textos duros movidos a diccionarios ES/EN (checkout, carrito, orders, creator/admin, combos, dashboards, formularios, toasts, validaciones, fechas con locale). Plan en `docs/bilingualizacion.md`. Pendientes menores: textos de mock de analytics y `page-old` legacy sin prioridad.
-
-### **TAREA 2: Mejorar Flujo WhatsApp Post-Pedido**
-**Estado:** ✅ **COMPLETADO** (PERO ROTO POR ERROR SQL)  
-**Prioridad:** ALTA
-
-**✅ COMPLETADO:**
-- ✅ Redirección corregida a `/user/orders`
-- ✅ Ventana emergente molesta eliminada
-- ✅ Botón WhatsApp agregado en "Mis Pedidos"
-- ✅ Instrucciones claras implementadas
-- ✅ Mensaje con desglose completo (productos + delivery)
-
-**❌ BLOQUEADO POR:**
-- ❌ **ERROR SQL**: Función `get_user_orders_with_breakdown()` rota
-- ❌ **"Mis Pedidos" no carga**: Error 400 impide ver la funcionalidad
-
-### **TAREA 3: Guardar Dirección del Usuario**
-**Estado:** ✅ **COMPLETADO**  
-**Prioridad:** ALTA
-
-**✅ IMPLEMENTADO:**
-- ✅ Trigger automático para guardar dirección
-- ✅ Se actualiza perfil después de cada pedido
-- ✅ Autocompletado en futuros pedidos
-- ✅ Función `save_user_address_from_order()` creada
-
-### **TAREA 4: Explicar Costos de Delivery Múltiple**
-**Estado:** ❌ **CONFUSO PARA USUARIO**  
-**Prioridad:** MEDIA
-
-**PROBLEMA:**
-- Q68.42 para 2 creadores no se explica
-- Usuario no entiende que son viajes separados
-
-**SOLUCIÓN:**
-- Desglose por creador individual
-- Explicación de viajes separados
-- Costos transparentes por ubicación
-
-## 🔴 TAREAS PENDIENTES ANTERIORES (En orden de prioridad)
-
-### TAREA 1: Sistema de Emails Completo
-**Estado:** ✅ **COMPLETADO AL 100%**  
-**Prioridad:** ALTA
-
-**✅ COMPLETADO:**
-- ✅ Edge Function desplegada en Supabase
-- ✅ Sistema de emails de pedidos funcionando
-- ✅ Sistema de emails de bienvenida funcionando
-- ✅ Resend API configurada y funcionando
-- ✅ JWT correcta configurada
-- ✅ Emails automáticos al registrarse (usuario + admin)
-- ✅ Emails automáticos al crear pedidos
-- ✅ Logs de emails en base de datos
-- ✅ Rate limiting controlado por Resend
-
-**📧 EMAILS FUNCIONANDO:**
-- **Bienvenida Cliente**: "🍰 ¡Bienvenido a TASTY!"
-- **Bienvenida Creador**: "🎉 ¡Bienvenido a TASTY como Creador!"
-- **Notificación Admin**: Automática para nuevos usuarios
-- **Confirmación Pedidos**: Lista para usar
-
-**⚠️ LIMITACIÓN ACTUAL:**
-- Solo envía a `pepiancookingclass@gmail.com` (cuenta verificada)
-- Para enviar a otros emails: verificar dominio en resend.com/domains
-
-**Archivos finales:**
-- `final-email-system-complete.sql` ✅ (sistema completo)
-- `create-email-logs-table.sql` ✅ (logs)
-- `supabase/functions/send-email/index.ts` ✅ (desplegado)
-
----
-
-### TAREA 2: Integración WhatsApp
-**Estado:** ✅ **COMPLETADO**  
-**Prioridad:** MEDIA
-
-**FLUJO IMPLEMENTADO:**
-1. Cliente suma productos al carrito
-2. Va a `/checkout` y completa datos de entrega
-3. Al confirmar pedido:
-   - Se crea en DB con número único
-   - Se genera mensaje para cliente con resumen
-   - Se genera URL de WhatsApp al agente (+502 30635323)
-   - Cliente confirma si quiere enviar WhatsApp al agente
-4. Agente recibe mensaje completo con todos los datos del pedido
-
-**Archivos modificados:**
-- `src/lib/services/orders.ts` - Funciones WhatsApp
-- `src/app/checkout/page.tsx` - Integración del flujo
-
----
-
-### TAREA 3: Sistema de pagos con comisión
-**Estado:** ✅ **COMPLETADO**  
-**Prioridad:** MEDIA
-
-**IMPLEMENTADO:**
-- Panel de creador muestra ganancias reales (90% del total)
-- Dashboard actualizado con comisión Tasty (10%)
-- Tabla de pedidos muestra desglose: Total / Tu parte / Comisión Tasty
-- Cálculos automáticos en todas las vistas
-
-**Archivos modificados:**
-- `src/components/creator/orders/OrderTable.tsx` - Desglose de comisiones
-- `src/app/creator/dashboard/page.tsx` - Estadísticas correctas
-
----
-
-## 🔄 **FLUJO COMPLETO DE PEDIDOS IMPLEMENTADO**
-
-### 📱 **FLUJO USUARIO:**
-1. **Carrito:** Cliente agrega productos de múltiples creadores
-2. **Checkout:** Completa datos (nombre, teléfono, dirección con dropdowns de Guatemala)
-3. **Confirmación:** Se crea pedido con número único en DB
-4. **WhatsApp:** Cliente recibe mensaje con resumen y opción de enviar al agente
-5. **Agente:** Recibe WhatsApp completo con todos los datos (+502 30635323)
-
-### 💰 **SISTEMA DE COMISIONES:**
-- **Total del pedido:** Lo que paga el cliente
-- **Creador recibe:** 90% del valor de sus productos
-- **Tasty comisión:** 10% del valor total
-- **Delivery:** Costo aparte (Q15 base)
-
-### 🏪 **PANEL DE CREADOR:**
-- Dashboard muestra ganancias reales (90%)
-- Tabla de pedidos con desglose de comisiones
-- Estadísticas actualizadas con cálculos correctos
-
-### 📊 **BASE DE DATOS:**
-- Tabla `orders` con todos los campos necesarios
-- Tabla `order_items` con productos y cantidades
-- Campos agregados: teléfono, email, dirección completa, método de pago
-
----
-
-### TAREA 2: Formulario de Combos Colaborativos
-**Estado:** ✅ **COMPLETADO**  
-**Prioridad:** MEDIA
-
-**✅ IMPLEMENTADO:**
-- ✅ Página `/creator/combos/new` completa
-- ✅ Búsqueda y selección de productos de cualquier creador
-- ✅ Configuración automática de precios y descuentos
-- ✅ Cálculo de distribución de ganancias por creador
-- ✅ Preview en tiempo real del combo
-- ✅ Categorías y configuración avanzada
-- ✅ Base de datos completa para combos
-
-**Archivos creados:**
-- `src/app/creator/combos/new/page.tsx` ✅
-- `create-combos-system.sql` ✅ (base de datos)
-
-### TAREA 3: Calculadora de Delivery Inteligente
-**Estado:** 🔴 **PENDIENTE**  
-**Prioridad:** ALTA
-
-**Descripción:** Sistema de cálculo de delivery por distancia/zona
-- Integración con geolocalización del checkout
-- Cálculo automático basado en distancia
-- Tarifas por zonas de Guatemala
-- Estimación de tiempo de entrega
-- Configuración de zonas de cobertura
-
-**Tecnología sugerida:** Leaflet.js + OpenStreetMap (ya integrado)
-
-### TAREA 4: Sistema de Notificaciones
-**Estado:** PENDIENTE  
-**Prioridad:** MEDIA
-
-**Descripción:** Notificaciones en tiempo real
-- Notificaciones push para cambios de estado
-- Notificaciones por email para eventos importantes
-- Panel de notificaciones en la app
-- Configuración de preferencias de notificación
-
-### TAREA 5: Mejorar Sistema de Búsqueda
-**Estado:** PENDIENTE  
-**Prioridad:** BAJA
-
-**Descripción:** Búsqueda avanzada de productos y combos
-- Búsqueda por ingredientes
-- Filtros avanzados (precio, tiempo, ubicación)
-- Búsqueda por creador
-- Sugerencias de búsqueda
-- Historial de búsquedas
-
-**Servicio sugerido:** Resend (fácil de integrar)
-
-**Emails a enviar:**
-| Evento | Destinatario | Template |
-|--------|--------------|----------|
-| Registro | Usuario + Admin | Bienvenida |
-| Compra | Usuario + Admin + Creador | Confirmación |
-| Estado pedido | Usuario | Actualización |
-
----
-
-### TAREA 9: Geolocalización
-**Estado:** PENDIENTE  
-**Prioridad:** BAJA
-
-**Hook básico:**
-```typescript
-// src/hooks/useGeolocation.ts
-export function useGeolocation() {
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-  
-  const getLocation = () => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => console.error(err)
-    );
-  };
-  
-  return { location, getLocation };
-}
-```
-
----
-
-## 🗄️ ESTRUCTURA DE BASE DE DATOS
-
-### Tabla: users
-```
-id UUID PRIMARY KEY
-email VARCHAR
-name VARCHAR
-phone VARCHAR
-profile_picture_url TEXT
-roles TEXT[] -- ['customer', 'creator', 'admin', 'agent']
-skills TEXT[] -- ['pastry', 'savory', 'handmade']
-gender VARCHAR
-workspace_photos TEXT[]
-address_street, address_city, address_state, address_zip, address_country VARCHAR
-has_delivery BOOLEAN
-created_at, updated_at TIMESTAMP
-```
-
-### Tabla: products
-```
-id UUID PRIMARY KEY
-creator_id UUID REFERENCES users(id)
-name, description, image_url, category VARCHAR/TEXT
-price DECIMAL
-is_available BOOLEAN
-created_at, updated_at TIMESTAMP
-```
-
-### Tabla: orders
-```
-id UUID PRIMARY KEY
-user_id UUID REFERENCES users(id)
-status VARCHAR -- 'pending', 'confirmed', 'preparing', 'ready', 'delivered'
-total DECIMAL
-created_at, updated_at TIMESTAMP
-```
-
-### Tabla: order_items
-```
-id UUID PRIMARY KEY
-order_id UUID REFERENCES orders(id)
-product_id UUID REFERENCES products(id)
-quantity INTEGER
-price_at_purchase DECIMAL
-```
-
----
-
-## 📁 ARCHIVOS CLAVE
-
-| Archivo | Descripción |
-|---------|-------------|
-| `src/app/user/profile/page.tsx` | Perfil de usuario, fotos, skills |
-| `src/app/page.tsx` | Home con productos y creadores |
-| `src/app/creator/products/page.tsx` | Panel de productos del creador |
-| `src/components/ui/multi-image-upload.tsx` | Upload múltiple (FUNCIONA) |
-| `src/hooks/useUser.ts` | Hook del usuario actual |
-| `src/lib/supabase.ts` | Cliente Supabase |
-| `src/providers/auth-provider.tsx` | Contexto de autenticación |
-
----
-
-## 🔧 CONFIGURACIÓN
-
-### Variables de entorno (.env.local)
-```
-NEXT_PUBLIC_SUPABASE_URL=https://aitmxnfljglwpkpibgek.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
-```
-
-### Supabase Storage
-- Bucket `images` - PÚBLICO
-- Bucket `avatars` - PÚBLICO
-
-### Comandos
-```bash
-npm run dev    # Desarrollo
-npm run build  # Build producción
-```
-
----
-
-## 📝 HISTORIAL DE CAMBIOS
-
-| Fecha | Cambio |
-|-------|--------|
-| 19/12/24 | Migración Firebase → Supabase completada |
-| 19/12/24 | Sistema de fotos de workspace funcionando |
-| 19/12/24 | Fotos de perfil con problemas (404) |
-| 19/12/24 | Creado este documento de estado |
-| 19/12/24 | ✅ Build exitoso - proyecto compila sin errores |
-| 19/12/24 | 🔍 **DEBUGGING COMPLETO** - Problemas identificados |
-| 19/12/24 | ✅ Storage funciona correctamente - NO es el problema |
-| 19/12/24 | ✅ Agregados logs detallados para upload y guardado |
-| 19/12/24 | 🔴 **CAUSA IDENTIFICADA**: RLS Policies bloqueando operaciones |
-| 19/12/24 | 📄 Creado `fix-rls-policies.sql` para solucionar |
-| 19/12/24 | ✅ **FLUJO COMPLETO DE PEDIDOS** - WhatsApp + Comisiones |
-| 19/12/24 | ✅ Instagram solo para creadores, imágenes sin distorsión |
-| 19/12/24 | ✅ Moneda cambiada a Quetzales (GTQ) en toda la app |
-| 19/12/24 | ✅ Dropdowns Guatemala/Sacatepéquez con municipios |
-| 19/12/24 | ✅ Geolocalización para usuarios (no creadores) |
-| 19/12/24 | ✅ Página de checkout completa con WhatsApp al agente |
-
----
-
-## 🚀 PARA EMPEZAR
+## 🧪 CÓMO PROBAR
 
 ```bash
-# Instalar dependencias (si es necesario)
+# Instalar dependencias
 npm install
 
-# Iniciar servidor de desarrollo
+# Desarrollo
 npm run dev
+
+# Build producción
+npm run build
 
 # El proyecto corre en http://localhost:3000
 ```
 
-### TAREAS CRÍTICAS PARA EL PRÓXIMO AGENTE:
-
-## ✅ **CORREGIDO - TRIGGERS DE EMAIL REACTIVADOS (29/12/24)**
-
-### **✅ TRIGGERS RESTAURADOS:**
-- `on_auth_user_created` - **REACTIVADO** ✅
-- `send_welcome_email_trigger` - **REACTIVADO** ✅
-- **EVIDENCIA**: SQL ejecutado exitosamente
-- **MENSAJE**: "SISTEMA DE EMAIL RESTAURADO - FUNCIONARÁ COMO ANTES"
-
-### **🧪 PROBAR SISTEMA DE EMAILS:**
-1. **Registrar usuario nuevo** desde `/signup`
-2. **Verificar email de bienvenida** llega a la bandeja
-3. **Formato esperado**: `TASTY <onboarding@resend.dev>`
-
-## 🚨 **ESTADO ACTUAL DE PROBLEMAS CRÍTICOS (29/12/24 - 23:45)**
-
-### **✅ DELIVERY HARDCODEADO - CORREGIDO:**
-- **Ubicación**: `src/app/checkout/page.tsx` líneas 125-180
-- **Cambio aplicado**: Implementado cálculo real usando fórmula Haversine
-- **Funcionalidad**: Calcula distancia desde ubicación real de creadores
-- **Fallback**: Guatemala City por defecto si creador no tiene ubicación
-- **Estado**: ✅ FUNCIONAL
-
-### **✅ FECHA DE ENTREGA - CORREGIDA:**
-- **Ubicación**: `src/app/checkout/page.tsx` líneas 652-661
-- **Cambio aplicado**: Texto clarificado y política de 48h destacada
-- **Lógica**: Mantiene 48 horas mínimas correctamente
-- **Estado**: ✅ FUNCIONAL
-
-### **✅ CARRITO HIDRATACIÓN - CORREGIDO:**
-- **Ubicación**: `src/context/CartProvider.tsx` líneas 94-97, `src/components/shared/SiteHeader.tsx` líneas 32-185
-- **Cambio aplicado**: Agregado `isLoaded` al contexto, badge condicional
-- **Funcionalidad**: Badge aparece solo cuando carrito está completamente cargado
-- **Estado**: ✅ FUNCIONAL
-
-### **✅ ADMIN REDIRECT - CORREGIDO:**
-- **Ubicación**: `src/providers/auth-provider.tsx` línea 35
-- **Cambio aplicado**: Cambió `/dashboard` → `/user/profile`
-- **Estado**: ✅ FUNCIONAL (ya no hay error 404 /dashboard)
-
-### **✅ ERRORES VERCEL EN DESARROLLO - RESUELTO:**
-- **Problema**: Scripts 404 de `/_vercel/insights/script.js` y `/_vercel/speed-insights/script.js`
-- **Ubicación**: `src/app/layout.tsx` líneas 14-21, 48-51
-- **Solución aplicada**: Eliminados completamente los imports de Vercel Analytics
-- **Estado**: ✅ RESUELTO
-- **Fecha**: 10 Enero 2025
-
-### **✅ FUNCIÓN PRIVACY - RESUELTA:**
-- **Problema**: Error 404 en `get_user_privacy_status`
-- **Ubicación**: `src/components/ui/privacy-settings.tsx` línea 44
-- **Causa real**: Función SQL usaba valores incorrectos del enum `order_status`
-- **Solución aplicada**: 
-  - Corregidos parámetros RPC: `{ user_id: user.id }`
-  - Corregidos valores enum: `'pending'` → `'new'`, `'confirmed'` → `'out_for_delivery'`
-- **Estado**: ✅ RESUELTO
-- **Fecha**: 10 Enero 2025
-
-## 🧪 **PLAN DE PRUEBAS COMPLETO:**
-
-1. **Iniciar servidor**: `npm run dev`
-2. **Probar autenticación**:
-   - Registrar usuario nuevo
-   - Login con `ruajhostal@gmail.com` / `admin123` (admin)
-3. **Probar checkout completo**:
-   - Agregar productos al carrito
-   - Proceso de checkout con ubicación
-   - Verificar cálculo de delivery
-   - Probar WhatsApp automático
-4. **ARREGLAR TRIGGERS ELIMINADOS** (prioridad crítica)
-5. **Seguir plan de pruebas**: Ver `PLAN_PRUEBAS_COMPLETO.md`
-
-### **RESUMEN DE TRABAJO DEL AGENTE (29/12/24 - 20:00 a 23:45):**
-
-#### **✅ PROBLEMAS RESUELTOS (4/6):**
-1. **Delivery dinámico** - Implementado cálculo real por distancia desde creadores
-2. **Fecha de entrega** - Política 48h clarificada y funcional  
-3. **Carrito persistente** - Hidratación corregida, sin parpadeos
-4. **Admin redirect** - Corregido de `/dashboard` a `/user/profile`
-
-#### **❌ PROBLEMAS SIN RESOLVER (2/6):**
-1. **Errores Vercel desarrollo** - Scripts 404 persisten en local
-2. **Función privacy** - Error 404 en `get_user_privacy_status`
-
-#### **🔧 ARCHIVOS MODIFICADOS:**
-- `src/app/checkout/page.tsx` - Delivery dinámico + fecha corregida
-- `src/context/CartProvider.tsx` - Hidratación del carrito
-- `src/components/shared/SiteHeader.tsx` - Badge condicional
-- `src/providers/auth-provider.tsx` - Redirect admin
-- `src/app/layout.tsx` - Intentos fallidos Vercel analytics
-- `src/components/ui/privacy-settings.tsx` - Intento corrección privacy
-- `next.config.ts` - Configuración Vercel
-- `vercel.json` - Eliminación configuración obsoleta
-
-#### **🗄️ BASE DE DATOS:**
-- ✅ **Función SQL creada**: `get_user_privacy_status` en Supabase
-- ✅ **Vercel conectado**: Proyecto `tasty-lat.vercel.app` desplegado
-
-#### **📋 PARA EL PRÓXIMO AGENTE:**
-Los 2 problemas restantes requieren enfoque diferente:
-1. **Vercel**: Eliminar completamente imports, no usar condicionales
-2. **Privacy**: Verificar nombre exacto de función en Supabase o deshabilitar llamada
+### Credenciales de Prueba
+- **Admin:** `ruajhostal@gmail.com` / `admin123`
 
 ---
 
-## ⚠️ PROBLEMAS CONOCIDOS
+## 📊 ESTRUCTURA DE BD (Solo referencia)
 
-1. **Fotos de perfil:** Dan 404, pero workspace funciona. Mismo código, diferente carpeta.
+### Tabla: orders
+- `id`, `user_id`, `customer_name`, `status`, `total`
+- `delivery_fee`, `delivery_breakdown` (JSONB con breakdown por creador)
+- `subtotal`, `iva_amount`
 
----
+### Tabla: order_items
+- `order_id`, `product_id`, `quantity`, `unit_price`
+- `delivery_vehicle` (moto/auto)
 
-## 🔐 ESTADO DE AUTENTICACIÓN (29/12/24 - RESUELTO)
-
-### ✅ **SISTEMA FUNCIONAL:**
-- **Registro**: ✅ Funciona correctamente
-- **Login**: ✅ Funciona correctamente  
-- **Admin actual**: `ruajhostal@gmail.com` (temporal)
-- **Password admin**: `admin123`
-
-### 🚨 **TRIGGERS ELIMINADOS POR AGENTES INCOMPETENTES:**
-- `on_auth_user_created` - **ELIMINADO** por agentes cobardes
-- `send_welcome_email_trigger` - **ELIMINADO** por agentes cobardes
-- **Razón ESTÚPIDA**: "Causaba error 500" - EN LUGAR DE ARREGLARLOS
-- **EVIDENCIA**: Triggers de órdenes SÍ funcionan (enviaron 19 emails)
-- **ACCIÓN REQUERIDA**: REACTIVAR Y ARREGLAR - NO ELIMINAR COMO COBARDES
-
-### 📧 **ADMIN CORRUPTO:**
-- `pepiancookingclass@gmail.com` - NO FUNCIONA en la app
-- Datos corruptos a nivel de Supabase
-- Sigue funcionando para dashboard de Supabase
-- **Acción**: IGNORAR - usar nuevo admin
-
-## 🛒 CHECKOUT Y FACTURACIÓN (29/12/24 - COMPLETADO)
-
-### ✅ **ESTRUCTURA DE FACTURACIÓN:**
-- **Productos**: Valor real sin impuestos
-- **I.V.A. (12%)**: Calculado y mostrado
-- **Subtotal**: Productos + IVA
-- **Delivery**: Estimado, se calcula por ubicación
-- **Total**: Todo incluido
-- **Comisión plataforma (10%)**: OCULTA al cliente, solo para admin y creador
-
-### ✅ **SELECTOR DE UBICACIÓN:**
-- **GPS automático**: Funciona correctamente
-- **Selección manual**: Leaflet con mapa interactivo
-- **Delivery pendiente**: Se calcula después de ubicación
-- **Validación**: No permite continuar sin ubicación
-
-### ✅ **SISTEMA WHATSAPP:**
-- **URL automática**: Sistema genera mensaje completo
-- **Cliente**: Solo hace clic y envía
-- **Mensaje personalizado**: Con datos reales del pedido
-- **Coordinación**: Agente recibe todo para coordinar entrega
-
-### ✅ **ENTREGA ESTIMADA:**
-- **48 horas mínimas**: Política correcta
-- **Coordinación**: Cliente debe escribir a agente
-- **Nota visible**: Instrucciones claras sobre proceso
-
-## ⚠️ PROBLEMAS CONOCIDOS
-
-1. **TRIGGERS ELIMINADOS POR INCOMPETENTES:** Agentes estúpidos eliminaron triggers de welcome en lugar de arreglarlos
-2. **Fotos de perfil:** Dan 404, pero workspace funciona. Mismo código, diferente carpeta.
-3. **Tildes:** Usuario reporta que no guarda nombres con tildes. Necesita debugging.
-4. **Imágenes grandes:** CSS necesita ajuste de tamaños.
-5. **Órdenes de creador no visibles:** RLS en `order_items` sigue arrojando `42P17 infinite recursion` y evita que el creador vea pedidos en `/creator/orders`. Se requieren policies simples (cliente por `orders.user_id`, creador por `products.creator_id`, sin joins) y revisar `order_items`/`orders` en Supabase.
-6. **Checkout crash (RESUELTO 23 Ene 2026):** Causa era bucle por objeto `useUser` inestable + prefill que seteaba en cada render. Se memorizó el usuario y se agregó guardas antes de setear. Pendiente validar en dispositivo real que ya no crashea y que el mensaje de WhatsApp muestra IVA y teléfono.
-7. **Pendientes actuales (23 Ene 2026):**
-   - WhatsApp: falta fallback de teléfono en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para evitar “No proporcionado”. IVA ya está en la plantilla.
-   - Emails cliente/admin: siguen sin listar productos ni desglose de delivery; revisar plantillas en `supabase/functions/send-email/index.ts` (cliente y admin), el agente anterior no lo arregló.
-   - Validación dirección vs geoloc: plan en `docs/plan-validacion-direcciones.md` (Nominatim + Haversine, umbral 500m) pendiente de implementar sin romper checkout.
-
-### ✅ ACTUALIZACIÓN (09 Feb 2026)
-- 🔧 **CartProvider**: Restaurar carrito usa `.maybeSingle()` para evitar 406 cuando no hay fila; si el carrito queda vacío se elimina la fila en `user_carts`; limpieza de storages al cambiar de usuario; logout deja intacto el carrito en BD.
-- 🌐 **Bilingüalización completada**: Todo el frontend opera con diccionarios ES/EN y fechas por locale (checkout, carrito, orders, admin/creator, combos, formularios, toasts).
-- 🧪 **Pendiente de probar (QA rápido):** Checkout logueado (prefill, delivery, pedido, WhatsApp con IVA/teléfono), cambio de usuario con carrito vacío, y restore por usuario.
-- ☎️ **WhatsApp sin teléfono:** Aún falta fallback en `createOrder` (`deliveryData.phone || user?.phone || authUser?.user_metadata?.phone || ''`) para evitar “No proporcionado”.
-
-### 🔴 Pendientes actuales (09 Feb 2026 - Actualizado)
-
-#### ✅ COMPLETADO HOY:
-- **Sistema de entrega por vehículo (moto vs auto)**: ✅ **IMPLEMENTADO COMPLETO**
-  - SQL: columnas `_auto` y `_moto` en `users`, `delivery_vehicle` en `products` y `order_items`
-  - Funciones SQL actualizadas: `calculate_creator_delivery_fee(vehicle)` 
-  - Frontend: selector moto/auto en formulario de productos, checkout determina vehículo por creador
-  - Emails: Edge Function actualizada con `Delivery (Moto)` / `Delivery (Auto)` por creador
-  - WhatsApp: mensaje incluye tipo de vehículo y entregas separadas por creador
-  - Checkout: muestra nombres reales de creadores (no "CREADOR")
-- **Bottom Navigation Bar (Panel Creador)**: ✅ Implementado para móviles, resuelve confusión hamburguesa-en-hamburguesa
-- **Mensaje productos artesanales**: ✅ Añadido en checkout sobre tiempos de entrega variables
-
-#### 🟡 PENDIENTES DE REVISIÓN/QA:
-- **WhatsApp IVA y teléfono**: El código está correcto pero pendiente verificar en próximo pedido real
-- **Nombres de creadores en página confirmación**: Corregido, pendiente verificar en próximo pedido
-- **Validación dirección timeout**: Ahora permite continuar con `pending_verification` en vez de bloquear; muestra mensaje de verificación manual
-
-#### 🔴 PENDIENTES SIN RESOLVER:
-- **~~BUG: Eliminación de productos bloquea página~~**: ✅ RESUELTO (13 Feb 2026). El `DropdownMenu` no se cerraba al abrir el `Dialog`. Fix: controlar el dropdown con estado explícito y cerrarlo antes de abrir el diálogo.
-- **Sistema de Combos**: Revisar todo el flujo de creación, edición y compra de combos. Verificar que funcione correctamente.
-- **~~RLS order_items para creadores~~**: ✅ RESUELTO. El código actual hace queries separadas sin joins, evitando la recursión. Creadores ven pedidos correctamente.
-- **Trigger/Edge emails pedidos**: funciona llamando desde app, pero no hay trigger automático.
-- **Dominio + Resend**: comprar dominio y conectarlo con Resend para enviar correos a destinatarios reales.
-- **Textos menores**: mocks de analytics y `page-old` legacy sin prioridad.
-
-### 🐛 BUG SIN RESOLVER: Eliminación de productos bloquea la página
-
-**Archivo:** `src/components/creator/ProductTable.tsx`
-
-**Síntoma:** Después de eliminar un producto desde `/creator/products`, la página queda "bloqueada" - no se pueden hacer clicks en ningún elemento. El producto SÍ se elimina correctamente y el `refetch` funciona (los logs muestran `🔄 useProductsByCreator: refetch triggered`), pero hay un overlay invisible que bloquea toda interacción. Requiere refresh manual.
-
-**Lo que se intentó (sin éxito):**
-1. Añadir `e.preventDefault()` en `AlertDialogAction` - empeoró
-2. Quitar `e.preventDefault()` - sigue bloqueado
-3. Cerrar diálogo ANTES de la operación async con `.then()` - sigue bloqueado
-4. Cambiar de `AlertDialog` a `Dialog` con `Button` normales - sigue bloqueado
-
-**Sospecha:** El problema puede ser la interacción entre `DropdownMenu` (menú de 3 puntos) → `Dialog`. Al abrir el Dialog desde dentro del DropdownMenu, puede quedar un overlay del Dropdown activo.
-
-**Sugerencia:** Probar cerrar explícitamente el `DropdownMenu` antes de abrir el Dialog de confirmación, o usar un estado separado para controlar ambos componentes y asegurar que el Dropdown se cierre completamente antes de mostrar el Dialog.
-
-### 🟡 Pendientes baja prioridad (futuro)
-- **Videos cortos de productos**: Permitir a creadores subir clips de 10-15 segundos para mostrar productos. Requiere: límite de tamaño (~10MB), upload a Supabase Storage, generación de thumbnails. Considerar Cloudinary/Mux para compresión automática si crece la demanda.
-
-## 🤬 CRÍTICA A AGENTES (INCLUYENDO ACTUAL)
-
-### **✅ CORREGIDO - TRIGGERS DE EMAIL:**
-- ✅ **Triggers reactivados** - Sistema restaurado
-- ✅ **19 emails funcionaron** - Evidencia que nunca estuvieron rotos
-- ✅ **SQL ejecutado** - `reactivar-triggers-email-funcionales.sql`
-
-### **❌ FALLAS DEL AGENTE ACTUAL:**
-- ❌ **Delivery hardcodeado** - Cambios no aplicados en build
-- ❌ **Fecha incorrecta** - Solo cambió texto, no lógica
-- ❌ **Carrito se oculta** - Hidratación mal implementada
-- ❌ **Errores Vercel** - Configuración incorrecta
-
-**INCOMPETENCIA CONTINÚA:** Agente actual hizo cambios que **NO FUNCIONAN** y no los probó correctamente.
+### Tabla: products
+- `creator_id`, `name_es`, `name_en`, `price`
+- `delivery_vehicle` (moto/auto por defecto)
+- `preparation_time` (horas)
 
 ---
 
-*Actualizar este documento después de cada tarea completada.*
+## ✅ BUGS RESUELTOS (No investigar)
+
+| Bug | Estado | Fecha |
+|-----|--------|-------|
+| Eliminación productos bloquea página | ✅ RESUELTO | 13 Feb 2026 |
+| RLS order_items recursión | ✅ RESUELTO | 13 Feb 2026 |
+| Carrito no persiste | ✅ RESUELTO | Ene 2026 |
+| Loop infinito CartView | ✅ RESUELTO | Ene 2026 |
+| Emails no se envían | ✅ RESUELTO | Ene 2026 |
+
+---
+
+## 📝 CUANDO TERMINES UNA TAREA
+
+1. **Actualiza este archivo** si completaste algo
+2. **Di qué archivos modificaste**
+3. **Da instrucciones claras** de cómo probar
+
+---
+
+*Última limpieza: 13 Febrero 2026 - Eliminadas secciones obsoletas y duplicadas*

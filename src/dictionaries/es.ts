@@ -114,7 +114,7 @@ const dictionary = {
   creatorShowcase: {
     headline: 'Conoce a Nuestros Creadores',
     tagline: 'El corazón y el alma detrás de nuestras delicias caseras.',
-    specialty: 'Especialista en delicias hechas con amor.',
+    specialty: 'Especialista en productos hechos con amor.',
     viewProfile: 'Ver Perfil',
     productCount: (count: number) => `${count} productos`,
   },

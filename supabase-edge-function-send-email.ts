@@ -6,7 +6,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TASTY <noreply@tasty.com>' // Cambiar por dominio real
+const FROM_EMAIL = 'TASTY <noreply@tasty.lat>' // Cambiar por dominio real
 
 interface EmailRequest {
   to: string
