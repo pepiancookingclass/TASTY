@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 13 Febrero 2026  
+> **Última actualización:** 14 Febrero 2026  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -112,24 +112,10 @@
 ### 🟡 PRIORIDAD MEDIA
 
 #### 4. Warning de Delivery Alto (> Q100)
-- **Problema:** Si un creador está en Antigua Guatemala y el cliente en Ciudad Guatemala, el delivery puede superar Q100. El usuario no recibe aviso y puede sorprenderse.
-- **Solución propuesta:**
-  1. En checkout, si el delivery de UN creador supera Q100, mostrar warning:
-     - "⚠️ El delivery de [Nombre Creador] es Q[XX]. Debido a la distancia, verificaremos disponibilidad de entrega antes de confirmar tu pedido."
-  2. Opcionalmente bloquear pedidos con delivery > Q150 (o umbral configurable)
-  3. Agregar nota en el email al cliente si hay delivery alto
-- **Archivos a modificar:**
-  - `src/app/checkout/page.tsx` - Mostrar warning si `creatorDeliveryFee > 100`
-  - `src/lib/services/orders.ts` - Agregar flag `high_delivery_warning` al mensaje WhatsApp
-- **Lógica:**
-  ```typescript
-  // En checkout, al calcular breakdown por creador:
-  if (creatorDeliveryFee > 100) {
-    showWarning = true
-    warningCreators.push({ name: creatorName, fee: creatorDeliveryFee })
-  }
-  ```
-- **UX sugerida:** Banner amarillo debajo del breakdown de delivery con el warning
+- **Estado:** ✅ COMPLETADO (14 Feb 2026)
+- **Implementación:** Banner amarillo en checkout si algún creador tiene delivery > Q100
+- **Texto:** "⚠️ Delivery alto (>Q100) por distancia (~X km). Deberás confirmar con servicio al cliente la disponibilidad y horario de entrega."
+- **Archivos modificados:** `src/app/checkout/page.tsx`, `src/dictionaries/es.ts`, `src/dictionaries/en.ts`
 
 #### 6. Sistema de Combos
 - **Estado:** Implementado pero sin QA reciente
@@ -218,11 +204,14 @@ npm run build
 
 | Bug | Estado | Fecha |
 |-----|--------|-------|
+| delivery_vehicle se pierde en checkout | ✅ RESUELTO | 14 Feb 2026 |
 | Eliminación productos bloquea página | ✅ RESUELTO | 13 Feb 2026 |
 | RLS order_items recursión | ✅ RESUELTO | 13 Feb 2026 |
 | Carrito no persiste | ✅ RESUELTO | Ene 2026 |
 | Loop infinito CartView | ✅ RESUELTO | Ene 2026 |
 | Emails no se envían | ✅ RESUELTO | Ene 2026 |
+
+**Nota bug delivery_vehicle:** El checkout ahora consulta `delivery_vehicle` directamente de la BD para evitar datos obsoletos del carrito guardado. Ver `docs/bug-delivery-vehicle.md` para detalles.
 
 ---
 
@@ -234,4 +223,4 @@ npm run build
 
 ---
 
-*Última limpieza: 13 Febrero 2026 - Eliminadas secciones obsoletas y duplicadas*
+*Última actualización: 14 Febrero 2026 - Bug delivery_vehicle resuelto, warning >Q100 implementado*
