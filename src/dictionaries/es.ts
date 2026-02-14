@@ -48,6 +48,8 @@ const dictionary = {
     deliverySeparateDesc: (count: number) =>
       `Recibirás ${count} entregas diferentes. Paga a cada creador por separado.`,
     deliveryCreatorHeading: (name: string) => `🚚 ${name.toUpperCase()}`,
+    deliveryCreatorVehicle: (vehicle: string) =>
+      vehicle === 'auto' ? '🚗 Vehículo: Auto' : '🏍️ Vehículo: Moto',
     deliveryCreatorProducts: 'Sus productos:',
     deliveryCreatorIva: 'IVA (12%):',
     deliveryCreatorFee: (km?: number) =>
@@ -918,6 +920,8 @@ const dictionary = {
     deliveryMultipleDesc:
       'Tus productos vienen de varias ubicaciones y requieren entregas separadas. Cada creador tiene su propia tarifa según distancia.',
     deliveryMultipleFallback: 'El costo final se mostrará por creador según la distancia calculada.',
+    highDeliveryWarning: (km?: number) =>
+      `⚠️ Delivery alto (>Q100) por distancia${Number.isFinite(km) ? ` (~${km?.toFixed(1)} km)` : ''}. Deberás confirmar con servicio al cliente la disponibilidad y horario de entrega.`,
     finalCostNote: '💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación.',
     totalLabel: 'Total',
     estimatedDeliveryTitle: 'Entrega estimada',

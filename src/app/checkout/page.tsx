@@ -349,6 +349,23 @@ export default function CheckoutPage() {
             vehicle_used: string;
           }> = [];
           
+          // ✅ OBTENER delivery_vehicle ACTUAL desde BD para todos los productos del carrito
+          const allProductIds = items.map(i => i.product.id);
+          const { data: vehicleData, error: vehicleError } = await supabase
+            .from('products')
+            .select('id, delivery_vehicle')
+            .in('id', allProductIds);
+          
+          const vehicleMap: Record<string, string> = {};
+          if (vehicleData && !vehicleError) {
+            vehicleData.forEach((p: { id: string; delivery_vehicle: string | null }) => {
+              vehicleMap[p.id] = p.delivery_vehicle || 'moto';
+            });
+            console.log('🚗 Checkout: Mapa de vehículos desde BD:', vehicleMap);
+          } else {
+            console.warn('⚠️ Checkout: No se pudo obtener delivery_vehicle desde BD, usando valores del carrito');
+          }
+          
           // Calcular delivery por cada creador usando función SQL
           for (const creatorId of creatorIds) {
             console.log(`🚚 Checkout: Calculando delivery para creador ${creatorId}`);
@@ -356,11 +373,17 @@ export default function CheckoutPage() {
             
             // Determinar vehículo para este creador: si al menos un producto requiere auto, usar auto
             const creatorItems = items.filter(item => item.product.creatorId === creatorId);
-            console.log(`📦 Checkout: Productos del creador ${creatorId}:`, creatorItems.map(i => ({
-              name: i.product.name.es,
-              vehicle: i.product.deliveryVehicle || 'moto (default)'
-            })));
-            const requiresAuto = creatorItems.some(item => item.product.deliveryVehicle === 'auto');
+            console.log('🛠️ DEBUG delivery vehicles -> items por creador (usando BD)', {
+              creatorId,
+              items: creatorItems.map(i => ({
+                id: i.product.id,
+                name: i.product.name?.es ?? i.product.name?.en,
+                deliveryVehicle_fromCart: i.product.deliveryVehicle || 'moto (default)',
+                deliveryVehicle_fromDB: vehicleMap[i.product.id] || 'moto (default)'
+              }))
+            });
+            // ✅ USAR vehicleMap (datos frescos de BD) en lugar del valor posiblemente obsoleto del carrito
+            const requiresAuto = creatorItems.some(item => vehicleMap[item.product.id] === 'auto');
             const vehicleForCreator = requiresAuto ? 'auto' : 'moto';
             console.log(`🚗 Checkout: Vehículo determinado para creador ${creatorId}: ${vehicleForCreator} (requiresAuto=${requiresAuto})`);
             
@@ -394,6 +417,7 @@ export default function CheckoutPage() {
             deliveryResults.push({ 
               creatorId, 
               creator_name: creatorNames[creatorId] || 'Creador',
+              vehicle_used: vehicleForCreator, // ✅ Guardar el vehículo que realmente usamos (de BD fresca)
               ...deliveryInfo 
             });
             
@@ -1164,6 +1188,19 @@ export default function CheckoutPage() {
                         )}
                       </div>
                     </div>
+                  </div>
+                )}
+                
+                {/* Warning delivery alto > Q100 */}
+                {Array.isArray(deliveryBreakdown) && deliveryBreakdown.some(d => Number(d.delivery_fee) > 100) && (
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                    {(() => {
+                      const first = deliveryBreakdown.find(d => Number(d.delivery_fee) > 100);
+                      const km = Number(first?.distance_km);
+                      return t?.highDeliveryWarning
+                        ? t.highDeliveryWarning(Number.isFinite(km) ? km : undefined)
+                        : `⚠️ Delivery alto (>Q100) por distancia${Number.isFinite(km) ? ` (~${km.toFixed(1)} km)` : ''}. Deberás confirmar con servicio al cliente la disponibilidad y horario de entrega.`;
+                    })()}
                   </div>
                 )}
                 

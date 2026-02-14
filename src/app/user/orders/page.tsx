@@ -51,6 +51,7 @@ interface UserOrder {
     creator_name: string;
     delivery_fee: number;
     distance_km: number;
+    vehicle?: string;
   }>;
   status: string;
   created_at: string;
@@ -384,13 +385,13 @@ export default function UserOrdersPage() {
                               const creatorSubtotal = order.subtotal / order.delivery_breakdown.length; // Simplificado
                               const creatorIva = creatorSubtotal * 0.12;
                               const creatorTotal = creatorSubtotal + creatorIva + delivery.delivery_fee;
+                              const vehicle = delivery.vehicle === 'auto' ? 'auto' : 'moto';
+                              const vehicleIcon = vehicle === 'auto' ? '🚗' : '🏍️';
                               
                               return (
                                 <div key={index} className="bg-white p-3 rounded border border-blue-100">
                                   <h5 className="font-medium text-gray-800 mb-2">
-                                    {t?.deliveryCreatorHeading
-                                      ? t.deliveryCreatorHeading(delivery.creator_name)
-                                      : `🚚 ${delivery.creator_name.toUpperCase()}`}
+                                    {vehicleIcon} {delivery.creator_name.toUpperCase()}
                                   </h5>
                                   <div className="space-y-1 text-sm">
                                     <div className="flex justify-between">
