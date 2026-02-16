@@ -58,7 +58,7 @@ export default function CreatorLayout({
             </main>
         </div>
       </div>
-      {/* Bottom navigation for mobile - replaces hamburger menu */}
+      {/* Bottom navigation for mobile - todos lo usan */}
       <CreatorBottomNav />
     </OrderProvider>
   );

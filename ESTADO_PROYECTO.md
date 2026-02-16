@@ -21,6 +21,7 @@
 | Sistema delivery moto/auto | ✅ FUNCIONA | Calculado por creador |
 | Analytics de visitantes | ✅ FUNCIONA | `src/hooks/useVisitorAnalytics.ts` |
 | Dashboard analytics | ✅ FUNCIONA | `src/app/admin/analytics/page.tsx` |
+| Sistema promociones | ✅ FUNCIONA | `src/app/admin/promotions/page.tsx` |
 
 ---
 
@@ -128,6 +129,24 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Sistema de Promociones
+- **Estado:** ✅ COMPLETADO (16 Feb 2026)
+- **Implementación:**
+  - **Tabla SQL:** `promotions` con descuentos %, fijos, productos gratis, bundles
+  - **RLS:** Creadores gestionan las suyas, admins gestionan todas
+  - **CRUD completo:** Crear, editar, eliminar, activar/desactivar promociones
+  - **Códigos promocionales:** Soporte para códigos con validación y límites de uso
+  - **Panel Admin:** `/admin/promotions` para gestionar todas las promociones
+  - **Panel Creador:** `/creator/promotions` para gestionar promociones propias
+- **Archivos nuevos:**
+  - `sql/create-promotions-system.sql` — Tablas, RLS y funciones
+  - `src/lib/services/promotions.ts` — CRUD de promociones
+  - `src/app/admin/promotions/page.tsx` — Panel admin completo
+- **Archivos modificados:**
+  - `src/app/creator/promotions/page.tsx` — Ahora usa BD (antes era datos estáticos)
+  - `src/components/creator/CreatorSidebar.tsx` — Link actualizado
+  - `src/components/admin/AdminFloatingMenu.tsx` — Link a promociones
 
 #### 5. Sistema de Analytics Completo
 - **Estado:** ✅ COMPLETADO (16 Feb 2026)
@@ -246,4 +265,4 @@ npm run build
 
 ---
 
-*Última actualización: 16 Febrero 2026 - Sistema de Analytics completo implementado (tracking interno + GA4 + Clarity)*
+*Última actualización: 16 Febrero 2026 - Sistema de Promociones implementado (CRUD completo para admins y creadores)*

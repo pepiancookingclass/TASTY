@@ -115,7 +115,7 @@ export function SiteHeader() {
                 {roles.some(role => ['admin', 'agent'].includes(role)) && (
                   <div className="mt-auto border-t p-4">
                       <SheetClose asChild>
-                        <Link href="/admin/creators" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
+                        <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
                             <Crown className="mr-2 h-5 w-5" />
                             <span>{dict.siteHeader.admin}</span>
                           </Link>
@@ -225,7 +225,7 @@ export function SiteHeader() {
                 
                 {roles.some(role => ['admin', 'agent'].includes(role)) && (
                   <DropdownMenuItem asChild>
-                      <Link href="/admin/creators">
+                      <Link href="/creator/dashboard">
                           <Crown className="mr-2 h-4 w-4" />
                           <span>{dict.siteHeader.admin}</span>
                       </Link>
@@ -263,7 +263,7 @@ export function SiteHeader() {
                         <DropdownMenuSeparator />
                         {roles.some(role => ['admin', 'agent'].includes(role)) && (
                           <DropdownMenuItem asChild>
-                              <Link href="/admin/creators">
+                              <Link href="/creator/dashboard">
                                   <Crown className="mr-2 h-4 w-4" />
                                   <span>{dict.siteHeader.admin}</span>
                               </Link>

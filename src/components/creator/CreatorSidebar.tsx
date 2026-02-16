@@ -24,7 +24,7 @@ const adminLinks = [
   { href: '/admin/creators', label: 'allCreators', icon: Users },
   { href: '/admin/creators/pending', label: 'pendingCreators', icon: Clock },
   { href: '/admin/products', label: 'allProducts', icon: ShoppingBag },
-  { href: '/admin/offers', label: 'allOffers', icon: Tag },
+  { href: '/admin/promotions', label: 'allOffers', icon: Tag },
   { href: '/admin/settings', label: 'settings', icon: Settings },
 ];
 

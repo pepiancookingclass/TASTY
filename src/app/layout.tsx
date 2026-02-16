@@ -15,6 +15,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
+import { AdminFloatingMenu } from '@/components/admin/AdminFloatingMenu';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -67,6 +68,7 @@ export default function RootLayout({
                 </main>
               </div>
               <HelpSticker />
+              <AdminFloatingMenu />
               <Toaster />
               <PageViewTracker />
               <Analytics />

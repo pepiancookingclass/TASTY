@@ -6,17 +6,23 @@ import { supabase } from '@/lib/supabase';
 
 // ✅ EXCLUIR admins y creadores de las estadísticas para evitar datos de prueba
 async function getExcludedUserIds(): Promise<string[]> {
+  // Nota: roles es TEXT[], no jsonb. Usamos contains con sintaxis de array PostgreSQL
   const { data, error } = await supabase
     .from('users')
-    .select('id, roles')
-    .or('roles.cs.["admin"],roles.cs.["creator"]');
+    .select('id, roles');
   
   if (error || !data) {
     console.warn('No se pudieron obtener usuarios excluidos:', error);
     return [];
   }
   
-  return data.map(u => u.id);
+  // Filtrar en JavaScript porque Supabase no soporta bien @> para TEXT[]
+  return data
+    .filter(u => {
+      const roles = u.roles || [];
+      return roles.includes('admin') || roles.includes('creator') || roles.includes('agent');
+    })
+    .map(u => u.id);
 }
 
 export interface DashboardStats {
@@ -96,12 +102,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .select('total, subtotal, delivery_fee, user_id')
       .neq('status', 'cancelled'),
     
-    // Total usuarios (solo clientes reales)
+    // Total usuarios (contamos todos y restamos admins/creators después)
     supabase
       .from('users')
-      .select('id', { count: 'exact', head: true })
-      .not('roles', 'cs', '["admin"]')
-      .not('roles', 'cs', '["creator"]'),
+      .select('id, roles'),
     
     // Total productos activos
     supabase
@@ -109,11 +113,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true),
     
-    // Total creadores
+    // Total creadores (se calcula en JS)
     supabase
       .from('users')
-      .select('id', { count: 'exact', head: true })
-      .contains('roles', ['creator']),
+      .select('id, roles'),
     
     // Órdenes esta semana
     supabase
@@ -144,12 +147,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const ordersThisWeek = filterExcluded(ordersThisWeekResult.data || []);
   const ordersLastWeek = filterExcluded(ordersLastWeekResult.data || []);
 
+  // Calcular usuarios y creadores en JS (porque roles es TEXT[], no jsonb)
+  const allUsers = usersResult.data || [];
+  const totalUsers = allUsers.filter(u => {
+    const roles = u.roles || [];
+    return !roles.includes('admin') && !roles.includes('creator') && !roles.includes('agent');
+  }).length;
+  
+  const totalCreators = (creatorsResult.data || []).filter(u => {
+    const roles = u.roles || [];
+    return roles.includes('creator');
+  }).length;
+
   return {
     totalOrders,
     totalRevenue,
-    totalUsers: usersResult.count || 0,
+    totalUsers,
     totalProducts: productsResult.count || 0,
-    totalCreators: creatorsResult.count || 0,
+    totalCreators,
     avgOrderValue,
     ordersThisWeek: ordersThisWeek.length,
     revenueThisWeek: ordersThisWeek.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0),
