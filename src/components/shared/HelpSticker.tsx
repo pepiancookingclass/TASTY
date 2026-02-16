@@ -18,7 +18,7 @@ export function HelpSticker() {
   };
 
   return (
-    <div className="fixed left-4 bottom-4 z-50">
+    <div className="fixed left-4 bottom-20 md:bottom-6 z-50">
       {/* Ventana expandida */}
       {isExpanded && (
         <Card className="mb-4 p-4 w-80 bg-white shadow-lg border-2 border-primary/20 animate-in slide-in-from-bottom-2 duration-300">
