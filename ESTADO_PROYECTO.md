@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 14 Febrero 2026  
+> **Última actualización:** 16 Febrero 2026  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -19,6 +19,8 @@
 | Traducciones ES/EN | ✅ FUNCIONA | `src/dictionaries/es.ts`, `en.ts` |
 | Panel creador | ✅ FUNCIONA | `src/app/creator/*` |
 | Sistema delivery moto/auto | ✅ FUNCIONA | Calculado por creador |
+| Analytics de visitantes | ✅ FUNCIONA | `src/hooks/useVisitorAnalytics.ts` |
+| Dashboard analytics | ✅ FUNCIONA | `src/app/admin/analytics/page.tsx` |
 
 ---
 
@@ -125,6 +127,27 @@
   3. Comprar combo (agregar al carrito, checkout)
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
+### ✅ COMPLETADO RECIENTEMENTE
+
+#### 5. Sistema de Analytics Completo
+- **Estado:** ✅ COMPLETADO (16 Feb 2026)
+- **Implementación:**
+  - **Tracking interno propio:** Hook `useVisitorAnalytics` trackea page views, product views, add to cart, purchases
+  - **API Route:** `/api/analytics/track` guarda en Supabase con geolocalización de Vercel
+  - **Dashboard admin:** Muestra visitantes únicos, dispositivos, países, fuentes de tráfico, conversión
+  - **Filtro anti-ruido:** No trackea admins ni creadores (solo clientes reales)
+  - **Google Analytics 4:** Integrado (ID: G-MJSSW7R01F)
+  - **Microsoft Clarity:** Integrado (ID: vicdzd41fb) para heatmaps y grabaciones
+- **Archivos nuevos:**
+  - `sql/create-visitor-analytics.sql` — Tabla y funciones SQL
+  - `src/app/api/analytics/track/route.ts` — API que guarda eventos
+  - `src/hooks/useVisitorAnalytics.ts` — Hook para trackear eventos
+  - `src/components/analytics/PageViewTracker.tsx` — Auto-track de page views
+- **Archivos modificados:**
+  - `src/lib/services/analytics.ts` — Nuevas funciones para visitor stats
+  - `src/app/admin/analytics/page.tsx` — Dashboard con sección de tráfico web
+  - `src/app/layout.tsx` — PageViewTracker + GA4 + Clarity scripts
+
 ### ⚪ PRIORIDAD BAJA (Futuro)
 
 #### 7. Videos Cortos de Productos
@@ -223,4 +246,4 @@ npm run build
 
 ---
 
-*Última actualización: 14 Febrero 2026 - Bug delivery_vehicle resuelto, warning >Q100 implementado*
+*Última actualización: 16 Febrero 2026 - Sistema de Analytics completo implementado (tracking interno + GA4 + Clarity)*
