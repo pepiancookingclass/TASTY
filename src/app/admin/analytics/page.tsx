@@ -771,28 +771,28 @@ export default function AdminAnalyticsPage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
                 <a 
-                  href="https://vercel.com/dashboard" 
+                  href="https://vercel.com/pepiancookingclass-projects/tasty-lat/analytics" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-xs bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800"
+                  className="text-xs bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors"
                 >
-                  Vercel Analytics
+                  📊 Vercel Analytics
                 </a>
                 <a 
-                  href="https://analytics.google.com" 
+                  href="https://analytics.google.com/analytics/web/#/p524916670/reports/reportinghub" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full hover:bg-blue-700"
+                  className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors"
                 >
-                  Google Analytics 4
+                  📈 Google Analytics 4
                 </a>
                 <a 
-                  href="https://clarity.microsoft.com" 
+                  href="https://clarity.microsoft.com/projects/view/vicdzd41fb/dashboard" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-full hover:bg-purple-700"
+                  className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-full hover:bg-purple-700 transition-colors"
                 >
-                  Microsoft Clarity (Heatmaps)
+                  🔥 Microsoft Clarity
                 </a>
               </div>
             </div>
