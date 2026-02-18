@@ -148,28 +148,41 @@
   - `src/components/creator/CreatorSidebar.tsx` — Link actualizado
   - `src/components/admin/AdminFloatingMenu.tsx` — Link a promociones
 
-#### 5. Sistema de Analytics Completo
+#### Sistema de Analytics Completo + Filtrado Inteligente
 - **Estado:** ✅ COMPLETADO (16 Feb 2026)
 - **Implementación:**
-  - **Tracking interno propio:** Hook `useVisitorAnalytics` trackea page views, product views, add to cart, purchases
+  - **Triple sistema:** Analytics interno + Google Analytics 4 + Microsoft Clarity
+  - **Tracking interno:** Hook `useVisitorAnalytics` trackea page views, product views, add to cart, purchases
   - **API Route:** `/api/analytics/track` guarda en Supabase con geolocalización de Vercel
-  - **Dashboard admin:** Muestra visitantes únicos, dispositivos, países, fuentes de tráfico, conversión
-  - **Filtro anti-ruido:** No trackea admins ni creadores (solo clientes reales)
-  - **Google Analytics 4:** Integrado (ID: G-MJSSW7R01F)
-  - **Microsoft Clarity:** Integrado (ID: vicdzd41fb) para heatmaps y grabaciones
+  - **Dashboard admin:** Visitantes únicos, dispositivos, países, fuentes de tráfico, conversión
+  - **Filtrado inteligente:** GA4 y Clarity NO trackean admins/creators (datos 100% limpios)
+  - **Sesión persistente:** Admins mantienen sesión abierta días/semanas sin relogueo
+  - **Google Analytics 4:** Integrado (ID: G-MJSSW7R01F) solo para usuarios reales
+  - **Microsoft Clarity:** Integrado (ID: vicdzd41fb) solo para usuarios reales
 - **Archivos nuevos:**
   - `sql/create-visitor-analytics.sql` — Tabla y funciones SQL
   - `src/app/api/analytics/track/route.ts` — API que guarda eventos
   - `src/hooks/useVisitorAnalytics.ts` — Hook para trackear eventos
   - `src/components/analytics/PageViewTracker.tsx` — Auto-track de page views
+  - `src/components/analytics/ConditionalAnalytics.tsx` — Carga GA4/Clarity condicionalmente
+  - `GUIA-ANALYTICS-GA4-CLARITY.md` — Documentación completa del sistema
+  - `GUIA_ANALYTICS_ECOMMERCE_DELIVERY_TASTY.md` — Roadmap futuro para métricas avanzadas
 - **Archivos modificados:**
-  - `src/lib/services/analytics.ts` — Nuevas funciones para visitor stats
-  - `src/app/admin/analytics/page.tsx` — Dashboard con sección de tráfico web
-  - `src/app/layout.tsx` — PageViewTracker + GA4 + Clarity scripts
+  - `src/lib/services/analytics.ts` — Funciones para visitor stats + filtrado de roles
+  - `src/app/admin/analytics/page.tsx` — Dashboard con tráfico web + header responsive
+  - `src/app/layout.tsx` — ConditionalAnalytics + PageViewTracker
+  - `src/components/shared/HelpSticker.tsx` — Botón WhatsApp reposicionado
 
 ### ⚪ PRIORIDAD BAJA (Futuro)
 
-#### 7. Videos Cortos de Productos
+#### 7. Analytics Avanzados E-commerce + Delivery
+- **Descripción:** Métricas específicas de food delivery (embudo completo, revenue por creador, zonas de delivery, horarios pico)
+- **Referencia:** `GUIA_ANALYTICS_ECOMMERCE_DELIVERY_TASTY.md` (implementación de Shugu adaptada)
+- **ROI esperado:** +15-40% conversión, +25% AOV, insights de negocio profundos
+- **Cuándo implementar:** Cuando tengamos 100+ órdenes/mes y necesitemos optimizar conversión
+- **Complejidad:** Media-Alta (3-6 semanas desarrollo)
+
+#### 8. Videos Cortos de Productos
 - **Descripción:** Permitir clips de 10-15 segundos
 - **Complejidad:** Alta (requiere storage, thumbnails, compresión)
 - **Acción:** Dejar para después del lanzamiento
@@ -265,4 +278,4 @@ npm run build
 
 ---
 
-*Última actualización: 16 Febrero 2026 - Sistema de Promociones implementado (CRUD completo para admins y creadores)*
+*Última actualización: 16 Febrero 2026 - Sistema de Analytics con filtrado inteligente + Promociones completas + Documentación para futuras expansiones*
