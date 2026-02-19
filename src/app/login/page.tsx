@@ -92,7 +92,12 @@ export default function LoginPage() {
                 <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="password">{dict.loginPage.passwordLabel}</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{dict.loginPage.passwordLabel}</Label>
+                  <Button variant="link" asChild className="p-0 h-auto text-xs">
+                    <Link href="/forgot-password">¿Olvidaste tu contraseña?</Link>
+                  </Button>
+                </div>
                 <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
