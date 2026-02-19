@@ -3,6 +3,11 @@ import { Product } from '@/lib/types';
 
 // Transformar datos de Supabase a tipo Product
 function transformProduct(data: any): Product {
+  // Obtener array de imágenes con fallback a imagen única
+  const imageUrls = data.image_urls && data.image_urls.length > 0 
+    ? data.image_urls 
+    : data.image_url ? [data.image_url] : [];
+  
   return {
     id: data.id,
     name: {
@@ -11,7 +16,8 @@ function transformProduct(data: any): Product {
     },
     type: data.type,
     price: parseFloat(data.price),
-    imageUrl: data.image_url || '',
+    imageUrl: imageUrls[0] || data.image_url || '', // Primera imagen o fallback
+    imageUrls: imageUrls, // Array completo de imágenes
     imageHint: data.image_hint || '',
     description: {
       en: data.description_en || '',
@@ -30,6 +36,7 @@ function transformProduct(data: any): Product {
       isNutFree: data.is_nut_free || false,
     },
     deliveryVehicle: data.delivery_vehicle || 'moto',
+    isSoldOut: data.is_sold_out || false,
   };
 }
 
@@ -98,6 +105,11 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 // Crear un producto
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product | null> {
+  // Usar imageUrls si existe, sino crear array con imageUrl
+  const imageUrls = product.imageUrls && product.imageUrls.length > 0 
+    ? product.imageUrls 
+    : product.imageUrl ? [product.imageUrl] : [];
+  
   const { data, error } = await supabase
     .from('products')
     .insert({
@@ -105,7 +117,8 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       name_es: product.name.es,
       type: product.type,
       price: product.price,
-      image_url: product.imageUrl,
+      image_url: imageUrls[0] || product.imageUrl, // Primera imagen como principal
+      image_urls: imageUrls, // Array completo
       image_hint: product.imageHint,
       description_en: product.description.en,
       description_es: product.description.es,
@@ -118,6 +131,7 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       is_dairy_free: product.dietaryFlags.isDairyFree,
       is_nut_free: product.dietaryFlags.isNutFree,
       delivery_vehicle: product.deliveryVehicle || 'moto',
+      is_sold_out: product.isSoldOut || false,
     })
     .select()
     .single();
@@ -140,7 +154,16 @@ export async function updateProduct(id: string, product: Partial<Product>): Prom
   }
   if (product.type) updateData.type = product.type;
   if (product.price !== undefined) updateData.price = product.price;
-  if (product.imageUrl) updateData.image_url = product.imageUrl;
+  
+  // Manejar imágenes: preferir imageUrls, fallback a imageUrl
+  if (product.imageUrls && product.imageUrls.length > 0) {
+    updateData.image_urls = product.imageUrls;
+    updateData.image_url = product.imageUrls[0]; // Primera como principal
+  } else if (product.imageUrl) {
+    updateData.image_url = product.imageUrl;
+    updateData.image_urls = [product.imageUrl];
+  }
+  
   if (product.imageHint) updateData.image_hint = product.imageHint;
   if (product.description) {
     updateData.description_en = product.description.en;
@@ -158,6 +181,7 @@ export async function updateProduct(id: string, product: Partial<Product>): Prom
     updateData.is_nut_free = product.dietaryFlags.isNutFree;
   }
   if (product.deliveryVehicle) updateData.delivery_vehicle = product.deliveryVehicle;
+  if (product.isSoldOut !== undefined) updateData.is_sold_out = product.isSoldOut;
 
   const { data, error } = await supabase
     .from('products')

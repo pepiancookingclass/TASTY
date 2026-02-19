@@ -10,6 +10,7 @@ export type Product = {
   type: 'pastry' | 'dessert' | 'savory' | 'cookie' | 'handmade';
   price: number;
   imageUrl: string;
+  imageUrls: string[]; // Array de imágenes para galería/carrusel
   imageHint: string;
   description: {
     en: string;
@@ -28,6 +29,7 @@ export type Product = {
     isNutFree: boolean;
   };
   deliveryVehicle?: DeliveryVehicle; // 'moto' (default) or 'auto'
+  isSoldOut?: boolean; // Producto agotado/vendido
 };
 
 export type Promotion = {

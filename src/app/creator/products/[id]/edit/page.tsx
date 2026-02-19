@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,19 +11,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/useDictionary";
 import { useAuth } from "@/providers/auth-provider";
 import { getProductById, updateProduct } from "@/lib/services/products";
-import { ImageUpload } from "@/components/ui/image-upload";
+import { MultiImageUpload } from "@/components/ui/multi-image-upload";
+import { Switch } from "@/components/ui/switch";
+import { FormDescription } from "@/components/ui/form";
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   productName_en: z.string().min(2, { message: "Product name must be at least 2 characters." }),
   productName_es: z.string().min(2, { message: "El nombre del producto debe tener al menos 2 caracteres." }),
-  productImage: z.string().optional(),
+  productImages: z.array(z.string()).optional(),
+  isSoldOut: z.boolean().optional(),
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
   productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
@@ -32,6 +36,8 @@ const formSchema = z.object({
   productIngredients_es: z.string().optional(),
   preparationTime: z.coerce.number().min(0).optional(),
 });
+
+const DRAFT_STORAGE_KEY_PREFIX = 'product_edit_draft_';
 
 export default function EditProductPage() {
   const params = useParams();
@@ -42,19 +48,64 @@ export default function EditProductPage() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  const draftKey = `${DRAFT_STORAGE_KEY_PREFIX}${productId}`;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       productName_en: "",
       productName_es: "",
-      productImage: "",
+      productImages: [],
+      isSoldOut: false,
       productType: "pastry",
       productIngredients_en: "",
       productIngredients_es: "",
       preparationTime: 1,
     },
   });
+
+  const saveDraft = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const values = form.getValues();
+    const draft = {
+      ...values,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+  }, [form, draftKey]);
+
+  const clearDraft = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(draftKey);
+    setHasDraft(false);
+  }, [draftKey]);
+
+  const loadDraft = useCallback((): z.infer<typeof formSchema> | null => {
+    if (typeof window === 'undefined') return null;
+    const saved = localStorage.getItem(draftKey);
+    if (!saved) return null;
+    
+    try {
+      const draft = JSON.parse(saved);
+      const hoursSinceSave = (Date.now() - draft.savedAt) / (1000 * 60 * 60);
+      if (hoursSinceSave > 24) {
+        localStorage.removeItem(draftKey);
+        return null;
+      }
+      return draft;
+    } catch {
+      return null;
+    }
+  }, [draftKey]);
+
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      saveDraft();
+    });
+    return () => subscription.unsubscribe();
+  }, [form, saveDraft]);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -73,7 +124,6 @@ export default function EditProductPage() {
           return;
         }
 
-        // Verificar que el producto pertenece al usuario
         if (product.creatorId !== user?.id) {
           toast({
             variant: 'destructive',
@@ -84,19 +134,42 @@ export default function EditProductPage() {
           return;
         }
 
-        // Llenar el formulario
-        form.reset({
-          productName_en: product.name.en,
-          productName_es: product.name.es,
-          productImage: product.imageUrl,
-          productType: product.type,
-          englishDescription: product.description.en,
-          spanishDescription: product.description.es,
-          productIngredients_en: product.ingredients.en,
-          productIngredients_es: product.ingredients.es,
-          preparationTime: product.preparationTime,
-          productPrice: product.price,
-        });
+        const draft = loadDraft();
+        
+        if (draft) {
+          setHasDraft(true);
+          form.reset({
+            productName_en: draft.productName_en,
+            productName_es: draft.productName_es,
+            productImages: draft.productImages || [],
+            isSoldOut: draft.isSoldOut || false,
+            productType: draft.productType,
+            englishDescription: draft.englishDescription,
+            spanishDescription: draft.spanishDescription,
+            productIngredients_en: draft.productIngredients_en,
+            productIngredients_es: draft.productIngredients_es,
+            preparationTime: draft.preparationTime,
+            productPrice: draft.productPrice,
+          });
+          toast({
+            title: 'Borrador restaurado',
+            description: 'Se recuperaron tus cambios anteriores.',
+          });
+        } else {
+          form.reset({
+            productName_en: product.name.en,
+            productName_es: product.name.es,
+            productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+            isSoldOut: product.isSoldOut || false,
+            productType: product.type,
+            englishDescription: product.description.en,
+            spanishDescription: product.description.es,
+            productIngredients_en: product.ingredients.en,
+            productIngredients_es: product.ingredients.es,
+            preparationTime: product.preparationTime,
+            productPrice: product.price,
+          });
+        }
       } catch (error) {
         console.error('Error loading product:', error);
         toast({
@@ -112,7 +185,34 @@ export default function EditProductPage() {
     if (user) {
       loadProduct();
     }
-  }, [productId, user, form, router, toast]);
+  }, [productId, user, form, router, toast, loadDraft]);
+
+  const handleDiscardDraft = async () => {
+    clearDraft();
+    setIsLoading(true);
+    
+    const product = await getProductById(productId);
+    if (product) {
+      form.reset({
+        productName_en: product.name.en,
+        productName_es: product.name.es,
+        productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+        isSoldOut: product.isSoldOut || false,
+        productType: product.type,
+        englishDescription: product.description.en,
+        spanishDescription: product.description.es,
+        productIngredients_en: product.ingredients.en,
+        productIngredients_es: product.ingredients.es,
+        preparationTime: product.preparationTime,
+        productPrice: product.price,
+      });
+      toast({
+        title: 'Borrador descartado',
+        description: 'Se cargaron los datos originales del producto.',
+      });
+    }
+    setIsLoading(false);
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
@@ -120,6 +220,8 @@ export default function EditProductPage() {
     setIsSubmitting(true);
 
     try {
+      const imageUrls = values.productImages && values.productImages.length > 0 ? values.productImages : [];
+      
       const updated = await updateProduct(productId, {
         name: {
           en: values.productName_en,
@@ -127,7 +229,8 @@ export default function EditProductPage() {
         },
         type: values.productType,
         price: values.productPrice,
-        imageUrl: values.productImage || '',
+        imageUrls: imageUrls,
+        imageUrl: imageUrls[0] || '',
         description: {
           en: values.englishDescription || '',
           es: values.spanishDescription || '',
@@ -137,9 +240,11 @@ export default function EditProductPage() {
           es: values.productIngredients_es || '',
         },
         preparationTime: values.preparationTime || 1,
+        isSoldOut: values.isSoldOut || false,
       });
 
       if (updated) {
+        clearDraft();
         toast({
           title: 'Producto actualizado',
           description: 'Los cambios han sido guardados.',
@@ -195,8 +300,28 @@ export default function EditProductPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline text-2xl">Editar Producto</CardTitle>
-              <CardDescription>Modifica los detalles de tu producto</CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="font-headline text-2xl">Editar Producto</CardTitle>
+                  <CardDescription>Modifica los detalles de tu producto</CardDescription>
+                </div>
+                {hasDraft && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Save className="h-3 w-3" />
+                      Borrador guardado
+                    </Badge>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleDiscardDraft}
+                    >
+                      Descartar
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <FormField control={form.control} name="productName_en" render={({ field }) => (
@@ -215,18 +340,38 @@ export default function EditProductPage() {
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="productImage" render={({ field }) => (
+              <FormField control={form.control} name="productImages" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{dict.creatorProducts.new.details.image}</FormLabel>
                   <FormControl>
-                    <ImageUpload
-                      value={field.value}
+                    <MultiImageUpload
+                      value={field.value || []}
                       onChange={field.onChange}
                       folder="products"
-                      aspectRatio="video"
+                      maxImages={6}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Sube hasta 6 imágenes. La primera será la portada del producto.
+                  </FormDescription>
                   <FormMessage />
+                </FormItem>
+              )} />
+              
+              <FormField control={form.control} name="isSoldOut" render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Producto Agotado</FormLabel>
+                    <FormDescription>
+                      Marca este producto como agotado/vendido temporalmente
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )} />
 

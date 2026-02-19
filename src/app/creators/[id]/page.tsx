@@ -95,24 +95,32 @@ export default function CreatorProfilePage() {
           .order('created_at', { ascending: false });
 
         if (!productsError && productsData) {
-          const transformedProducts: Product[] = productsData.map((p: any) => ({
-            id: p.id,
-            name: { en: p.name_en, es: p.name_es },
-            type: p.type,
-            price: parseFloat(p.price),
-            imageUrl: p.image_url || '',
-            imageHint: p.image_hint || '',
-            description: { en: p.description_en || '', es: p.description_es || '' },
-            ingredients: { en: p.ingredients_en || '', es: p.ingredients_es || '' },
-            creatorId: p.creator_id,
-            preparationTime: p.preparation_time || 0,
-            dietaryFlags: {
-              isGlutenFree: p.is_gluten_free || false,
-              isVegan: p.is_vegan || false,
-              isDairyFree: p.is_dairy_free || false,
-              isNutFree: p.is_nut_free || false,
-            },
-          }));
+          const transformedProducts: Product[] = productsData.map((p: any) => {
+            const imageUrls = p.image_urls && p.image_urls.length > 0 
+              ? p.image_urls 
+              : p.image_url ? [p.image_url] : [];
+            
+            return {
+              id: p.id,
+              name: { en: p.name_en, es: p.name_es },
+              type: p.type,
+              price: parseFloat(p.price),
+              imageUrl: imageUrls[0] || p.image_url || '',
+              imageUrls: imageUrls,
+              imageHint: p.image_hint || '',
+              description: { en: p.description_en || '', es: p.description_es || '' },
+              ingredients: { en: p.ingredients_en || '', es: p.ingredients_es || '' },
+              creatorId: p.creator_id,
+              preparationTime: p.preparation_time || 0,
+              dietaryFlags: {
+                isGlutenFree: p.is_gluten_free || false,
+                isVegan: p.is_vegan || false,
+                isDairyFree: p.is_dairy_free || false,
+                isNutFree: p.is_nut_free || false,
+              },
+              isSoldOut: p.is_sold_out || false,
+            };
+          });
           setProducts(transformedProducts);
         }
       } catch (error) {
