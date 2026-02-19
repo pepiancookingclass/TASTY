@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 16 Febrero 2026  
+> **Última actualización:** 19 Febrero 2026  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -22,6 +22,8 @@
 | Analytics de visitantes | ✅ FUNCIONA | `src/hooks/useVisitorAnalytics.ts` |
 | Dashboard analytics | ✅ FUNCIONA | `src/app/admin/analytics/page.tsx` |
 | Sistema promociones | ✅ FUNCIONA | `src/app/admin/promotions/page.tsx` |
+| Galería multi-imagen | ✅ FUNCIONA | `src/components/product/ProductCard.tsx` |
+| Auto-guardado formularios | ✅ FUNCIONA | Formularios de producto |
 
 ---
 
@@ -129,6 +131,29 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Galería Multi-Imagen + Auto-guardado
+- **Estado:** ✅ COMPLETADO (19 Feb 2026)
+- **Implementación:**
+  - **Multi-imagen:** Los creadores pueden subir hasta 6 fotos por producto
+  - **Carrusel lightbox:** Click en imagen abre galería a pantalla completa
+  - **Miniaturas:** Navegación con flechas y miniaturas clickeables
+  - **Indicador:** Badge "1/6" en tarjetas con múltiples imágenes
+  - **Estado agotado:** Creadores pueden marcar productos como "AGOTADO"
+  - **Auto-guardado:** Formularios guardan automáticamente en localStorage
+  - **Restauración:** Al volver a la página, recupera cambios no guardados
+  - **Borradores expiran:** Después de 24 horas se eliminan automáticamente
+- **Archivos nuevos:**
+  - `sql/add-product-gallery.sql` — Columnas `image_urls` y `is_sold_out`
+  - `src/components/ui/multi-image-upload.tsx` — Upload múltiple con reordenar
+  - `src/components/product/ProductImageCarousel.tsx` — Carrusel standalone
+- **Archivos modificados:**
+  - `src/lib/types.ts` — Agregado `imageUrls[]` e `isSoldOut` al tipo Product
+  - `src/lib/services/products.ts` — CRUD actualizado para arrays
+  - `src/components/product/ProductCard.tsx` — Lightbox + badge agotado
+  - `src/components/creator/NewProductForm.tsx` — Multi-upload + auto-save
+  - `src/app/creator/products/[id]/edit/page.tsx` — Multi-upload + auto-save
+  - `src/app/creators/[id]/page.tsx` — Transformación de productos actualizada
 
 #### Sistema de Promociones
 - **Estado:** ✅ COMPLETADO (16 Feb 2026)
@@ -252,6 +277,9 @@ npm run build
 - `creator_id`, `name_es`, `name_en`, `price`
 - `delivery_vehicle` (moto/auto por defecto)
 - `preparation_time` (horas)
+- `image_url` (imagen principal para compatibilidad)
+- `image_urls` (TEXT[] array de hasta 6 imágenes)
+- `is_sold_out` (BOOLEAN para marcar agotado)
 
 ---
 
@@ -278,4 +306,4 @@ npm run build
 
 ---
 
-*Última actualización: 16 Febrero 2026 - Sistema de Analytics con filtrado inteligente + Promociones completas + Documentación para futuras expansiones*
+*Última actualización: 19 Febrero 2026 - Galería multi-imagen con carrusel + Auto-guardado de formularios + Estado agotado para productos*
