@@ -51,7 +51,8 @@ export default function UserProfilePage() {
     email: '',
     phone: '',
     profilePictureUrl: '',
-    instagram: '', // NUEVO CAMPO
+    instagram: '',
+    gender: 'female' as 'female' | 'male' | 'other',
     skills: [] as Skill[],
     workspacePhotos: [] as string[],
     street: '',
@@ -121,6 +122,7 @@ export default function UserProfilePage() {
             phone: userData.phone || '',
             profilePictureUrl: userData.profile_picture_url || '',
             instagram: userData.instagram || '',
+            gender: (userData.gender as 'female' | 'male' | 'other') || 'female',
             skills: userData.skills || [],
             workspacePhotos: userData.workspace_photos || [],
             street: userData.address_street || '',
@@ -351,6 +353,7 @@ export default function UserProfilePage() {
         ...(isCreator && { 
           skills: formData.skills, 
           workspace_photos: formData.workspacePhotos,
+          gender: formData.gender,
           // ✅ GUARDAR CONFIGURACIÓN DE DELIVERY
           creator_latitude: creatorDeliveryConfig.latitude,
           creator_longitude: creatorDeliveryConfig.longitude,
@@ -611,6 +614,28 @@ export default function UserProfilePage() {
                             disabled={isSaving}
                             placeholder={dict.userProfile.personalInfo.instagramPlaceholder}
                           />
+                        </div>
+                        
+                        {/* Género para creadores - define color del borde del avatar */}
+                        <div className="space-y-2 mt-4">
+                          <Label htmlFor="gender">{dict.userProfile.personalInfo.genderLabel ?? 'Género'}</Label>
+                          <Select 
+                            value={formData.gender} 
+                            onValueChange={(value: 'female' | 'male' | 'other') => updateField('gender', value)} 
+                            disabled={isSaving}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona tu género" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="female">{dict.userProfile.personalInfo.genderFemale ?? 'Femenino'}</SelectItem>
+                              <SelectItem value="male">{dict.userProfile.personalInfo.genderMale ?? 'Masculino'}</SelectItem>
+                              <SelectItem value="other">{dict.userProfile.personalInfo.genderOther ?? 'Prefiero no decir'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            {dict.userProfile.personalInfo.genderHint ?? 'Define el color del borde de tu foto de perfil (rosa o azul)'}
+                          </p>
                         </div>
                       </div>
 

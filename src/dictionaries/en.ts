@@ -269,6 +269,11 @@ const dictionary = {
       phonePlaceholder: '+502 1234-5678',
       instagramLabel: 'Business Instagram (optional)',
       instagramPlaceholder: '@your_business',
+      genderLabel: 'Gender',
+      genderFemale: 'Female',
+      genderMale: 'Male',
+      genderOther: 'Prefer not to say',
+      genderHint: 'Defines the border color of your profile picture (pink or blue)',
     },
     address: {
       title: 'Delivery Address',
