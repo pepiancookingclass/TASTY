@@ -84,6 +84,7 @@ export default function CreatorProfilePage() {
           hasDelivery: userData.has_delivery || false,
           skills: userData.skills || [],
           gender: userData.gender || 'female',
+          availabilityStatus: (userData.availability_status as 'available' | 'vacation' | 'busy') || 'available',
         };
 
         setCreator(creatorData);
@@ -197,6 +198,40 @@ export default function CreatorProfilePage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
+      {/* Banner de creador en vacaciones */}
+      {creator.availabilityStatus === 'vacation' && (
+        <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-300 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">🏖️</div>
+            <div>
+              <h3 className="font-semibold text-amber-800">
+                {dict.creatorProfile?.onVacationTitle ?? 'Creador de vacaciones'}
+              </h3>
+              <p className="text-sm text-amber-700">
+                {dict.creatorProfile?.onVacationDesc ?? 'Este creador está de vacaciones, regresa pronto. Sus productos se muestran solo como referencia.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Banner de creador ocupado */}
+      {creator.availabilityStatus === 'busy' && (
+        <div className="mb-8 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">📦</div>
+            <div>
+              <h3 className="font-semibold text-orange-800">
+                {dict.creatorProfile?.busyTitle ?? 'Creador con agenda llena'}
+              </h3>
+              <p className="text-sm text-orange-700">
+                {dict.creatorProfile?.busyDesc ?? 'Este creador tiene muchos pedidos y no puede aceptar más por ahora. Intenta más tarde.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Columna izquierda - Info del creador */}

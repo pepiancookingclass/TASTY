@@ -33,6 +33,7 @@ export function ProductCard({ product, creator }: ProductCardProps) {
   
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
   const images = (product.imageUrls && product.imageUrls.length > 0) 
     ? product.imageUrls 
@@ -104,11 +105,14 @@ export function ProductCard({ product, creator }: ProductCardProps) {
     : product.imageUrl;
   
   const isSoldOut = product.isSoldOut || false;
+  const creatorStatus = creator?.availabilityStatus || 'available';
+  const isCreatorUnavailable = creatorStatus !== 'available';
+  const isUnavailable = isSoldOut || isCreatorUnavailable;
 
   return (
     <Card className={cn(
       "flex flex-col overflow-hidden h-full transform hover:scale-105 transition-transform duration-300 ease-in-out shadow-md hover:shadow-xl",
-      isSoldOut && "opacity-75"
+      isUnavailable && "opacity-75"
     )}>
       <CardHeader className="p-0">
         <div 
@@ -121,13 +125,13 @@ export function ProductCard({ product, creator }: ProductCardProps) {
             fill
             className={cn(
               "object-cover object-center transition-transform duration-300 group-hover:scale-110",
-              isSoldOut && "grayscale"
+              isUnavailable && "grayscale"
             )}
             data-ai-hint={product.imageHint}
           />
           
           {/* Indicador de múltiples imágenes */}
-          {hasMultipleImages && !isSoldOut && (
+          {hasMultipleImages && !isUnavailable && (
             <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
               <Images className="h-3 w-3" />
               <span>1/{images.length}</span>
@@ -135,7 +139,7 @@ export function ProductCard({ product, creator }: ProductCardProps) {
           )}
           
           {/* Badge AGOTADO */}
-          {isSoldOut && (
+          {isSoldOut && !isCreatorUnavailable && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <div className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 rotate-[-15deg] shadow-lg">
                 <Ban className="h-5 w-5" />
@@ -143,13 +147,47 @@ export function ProductCard({ product, creator }: ProductCardProps) {
               </div>
             </div>
           )}
+          
+          {/* Badge CREADOR EN VACACIONES */}
+          {creatorStatus === 'vacation' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="bg-amber-500 text-white font-bold px-3 py-2 rounded-lg flex items-center gap-2 rotate-[-15deg] shadow-lg text-sm">
+                🏖️ {t?.creatorOnVacation ?? 'DE VACACIONES'}
+              </div>
+            </div>
+          )}
+          
+          {/* Badge CREADOR OCUPADO */}
+          {creatorStatus === 'busy' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="bg-orange-500 text-white font-bold px-3 py-2 rounded-lg flex items-center gap-2 rotate-[-15deg] shadow-lg text-sm">
+                📦 {t?.creatorBusy ?? 'AGENDA LLENA'}
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="font-headline text-xl mb-2">{productName}</CardTitle>
-        <p className="text-muted-foreground text-sm line-clamp-2">
-          {productDescription}
-        </p>
+        <div>
+          <p className={cn(
+            "text-muted-foreground text-sm",
+            !isDescriptionExpanded && "line-clamp-2"
+          )}>
+            {productDescription}
+          </p>
+          {productDescription && productDescription.length > 80 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDescriptionExpanded(!isDescriptionExpanded);
+              }}
+              className="text-primary text-xs font-medium mt-1 hover:underline"
+            >
+              {isDescriptionExpanded ? (t?.readLess ?? 'Leer menos') : (t?.readMore ?? 'Leer más')}
+            </button>
+          )}
+        </div>
         
         {/* Tiempo de preparación */}
         <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
@@ -186,15 +224,15 @@ export function ProductCard({ product, creator }: ProductCardProps) {
         )}
         <div className="w-full flex justify-between items-center">
             <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
-            <Button onClick={handleAddToCart} size="sm" disabled={isSoldOut}>
-              {isSoldOut ? (
-                <>
-                  <Ban className="mr-2 h-4 w-4" /> Agotado
-                </>
+            <Button onClick={handleAddToCart} size="sm" disabled={isUnavailable}>
+              {creatorStatus === 'vacation' ? (
+                <>🏖️ {t?.unavailable ?? 'No disponible'}</>
+              ) : creatorStatus === 'busy' ? (
+                <>📦 {t?.unavailable ?? 'No disponible'}</>
+              ) : isSoldOut ? (
+                <><Ban className="mr-2 h-4 w-4" /> Agotado</>
               ) : (
-                <>
-                  <PlusCircle className="mr-2 h-4 w-4" /> {dict.productCard.addToCart}
-                </>
+                <><PlusCircle className="mr-2 h-4 w-4" /> {dict.productCard.addToCart}</>
               )}
             </Button>
         </div>
@@ -284,37 +322,6 @@ export function ProductCard({ product, creator }: ProductCardProps) {
             </div>
           </div>
           
-          {/* Info del producto */}
-          <div className="absolute top-4 left-4 right-16 text-white max-h-[40%] overflow-y-auto">
-            <h3 className="text-lg font-bold">{productName}</h3>
-            <p className="text-sm text-gray-300 mb-2">{formatPrice(product.price)}</p>
-            
-            {/* Descripción */}
-            {productDescription && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-200 leading-relaxed">{productDescription}</p>
-              </div>
-            )}
-            
-            {/* Ingredientes (solo si existen) */}
-            {product.ingredients[language] && product.ingredients[language].trim() !== '' && (
-              <div className="mt-3 pt-2 border-t border-white/20">
-                <p className="text-xs text-gray-400 font-medium mb-1">{t?.ingredients ?? 'Ingredientes'}:</p>
-                <p className="text-xs text-gray-300">{product.ingredients[language]}</p>
-              </div>
-            )}
-            
-            {/* Badges dietéticos */}
-            {dietaryBadges.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-3">
-                {dietaryBadges.map(badge => (
-                  <span key={badge.key} className="bg-white/20 text-white text-xs px-2 py-0.5 rounded">
-                    {badge.label}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
     </Card>

@@ -53,6 +53,7 @@ export default function UserProfilePage() {
     profilePictureUrl: '',
     instagram: '',
     gender: 'female' as 'female' | 'male' | 'other',
+    availabilityStatus: 'available' as 'available' | 'vacation' | 'busy',
     skills: [] as Skill[],
     workspacePhotos: [] as string[],
     street: '',
@@ -64,6 +65,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isSavingAvailability, setIsSavingAvailability] = useState(false);
   
   // Preview state para foto
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -123,6 +125,7 @@ export default function UserProfilePage() {
             profilePictureUrl: userData.profile_picture_url || '',
             instagram: userData.instagram || '',
             gender: (userData.gender as 'female' | 'male' | 'other') || 'female',
+            availabilityStatus: (userData.availability_status as 'available' | 'vacation' | 'busy') || 'available',
             skills: userData.skills || [],
             workspacePhotos: userData.workspace_photos || [],
             street: userData.address_street || '',
@@ -188,6 +191,50 @@ export default function UserProfilePage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Función para actualizar disponibilidad de forma instantánea
+  const updateAvailabilityStatus = async (newStatus: 'available' | 'vacation' | 'busy') => {
+    if (!authUser || isSavingAvailability) return;
+    
+    setIsSavingAvailability(true);
+    
+    try {
+      console.log('🔄 Actualizando availability_status a:', newStatus);
+      
+      const { data, error } = await supabase
+        .from('users')
+        .update({ availability_status: newStatus })
+        .eq('id', authUser.id)
+        .select();
+      
+      console.log('📝 Resultado update:', { data, error });
+      
+      if (error) throw error;
+      
+      // Actualizar estado local
+      setFormData(prev => ({ ...prev, availabilityStatus: newStatus }));
+      
+      const statusLabels = {
+        available: '✅ Disponible',
+        vacation: '🏖️ Vacaciones',
+        busy: '📦 Muchos pedidos'
+      };
+      
+      toast({
+        title: 'Estado actualizado',
+        description: `Tu estado ahora es: ${statusLabels[newStatus]}`,
+      });
+    } catch (error: any) {
+      console.error('Error updating availability:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo actualizar el estado"
+      });
+    } finally {
+      setIsSavingAvailability(false);
+    }
   };
 
   // Manejar cambio de departamento
@@ -354,6 +401,7 @@ export default function UserProfilePage() {
           skills: formData.skills, 
           workspace_photos: formData.workspacePhotos,
           gender: formData.gender,
+          availability_status: formData.availabilityStatus,
           // ✅ GUARDAR CONFIGURACIÓN DE DELIVERY
           creator_latitude: creatorDeliveryConfig.latitude,
           creator_longitude: creatorDeliveryConfig.longitude,
@@ -557,6 +605,53 @@ export default function UserProfilePage() {
                   {/* Habilidades de Creador */}
                   {isCreator && (
                     <>
+                      {/* Selector de Disponibilidad - GUARDADO INSTANTÁNEO */}
+                      <div className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                        <h4 className="font-medium mb-3">{dict.userProfile.availability?.title ?? 'Estado de disponibilidad'}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <Button
+                            type="button"
+                            variant={formData.availabilityStatus === 'available' ? "default" : "outline"}
+                            className={formData.availabilityStatus === 'available' ? "bg-green-600 hover:bg-green-700" : ""}
+                            onClick={() => updateAvailabilityStatus('available')}
+                            disabled={isSavingAvailability}
+                          >
+                            {isSavingAvailability ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            ✅ {dict.userProfile.availability?.available ?? 'Disponible'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={formData.availabilityStatus === 'vacation' ? "default" : "outline"}
+                            className={formData.availabilityStatus === 'vacation' ? "bg-amber-500 hover:bg-amber-600" : ""}
+                            onClick={() => updateAvailabilityStatus('vacation')}
+                            disabled={isSavingAvailability}
+                          >
+                            {isSavingAvailability ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            🏖️ {dict.userProfile.availability?.vacation ?? 'Vacaciones'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={formData.availabilityStatus === 'busy' ? "default" : "outline"}
+                            className={formData.availabilityStatus === 'busy' ? "bg-orange-500 hover:bg-orange-600" : ""}
+                            onClick={() => updateAvailabilityStatus('busy')}
+                            disabled={isSavingAvailability}
+                          >
+                            {isSavingAvailability ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            📦 {dict.userProfile.availability?.busy ?? 'Muchos pedidos'}
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-3">
+                          {formData.availabilityStatus === 'available' 
+                            ? (dict.userProfile.availability?.availableDesc ?? 'Los clientes pueden hacer pedidos')
+                            : formData.availabilityStatus === 'vacation'
+                            ? (dict.userProfile.availability?.vacationDesc ?? 'Tus productos se muestran pero no se pueden ordenar')
+                            : (dict.userProfile.availability?.busyDesc ?? 'Tienes muchos pedidos, no puedes aceptar más por ahora')
+                          }
+                        </p>
+                      </div>
+
+                      <Separator />
+
                       <div>
                         <h3 className="font-headline text-lg mb-4">{dict.userProfile.skills.title}</h3>
                         <div className="flex flex-wrap gap-4">

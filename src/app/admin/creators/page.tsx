@@ -50,6 +50,7 @@ interface Creator {
   address_city?: string;
   address_state?: string;
   has_delivery: boolean;
+  availability_status: 'available' | 'vacation' | 'busy';
   created_at: string;
   product_count?: number;
   total_orders?: number;
@@ -66,6 +67,7 @@ export default function AdminCreatorsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
   // Verificar permisos
   useEffect(() => {
@@ -111,6 +113,7 @@ export default function AdminCreatorsPage() {
 
           return {
             ...creator,
+            availability_status: creator.availability_status || 'available',
             product_count: productCount || 0,
             total_orders: orderCount || 0
           };
@@ -127,6 +130,50 @@ export default function AdminCreatorsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Cambiar estado de disponibilidad del creador
+  const updateAvailabilityStatus = async (creatorId: string, newStatus: 'available' | 'vacation' | 'busy') => {
+    setUpdatingStatusId(creatorId);
+    
+    try {
+      console.log('🔄 Updating availability_status:', { creatorId, newStatus });
+      
+      const { error, data } = await supabase
+        .from('users')
+        .update({ availability_status: newStatus })
+        .eq('id', creatorId)
+        .select();
+
+      console.log('📝 Update result:', { error, data });
+      
+      if (error) throw error;
+
+      // Actualizar estado local
+      setCreators(prev => prev.map(c => 
+        c.id === creatorId ? { ...c, availability_status: newStatus } : c
+      ));
+
+      const statusLabels = {
+        available: t?.statusAvailable ?? "Disponible",
+        vacation: t?.statusVacation ?? "Vacaciones",
+        busy: t?.statusBusy ?? "Muchos pedidos"
+      };
+
+      toast({
+        title: t?.statusUpdated ?? "Estado actualizado",
+        description: `${statusLabels[newStatus]}`
+      });
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado"
+      });
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -290,7 +337,19 @@ export default function AdminCreatorsPage() {
                   className="rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{creator.name}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">{creator.name}</CardTitle>
+                    {creator.availability_status === 'vacation' && (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                        🏖️ {t?.statusVacation ?? "Vacaciones"}
+                      </Badge>
+                    )}
+                    {creator.availability_status === 'busy' && (
+                      <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+                        📦 {t?.statusBusy ?? "Muchos pedidos"}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {creator.skills.map((skill) => (
                       <Badge key={skill} variant="secondary" className="text-xs">
@@ -344,6 +403,37 @@ export default function AdminCreatorsPage() {
                   {creator.has_delivery ? (t?.cardDeliveryYes ?? "Delivery") : (t?.cardDeliveryNo ?? "Sin delivery")}
                   </Badge>
                 </div>
+              </div>
+
+              {/* Selector de Estado */}
+              <div className="grid grid-cols-3 gap-1 mb-2">
+                <Button
+                  variant={creator.availability_status === 'available' ? "default" : "outline"}
+                  size="sm"
+                  className={creator.availability_status === 'available' ? "bg-green-600 hover:bg-green-700 text-xs px-1" : "text-xs px-1"}
+                  disabled={updatingStatusId === creator.id}
+                  onClick={() => updateAvailabilityStatus(creator.id, 'available')}
+                >
+                  {updatingStatusId === creator.id ? <Loader2 className="h-3 w-3 animate-spin" /> : '✅'}
+                </Button>
+                <Button
+                  variant={creator.availability_status === 'vacation' ? "default" : "outline"}
+                  size="sm"
+                  className={creator.availability_status === 'vacation' ? "bg-amber-500 hover:bg-amber-600 text-xs px-1" : "text-xs px-1"}
+                  disabled={updatingStatusId === creator.id}
+                  onClick={() => updateAvailabilityStatus(creator.id, 'vacation')}
+                >
+                  🏖️
+                </Button>
+                <Button
+                  variant={creator.availability_status === 'busy' ? "default" : "outline"}
+                  size="sm"
+                  className={creator.availability_status === 'busy' ? "bg-orange-500 hover:bg-orange-600 text-xs px-1" : "text-xs px-1"}
+                  disabled={updatingStatusId === creator.id}
+                  onClick={() => updateAvailabilityStatus(creator.id, 'busy')}
+                >
+                  📦
+                </Button>
               </div>
 
               {/* Acciones */}

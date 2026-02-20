@@ -85,11 +85,11 @@ export default function Home() {
             {savory.length > 0 && (
               <ProductShowcase products={savory} creators={creators} title={dict.productShowcase.savory} id="savory" />
             )}
-            {seasonal.length > 0 && (
-              <ProductShowcase products={seasonal} creators={creators} title={dict.productShowcase.seasonal} id="seasonal" />
-            )}
             {handmades.length > 0 && (
               <ProductShowcase products={handmades} creators={creators} title={dict.productShowcase.handmades} id="handmades" />
+            )}
+            {seasonal.length > 0 && (
+              <ProductShowcase products={seasonal} creators={creators} title={dict.productShowcase.seasonal} id="seasonal" />
             )}
             {others.length > 0 && (
               <ProductShowcase products={others} creators={creators} title={dict.productShowcase.others} id="others" />

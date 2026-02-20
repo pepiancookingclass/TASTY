@@ -64,6 +64,8 @@ export type User = {
   };
 };
 
+export type AvailabilityStatus = 'available' | 'vacation' | 'busy';
+
 export type Creator = {
   id: string;
   name: string;
@@ -72,6 +74,8 @@ export type Creator = {
   imageHint: string;
   gender: 'male' | 'female';
   skills?: ('pastry' | 'savory' | 'handmade')[];
+  hasDelivery?: boolean;
+  availabilityStatus?: AvailabilityStatus;
 };
 
 export type CartItem = {

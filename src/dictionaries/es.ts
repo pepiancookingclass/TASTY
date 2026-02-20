@@ -135,6 +135,12 @@ const dictionary = {
     savory: 'Platos Salados',
     handmade: 'Artesanías',
   },
+  creatorProfile: {
+    onVacationTitle: 'Creador de vacaciones',
+    onVacationDesc: 'Este creador está de vacaciones, regresa pronto. Sus productos se muestran solo como referencia.',
+    busyTitle: 'Creador con agenda llena',
+    busyDesc: 'Este creador tiene muchos pedidos y no puede aceptar más por ahora. Intenta más tarde.',
+  },
   promotionsBanner: {
     title: 'Ofertas Especiales',
   },
@@ -159,7 +165,12 @@ const dictionary = {
     inYourCart: (productName: string) => `${productName} está ahora en tu carrito.`,
     by: 'Por',
     preparationLabel: 'Preparación',
-    ingredients: 'Ingredientes'
+    ingredients: 'Ingredientes',
+    creatorOnVacation: 'DE VACACIONES',
+    creatorBusy: 'AGENDA LLENA',
+    unavailable: 'No disponible',
+    readMore: 'Leer más',
+    readLess: 'Leer menos',
   },
   cartView: {
     empty: {
@@ -281,6 +292,15 @@ const dictionary = {
     workspace: {
       title: '📸 Fotos de tu Espacio de Trabajo',
       hint: 'Muestra a tus clientes dónde creas tus productos. Sube fotos de tu cocina, taller, herramientas, etc.',
+    },
+    availability: {
+      title: 'Estado de disponibilidad',
+      available: 'Disponible',
+      vacation: 'Vacaciones',
+      busy: 'Muchos pedidos',
+      availableDesc: 'Los clientes pueden hacer pedidos',
+      vacationDesc: 'Tus productos se muestran pero no se pueden ordenar',
+      busyDesc: 'Tienes muchos pedidos, no puedes aceptar más por ahora',
     },
     creatorLocation: {
       title: '📍 Dirección de tu Lugar Creador',

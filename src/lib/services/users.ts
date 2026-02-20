@@ -49,6 +49,8 @@ function transformToCreator(data: any): Creator {
     imageHint: 'creator portrait',
     gender: data.gender || 'female',
     skills: data.skills || [],
+    hasDelivery: data.has_delivery || false,
+    availabilityStatus: data.availability_status || 'available',
   };
 }
 
