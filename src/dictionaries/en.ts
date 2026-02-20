@@ -151,6 +151,7 @@ const dictionary = {
     savory: 'Savory',
     handmades: 'Handmades',
     seasonal: 'Seasonal',
+    others: 'Others',
     noProductsMatch: 'No products match your filters.',
     tryAdjusting: 'Try adjusting your selection to find more delights!',
     filters: {

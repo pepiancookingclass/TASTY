@@ -143,6 +143,7 @@ const dictionary = {
     savory: 'Salados',
     handmades: 'Hecho a Mano',
     seasonal: 'Temporada',
+    others: 'Otros',
     noProductsMatch: 'No hay productos que coincidan con tus filtros.',
     tryAdjusting: '¡Intenta ajustar tu selección para encontrar más delicias!',
     filters: {

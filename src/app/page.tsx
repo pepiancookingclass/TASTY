@@ -25,6 +25,7 @@ export default function Home() {
   const savory = products.filter(p => p.type === 'savory');
   const handmades = products.filter(p => p.type === 'handmade');
   const seasonal = products.filter(p => p.type === 'seasonal');
+  const others = products.filter(p => p.type === 'other');
 
   const isLoading = productsLoading || creatorsLoading || promotionsLoading;
 
@@ -89,6 +90,9 @@ export default function Home() {
             )}
             {handmades.length > 0 && (
               <ProductShowcase products={handmades} creators={creators} title={dict.productShowcase.handmades} id="handmades" />
+            )}
+            {others.length > 0 && (
+              <ProductShowcase products={others} creators={creators} title={dict.productShowcase.others} id="others" />
             )}
           </>
         )}
