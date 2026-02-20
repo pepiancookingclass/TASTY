@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 19 Febrero 2026  
+> **Última actualización:** 20 Febrero 2026  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -131,6 +131,26 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Login con Google OAuth + Sistema de Disponibilidad
+- **Estado:** ✅ COMPLETADO (20 Feb 2026)
+- **Implementación:**
+  - **Google OAuth:** Login/registro con cuenta de Google funcionando
+  - **Auth callback:** Ruta `/auth/callback` maneja el redirect de Google
+  - **Disponibilidad creadores:** Estados available/vacation/busy con guardado instantáneo
+  - **Guardado dinámico:** Botones de estado guardan directo a BD sin necesidad de "Guardar"
+  - **Panel admin:** Admins pueden cambiar estado de cualquier creador
+  - **ProductCard:** Muestra badges y deshabilita compra según estado del creador
+  - **Página creador:** Banners de "vacaciones" o "agenda llena" en perfil público
+- **Archivos nuevos:**
+  - `src/app/auth/callback/route.ts` — Maneja callback de Google OAuth
+- **Archivos modificados:**
+  - `src/app/user/profile/page.tsx` — Selector de disponibilidad con guardado instantáneo
+  - `src/app/admin/creators/page.tsx` — Control de disponibilidad por admin
+  - `src/app/creators/[id]/page.tsx` — Banners de estado
+  - `src/components/product/ProductCard.tsx` — Badges y lógica de no disponible
+  - `src/lib/types.ts` — Tipo AvailabilityStatus
+  - `src/lib/services/users.ts` — Transform con availabilityStatus
 
 #### Galería Multi-Imagen + Auto-guardado
 - **Estado:** ✅ COMPLETADO (19 Feb 2026)
@@ -306,4 +326,4 @@ npm run build
 
 ---
 
-*Última actualización: 19 Febrero 2026 - Galería multi-imagen con carrusel + Auto-guardado de formularios + Estado agotado para productos*
+*Última actualización: 20 Febrero 2026 - Login con Google OAuth + Sistema de disponibilidad de creadores (vacation/busy/available) con guardado instantáneo*
