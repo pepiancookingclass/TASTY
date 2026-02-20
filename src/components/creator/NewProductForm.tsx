@@ -29,7 +29,7 @@ const formSchema = z.object({
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
   productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
-  productType: z.enum(['pastry', 'dessert', 'savory', 'cookie', 'handmade']),
+  productType: z.enum(['pastry', 'dessert', 'savory', 'cookie', 'handmade', 'seasonal', 'other']),
   productIngredients_en: z.string().optional(),
   productIngredients_es: z.string().optional(),
   preparationTime: z.coerce.number().min(0).optional(),
@@ -383,7 +383,8 @@ export function NewProductForm() {
                                     <SelectItem value="savory">{dict.creatorProducts.new.details.type_savory}</SelectItem>
                                     <SelectItem value="cookie">{dict.creatorProducts.new.details.type_cookie}</SelectItem>
                                     <SelectItem value="handmade">{dict.creatorProducts.new.details.type_handmade}</SelectItem>
-                                <SelectItem value="seasonal">{dict.creatorProducts.new.details.type_seasonal}</SelectItem>
+                                    <SelectItem value="seasonal">{dict.creatorProducts.new.details.type_seasonal}</SelectItem>
+                                    <SelectItem value="other">Otros</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
