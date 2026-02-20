@@ -31,7 +31,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Images
+  Images,
+  Instagram
 } from 'lucide-react';
 
 export default function CreatorProfilePage() {
@@ -43,6 +44,7 @@ export default function CreatorProfilePage() {
   const [creator, setCreator] = useState<Creator | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [workspacePhotos, setWorkspacePhotos] = useState<string[]>([]);
+  const [instagram, setInstagram] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
@@ -86,6 +88,7 @@ export default function CreatorProfilePage() {
 
         setCreator(creatorData);
         setWorkspacePhotos(userData.workspace_photos || []);
+        setInstagram(userData.instagram || null);
 
         // Obtener productos del creador
         const { data: productsData, error: productsError } = await supabase
@@ -290,6 +293,26 @@ export default function CreatorProfilePage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Instagram */}
+          {instagram && (
+            <a
+              href={instagram.startsWith('http') ? instagram : `https://instagram.com/${instagram.replace('@', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 rounded-lg text-white hover:opacity-90 transition-opacity"
+            >
+              <Instagram className="h-6 w-6" />
+              <div>
+                <p className="font-medium">Sígueme en Instagram</p>
+                <p className="text-sm opacity-90">
+                  {instagram.startsWith('http') 
+                    ? instagram.split('/').pop() 
+                    : instagram.startsWith('@') ? instagram : `@${instagram}`}
+                </p>
+              </div>
+            </a>
           )}
 
           {/* Productos */}
