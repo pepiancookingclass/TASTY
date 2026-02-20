@@ -131,6 +131,8 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       is_dairy_free: product.dietaryFlags.isDairyFree,
       is_nut_free: product.dietaryFlags.isNutFree,
       delivery_vehicle: product.deliveryVehicle || 'moto',
+      // Todo producto nuevo nace disponible
+      is_available: true,
       is_sold_out: product.isSoldOut || false,
     })
     .select()

@@ -1,36 +1,37 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowLeft, Save } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useDictionary } from "@/hooks/useDictionary";
-import { useAuth } from "@/providers/auth-provider";
-import { getProductById, updateProduct } from "@/lib/services/products";
-import { MultiImageUpload } from "@/components/ui/multi-image-upload";
-import { Switch } from "@/components/ui/switch";
-import { FormDescription } from "@/components/ui/form";
+import { useParams, useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, ArrowLeft, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useDictionary } from '@/hooks/useDictionary';
+import { useAuth } from '@/providers/auth-provider';
+import { getProductById, updateProduct } from '@/lib/services/products';
+import { MultiImageUpload } from '@/components/ui/multi-image-upload';
+import { Switch } from '@/components/ui/switch';
+import { FormDescription } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const formSchema = z.object({
-  productName_en: z.string().min(2, { message: "Product name must be at least 2 characters." }),
-  productName_es: z.string().min(2, { message: "El nombre del producto debe tener al menos 2 caracteres." }),
+  productName_en: z.string().min(2, { message: 'Product name must be at least 2 characters.' }),
+  productName_es: z.string().min(2, { message: 'El nombre del producto debe tener al menos 2 caracteres.' }),
   productImages: z.array(z.string()).optional(),
   isSoldOut: z.boolean().optional(),
   englishDescription: z.string().optional(),
   spanishDescription: z.string().optional(),
-  productPrice: z.coerce.number().positive({ message: "Price must be a positive number." }),
+  productPrice: z.coerce.number().positive({ message: 'Price must be a positive number.' }),
   productType: z.enum(['pastry', 'dessert', 'savory', 'cookie', 'handmade', 'seasonal', 'other']),
   productIngredients_en: z.string().optional(),
   productIngredients_es: z.string().optional(),
@@ -38,15 +39,16 @@ const formSchema = z.object({
   deliveryVehicle: z.enum(['moto', 'auto']).optional(),
 });
 
-const DRAFT_STORAGE_KEY_PREFIX = 'product_edit_draft_';
+const DRAFT_STORAGE_KEY_PREFIX = 'admin_product_edit_draft_';
 
-export default function EditProductPage() {
+export default function AdminEditProductPage() {
   const params = useParams();
   const productId = params.id as string;
   const router = useRouter();
   const { toast } = useToast();
   const dict = useDictionary();
   const { user } = useAuth();
+  const { canAccessAdminPanel, loading: permissionsLoading } = usePermissions();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
@@ -56,13 +58,13 @@ export default function EditProductPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      productName_en: "",
-      productName_es: "",
+      productName_en: '',
+      productName_es: '',
       productImages: [],
       isSoldOut: false,
-      productType: "pastry",
-      productIngredients_en: "",
-      productIngredients_es: "",
+      productType: 'pastry',
+      productIngredients_en: '',
+      productIngredients_es: '',
       preparationTime: 1,
     },
   });
@@ -87,7 +89,7 @@ export default function EditProductPage() {
     if (typeof window === 'undefined') return null;
     const saved = localStorage.getItem(draftKey);
     if (!saved) return null;
-    
+
     try {
       const draft = JSON.parse(saved);
       const hoursSinceSave = (Date.now() - draft.savedAt) / (1000 * 60 * 60);
@@ -109,34 +111,32 @@ export default function EditProductPage() {
   }, [form, saveDraft]);
 
   useEffect(() => {
+    if (permissionsLoading) return;
+    if (!canAccessAdminPanel) {
+      router.push('/');
+      return;
+    }
+  }, [permissionsLoading, canAccessAdminPanel, router]);
+
+  useEffect(() => {
     const loadProduct = async () => {
       if (!productId) return;
 
       try {
         const product = await getProductById(productId);
-        
+
         if (!product) {
           toast({
             variant: 'destructive',
             title: 'Error',
             description: 'Producto no encontrado',
           });
-          router.push('/creator/products');
-          return;
-        }
-
-        if (product.creatorId !== user?.id) {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'No tienes permiso para editar este producto',
-          });
-          router.push('/creator/products');
+          router.push('/admin/products');
           return;
         }
 
         const draft = loadDraft();
-        
+
         if (draft) {
           setHasDraft(true);
           form.reset({
@@ -160,7 +160,7 @@ export default function EditProductPage() {
           form.reset({
             productName_en: product.name.en,
             productName_es: product.name.es,
-            productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+            productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [],
             isSoldOut: product.isSoldOut || false,
             productType: product.type,
             englishDescription: product.description.en,
@@ -192,13 +192,13 @@ export default function EditProductPage() {
   const handleDiscardDraft = async () => {
     clearDraft();
     setIsLoading(true);
-    
+
     const product = await getProductById(productId);
     if (product) {
       form.reset({
         productName_en: product.name.en,
         productName_es: product.name.es,
-        productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+        productImages: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [],
         isSoldOut: product.isSoldOut || false,
         productType: product.type,
         englishDescription: product.description.en,
@@ -223,7 +223,7 @@ export default function EditProductPage() {
 
     try {
       const imageUrls = values.productImages && values.productImages.length > 0 ? values.productImages : [];
-      
+
       const updated = await updateProduct(productId, {
         name: {
           en: values.productName_en,
@@ -252,7 +252,7 @@ export default function EditProductPage() {
           title: 'Producto actualizado',
           description: 'Los cambios han sido guardados.',
         });
-        router.push('/creator/products');
+        router.push('/admin/products');
       } else {
         throw new Error('Error al actualizar');
       }
@@ -268,7 +268,7 @@ export default function EditProductPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || permissionsLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
@@ -288,11 +288,15 @@ export default function EditProductPage() {
     );
   }
 
+  if (!canAccessAdminPanel) {
+    return null;
+  }
+
   return (
     <div>
       <div className="mb-6">
         <Button variant="ghost" asChild>
-          <Link href="/creator/products">
+          <Link href="/admin/products">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a productos
           </Link>
@@ -305,8 +309,8 @@ export default function EditProductPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="font-headline text-2xl">Editar Producto</CardTitle>
-                  <CardDescription>Modifica los detalles de tu producto</CardDescription>
+                  <CardTitle className="font-headline text-2xl">Editar Producto (Admin)</CardTitle>
+                  <CardDescription>Modifica los detalles del producto</CardDescription>
                 </div>
                 {hasDraft && (
                   <div className="flex items-center gap-2">
@@ -314,9 +318,9 @@ export default function EditProductPage() {
                       <Save className="h-3 w-3" />
                       Borrador guardado
                     </Badge>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
+                    <Button
+                      type="button"
+                      variant="ghost"
                       size="sm"
                       onClick={handleDiscardDraft}
                     >
@@ -360,7 +364,7 @@ export default function EditProductPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              
+
               <FormField control={form.control} name="isSoldOut" render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">

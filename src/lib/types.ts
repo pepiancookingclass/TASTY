@@ -7,7 +7,7 @@ export type Product = {
     en: string;
     es: string;
   };
-  type: 'pastry' | 'dessert' | 'savory' | 'cookie' | 'handmade';
+  type: 'pastry' | 'dessert' | 'savory' | 'cookie' | 'handmade' | 'seasonal' | 'other';
   price: number;
   imageUrl: string;
   imageUrls: string[]; // Array de imágenes para galería/carrusel

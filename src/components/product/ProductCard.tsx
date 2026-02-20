@@ -119,12 +119,11 @@ export function ProductCard({ product, creator }: ProductCardProps) {
             src={displayImage}
             alt={productName}
             fill
-            style={{ objectFit: 'contain', objectPosition: 'center' }}
-            data-ai-hint={product.imageHint}
             className={cn(
-              "transition-transform duration-300 group-hover:scale-110",
+              "object-cover object-center transition-transform duration-300 group-hover:scale-110",
               isSoldOut && "grayscale"
             )}
+            data-ai-hint={product.imageHint}
           />
           
           {/* Indicador de múltiples imágenes */}

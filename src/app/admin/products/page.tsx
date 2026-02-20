@@ -72,6 +72,7 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const formatPrice = (price: number) => 
     new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(price);
@@ -151,18 +152,20 @@ export default function AdminProductsPage() {
   };
 
   // Cambiar disponibilidad
-  const toggleAvailability = async (productId: string, currentAvailability: boolean) => {
+  // Cambiar disponibilidad usando is_sold_out (un solo flag)
+  const toggleAvailability = async (productId: string, currentSoldOut: boolean) => {
+    setUpdatingId(productId);
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_available: !currentAvailability })
+        .update({ is_sold_out: !currentSoldOut })
         .eq('id', productId);
 
       if (error) throw error;
 
       toast({
         title: "Disponibilidad actualizada",
-        description: `Producto ${!currentAvailability ? 'activado' : 'desactivado'} exitosamente`
+        description: `Producto ${currentSoldOut ? 'activado' : 'desactivado'} exitosamente`
       });
 
       loadProducts();
@@ -173,6 +176,8 @@ export default function AdminProductsPage() {
         title: "Error",
         description: error.message || "No se pudo actualizar la disponibilidad"
       });
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -184,6 +189,8 @@ export default function AdminProductsPage() {
 
   // Filtrar productos
   const filteredProducts = products.filter(product => {
+    const isSoldOut = product.is_sold_out ?? false;
+
     const matchesSearch = 
       product.name_es.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.creator_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -193,8 +200,8 @@ export default function AdminProductsPage() {
     
     const matchesAvailability = 
       availabilityFilter === 'all' || 
-      (availabilityFilter === 'available' && product.is_available) ||
-      (availabilityFilter === 'unavailable' && !product.is_available);
+      (availabilityFilter === 'available' && !isSoldOut) ||
+      (availabilityFilter === 'unavailable' && isSoldOut);
 
     return matchesSearch && matchesCategory && matchesAvailability;
   });
@@ -215,7 +222,7 @@ export default function AdminProductsPage() {
   }
 
   const categories = [...new Set(products.map(p => p.category))];
-  const availableCount = products.filter(p => p.is_available).length;
+  const availableCount = products.filter(p => !p.is_sold_out).length;
   const totalValue = products.reduce((sum, p) => sum + p.price, 0);
 
   return (
@@ -335,7 +342,9 @@ export default function AdminProductsPage() {
 
       {/* Lista de productos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
+        {filteredProducts.map((product) => {
+          const isSoldOut = product.is_sold_out ?? false;
+          return (
           <Card key={product.id} className="overflow-hidden">
             <div className="relative">
               <Image
@@ -346,8 +355,8 @@ export default function AdminProductsPage() {
                 className="w-full h-48 object-cover"
               />
               <div className="absolute top-2 right-2">
-                <Badge variant={product.is_available ? "default" : "secondary"}>
-                  {product.is_available ? "Disponible" : "No disponible"}
+                <Badge variant={!isSoldOut ? "default" : "secondary"}>
+                  {!isSoldOut ? "Disponible" : "No disponible"}
                 </Badge>
               </div>
               <div className="absolute top-2 left-2">
@@ -395,12 +404,17 @@ export default function AdminProductsPage() {
 
               <div className="flex gap-2">
                 <Button 
-                  variant={product.is_available ? "secondary" : "default"}
+                  variant={!isSoldOut ? "secondary" : "default"}
                   size="sm" 
                   className="flex-1"
-                  onClick={() => toggleAvailability(product.id, product.is_available)}
+                  disabled={updatingId === product.id}
+                  onClick={() => toggleAvailability(product.id, isSoldOut)}
                 >
-                  {product.is_available ? (t?.deactivate ?? 'Desactivar') : (t?.activate ?? 'Activar')}
+                  {updatingId === product.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    !isSoldOut ? (t?.deactivate ?? 'Marcar no disponible') : (t?.activate ?? 'Marcar disponible')
+                  )}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -439,7 +453,8 @@ export default function AdminProductsPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {filteredProducts.length === 0 && (

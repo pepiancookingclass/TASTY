@@ -89,11 +89,16 @@ export default function UserProfilePage() {
 
   const isCreator = roles.includes('creator');
 
-  // Cargar datos UNA SOLA VEZ al montar el componente
+  // Cargar datos cuando authUser y roles estén listos
   useEffect(() => {
     const loadUserData = async () => {
       if (!authUser) {
         router.push('/login');
+        return;
+      }
+
+      // Esperar a que roles termine de cargar
+      if (rolesLoading) {
         return;
       }
 
@@ -115,35 +120,34 @@ export default function UserProfilePage() {
             email: userData.email || authUser.email || '',
             phone: userData.phone || '',
             profilePictureUrl: userData.profile_picture_url || '',
-            instagram: userData.instagram || '', // NUEVO CAMPO
+            instagram: userData.instagram || '',
             skills: userData.skills || [],
             workspacePhotos: userData.workspace_photos || [],
             street: userData.address_street || '',
             city: userData.address_city || '',
-            state: userData.address_state || '', // Departamento
+            state: userData.address_state || '',
             country: userData.address_country || ''
           };
           
           console.warn('📝 DATOS CARGADOS:', JSON.stringify(newFormData, null, 2));
           setFormData(newFormData);
           
-          // ✅ CARGAR CONFIGURACIÓN DE DELIVERY DEL CREADOR
-          if (isCreator && userData) {
-            setCreatorDeliveryConfig({
-              latitude: userData.creator_latitude,
-              longitude: userData.creator_longitude,
-              address: userData.creator_address || '',
-              deliveryRadius: userData.creator_delivery_radius || 25,
-              baseFee: userData.creator_base_delivery_fee || 25.00,
-              perKmFee: userData.creator_per_km_fee || 3.00
-            });
-            console.log('🚚 Profile: Configuración delivery cargada:', {
-              lat: userData.creator_latitude,
-              lng: userData.creator_longitude,
-              address: userData.creator_address,
-              radius: userData.creator_delivery_radius
-            });
-          }
+          // ✅ CARGAR CONFIGURACIÓN DE DELIVERY (siempre, los datos están en userData)
+          // La sección solo se muestra si isCreator, pero cargamos los datos de todos modos
+          setCreatorDeliveryConfig({
+            latitude: userData.creator_latitude ?? null,
+            longitude: userData.creator_longitude ?? null,
+            address: userData.creator_address || '',
+            deliveryRadius: userData.creator_delivery_radius || 25,
+            baseFee: userData.creator_base_delivery_fee || 25.00,
+            perKmFee: userData.creator_per_km_fee || 3.00
+          });
+          console.log('🚚 Profile: Configuración delivery cargada:', {
+            lat: userData.creator_latitude,
+            lng: userData.creator_longitude,
+            address: userData.creator_address,
+            radius: userData.creator_delivery_radius
+          });
           
           // Configurar departamento y municipios si ya hay datos
           if (userData.address_state) {
@@ -173,7 +177,7 @@ export default function UserProfilePage() {
     };
 
     loadUserData();
-  }, []); // Sin dependencias - solo se ejecuta una vez
+  }, [authUser, rolesLoading]); // Ejecutar cuando authUser cambie o roles termine de cargar
 
   // Función simple para actualizar campos
   const updateField = (field: string, value: any) => {
@@ -768,11 +772,20 @@ export default function UserProfilePage() {
                               <Label>{dict.userProfile.creatorLocation.radiusLabel}</Label>
                               <Input 
                                 type="number" 
-                                value={creatorDeliveryConfig.deliveryRadius} 
-                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
-                                  ...prev,
-                                  deliveryRadius: parseInt(e.target.value) || 25
-                                }))}
+                                inputMode="numeric"
+                                value={creatorDeliveryConfig.deliveryRadius === 0 ? '' : creatorDeliveryConfig.deliveryRadius} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCreatorDeliveryConfig(prev => ({
+                                    ...prev,
+                                    deliveryRadius: val === '' ? 0 : parseInt(val) || 0
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  if (!e.target.value || parseInt(e.target.value) <= 0) {
+                                    setCreatorDeliveryConfig(prev => ({ ...prev, deliveryRadius: 25 }));
+                                  }
+                                }}
                                 placeholder="25"
                                 disabled={isSaving}
                               />
@@ -781,12 +794,21 @@ export default function UserProfilePage() {
                               <Label>{dict.userProfile.creatorLocation.baseFeeLabel}</Label>
                               <Input 
                                 type="number" 
+                                inputMode="decimal"
                                 step="0.01"
-                                value={creatorDeliveryConfig.baseFee} 
-                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
-                                  ...prev,
-                                  baseFee: parseFloat(e.target.value) || 25.00
-                                }))}
+                                value={creatorDeliveryConfig.baseFee === 0 ? '' : creatorDeliveryConfig.baseFee} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCreatorDeliveryConfig(prev => ({
+                                    ...prev,
+                                    baseFee: val === '' ? 0 : parseFloat(val) || 0
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                    setCreatorDeliveryConfig(prev => ({ ...prev, baseFee: 25.00 }));
+                                  }
+                                }}
                                 placeholder="25.00"
                                 disabled={isSaving}
                               />
@@ -795,12 +817,21 @@ export default function UserProfilePage() {
                               <Label>{dict.userProfile.creatorLocation.perKmFeeLabel}</Label>
                               <Input 
                                 type="number" 
+                                inputMode="decimal"
                                 step="0.01"
-                                value={creatorDeliveryConfig.perKmFee} 
-                                onChange={(e) => setCreatorDeliveryConfig(prev => ({
-                                  ...prev,
-                                  perKmFee: parseFloat(e.target.value) || 3.00
-                                }))}
+                                value={creatorDeliveryConfig.perKmFee === 0 ? '' : creatorDeliveryConfig.perKmFee} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCreatorDeliveryConfig(prev => ({
+                                    ...prev,
+                                    perKmFee: val === '' ? 0 : parseFloat(val) || 0
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                    setCreatorDeliveryConfig(prev => ({ ...prev, perKmFee: 3.00 }));
+                                  }
+                                }}
                                 placeholder="3.00"
                                 disabled={isSaving}
                               />

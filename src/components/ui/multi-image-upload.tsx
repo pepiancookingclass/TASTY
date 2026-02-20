@@ -3,8 +3,15 @@
 import { useState, useRef } from 'react';
 import { Button } from './button';
 import { Input } from './input';
-import { Loader2, X, Image as ImageIcon, Plus, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { Loader2, X, Plus, ChevronUp, ChevronDown, Upload, Check } from 'lucide-react';
 import Image from 'next/image';
+
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  error?: string;
+}
 
 interface MultiImageUploadProps {
   value: string[];
@@ -25,73 +32,133 @@ export function MultiImageUpload({
 }: MultiImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setError(null);
 
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-      setError('Solo se permiten imágenes JPG, PNG, WebP o GIF');
+    const remainingSlots = maxImages - value.length - pendingFiles.length;
+    if (remainingSlots <= 0) {
+      setError(`Ya alcanzaste el máximo de ${maxImages} imágenes`);
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('La imagen no puede superar 5MB');
-      return;
+    const filesToAdd: PendingFile[] = [];
+    const errors: string[] = [];
+
+    for (let i = 0; i < Math.min(files.length, remainingSlots); i++) {
+      const file = files[i];
+
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+        errors.push(`${file.name}: formato no permitido`);
+        continue;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`${file.name}: supera 5MB`);
+        continue;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      filesToAdd.push({
+        file,
+        previewUrl,
+        status: 'pending',
+      });
     }
 
-    const localUrl = URL.createObjectURL(file);
-    setPreviewUrl(localUrl);
-    setSelectedFile(file);
-  };
-
-  const handleCancelPreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+    if (files.length > remainingSlots) {
+      errors.push(`Solo se pueden agregar ${remainingSlots} imágenes más`);
     }
-    setPreviewUrl(null);
-    setSelectedFile(null);
+
+    if (errors.length > 0) {
+      setError(errors.join('. '));
+    }
+
+    if (filesToAdd.length > 0) {
+      setPendingFiles((prev) => [...prev, ...filesToAdd]);
+    }
+
     if (inputRef.current) {
       inputRef.current.value = '';
     }
   };
 
-  const handleConfirmUpload = async () => {
-    if (!selectedFile) return;
+  const handleRemovePending = (index: number) => {
+    setPendingFiles((prev) => {
+      const toRemove = prev[index];
+      if (toRemove) {
+        URL.revokeObjectURL(toRemove.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleCancelAll = () => {
+    pendingFiles.forEach((pf) => URL.revokeObjectURL(pf.previewUrl));
+    setPendingFiles([]);
+    setError(null);
+  };
+
+  const handleUploadAll = async () => {
+    if (pendingFiles.length === 0) return;
 
     setIsUploading(true);
     setError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('bucket', bucket);
-      formData.append('folder', folder);
+    const uploadedUrls: string[] = [];
+    const updatedPending = [...pendingFiles];
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+    for (let i = 0; i < updatedPending.length; i++) {
+      const pf = updatedPending[i];
+      if (pf.status !== 'pending') continue;
 
-      const data = await response.json();
+      updatedPending[i] = { ...pf, status: 'uploading' };
+      setPendingFiles([...updatedPending]);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
+      try {
+        const formData = new FormData();
+        formData.append('file', pf.file);
+        formData.append('bucket', bucket);
+        formData.append('folder', folder);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Upload failed');
+        }
+
+        uploadedUrls.push(data.url);
+        updatedPending[i] = { ...pf, status: 'success' };
+        setPendingFiles([...updatedPending]);
+      } catch (err: any) {
+        console.error('Upload error:', err);
+        updatedPending[i] = { ...pf, status: 'error', error: err.message || 'Error' };
+        setPendingFiles([...updatedPending]);
       }
-
-      onChange([...value, data.url]);
-      handleCancelPreview();
-    } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Error al subir imagen');
-    } finally {
-      setIsUploading(false);
     }
+
+    if (uploadedUrls.length > 0) {
+      onChange([...value, ...uploadedUrls]);
+    }
+
+    setTimeout(() => {
+      setPendingFiles((prev) => {
+        prev.filter((pf) => pf.status === 'success').forEach((pf) => URL.revokeObjectURL(pf.previewUrl));
+        return prev.filter((pf) => pf.status === 'error');
+      });
+    }, 1000);
+
+    setIsUploading(false);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -113,7 +180,7 @@ export function MultiImageUpload({
     onChange(newUrls);
   };
 
-  const canAddMore = value.length < maxImages;
+  const canAddMore = value.length + pendingFiles.length < maxImages;
 
   return (
     <div className={className}>
@@ -121,16 +188,17 @@ export function MultiImageUpload({
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
         onChange={handleFileSelect}
         className="hidden"
         disabled={isUploading}
       />
 
-      {/* Imágenes existentes */}
+      {/* Imágenes ya subidas */}
       {value.length > 0 && (
         <div className="space-y-2 mb-4">
           <p className="text-sm text-muted-foreground">
-            {value.length} de {maxImages} imágenes (la primera es la portada)
+            {value.length} de {maxImages} imágenes subidas (la primera es la portada)
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {value.map((url, index) => (
@@ -147,16 +215,13 @@ export function MultiImageUpload({
                   className="object-cover"
                 />
                 
-                {/* Badge de portada */}
                 {index === 0 && (
                   <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
                     Portada
                   </div>
                 )}
 
-                {/* Controles de la imagen */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                  {/* Mover arriba */}
                   {index > 0 && (
                     <Button
                       type="button"
@@ -169,7 +234,6 @@ export function MultiImageUpload({
                     </Button>
                   )}
                   
-                  {/* Mover abajo */}
                   {index < value.length - 1 && (
                     <Button
                       type="button"
@@ -182,7 +246,6 @@ export function MultiImageUpload({
                     </Button>
                   )}
                   
-                  {/* Eliminar */}
                   <Button
                     type="button"
                     variant="destructive"
@@ -199,42 +262,87 @@ export function MultiImageUpload({
         </div>
       )}
 
-      {/* Preview de nueva imagen */}
-      {previewUrl && (
+      {/* Previews de archivos pendientes */}
+      {pendingFiles.length > 0 && (
         <div className="space-y-3 mb-4">
-          <div className="relative rounded-lg overflow-hidden border-2 border-amber-400 aspect-square max-w-[200px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded">
-              Nueva imagen
-            </div>
+          <p className="text-sm font-medium text-amber-600">
+            {pendingFiles.length} imagen(es) pendiente(s) de subir
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {pendingFiles.map((pf, index) => (
+              <div
+                key={`pending-${index}`}
+                className={`relative rounded-lg overflow-hidden border-2 aspect-square ${
+                  pf.status === 'error' ? 'border-red-400' : 
+                  pf.status === 'success' ? 'border-green-400' : 
+                  pf.status === 'uploading' ? 'border-blue-400' : 
+                  'border-amber-400'
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={pf.previewUrl}
+                  alt={`Preview ${index + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                
+                {pf.status === 'uploading' && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                  </div>
+                )}
+                
+                {pf.status === 'success' && (
+                  <div className="absolute inset-0 bg-green-500/50 flex items-center justify-center">
+                    <Check className="h-6 w-6 text-white" />
+                  </div>
+                )}
+                
+                {pf.status === 'error' && (
+                  <div className="absolute inset-0 bg-red-500/50 flex items-center justify-center">
+                    <X className="h-6 w-6 text-white" />
+                  </div>
+                )}
+                
+                {pf.status === 'pending' && !isUploading && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePending(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
+          
           <div className="flex gap-2">
             <Button
               type="button"
               variant="default"
               size="sm"
               className="bg-green-600 hover:bg-green-700"
-              onClick={handleConfirmUpload}
-              disabled={isUploading}
+              onClick={handleUploadAll}
+              disabled={isUploading || pendingFiles.every((pf) => pf.status !== 'pending')}
             >
               {isUploading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Subiendo...
+                </>
               ) : (
-                <Plus className="h-4 w-4 mr-2" />
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Subir {pendingFiles.filter((pf) => pf.status === 'pending').length} imagen(es)
+                </>
               )}
-              {isUploading ? 'Subiendo...' : 'Agregar'}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleCancelPreview}
+              onClick={handleCancelAll}
               disabled={isUploading}
             >
               <X className="h-4 w-4 mr-2" />
@@ -245,32 +353,40 @@ export function MultiImageUpload({
       )}
 
       {/* Botón para agregar más */}
-      {canAddMore && !previewUrl && (
+      {canAddMore && pendingFiles.length === 0 && (
         <div
           onClick={() => !isUploading && inputRef.current?.click()}
           className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
         >
-          {isUploading ? (
-            <>
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Subiendo...</p>
-            </>
-          ) : (
-            <>
-              <Plus className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                {value.length === 0 ? 'Agregar imágenes' : 'Agregar otra imagen'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                JPG, PNG, WebP o GIF (máx. 5MB cada una)
-              </p>
-            </>
-          )}
+          <Plus className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            {value.length === 0 ? 'Seleccionar imágenes' : 'Agregar más imágenes'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Puedes seleccionar varias a la vez (máx. {maxImages - value.length} más)
+          </p>
+          <p className="text-xs text-muted-foreground">
+            JPG, PNG, WebP o GIF (máx. 5MB cada una)
+          </p>
         </div>
       )}
 
+      {/* Botón secundario si hay pendientes */}
+      {canAddMore && pendingFiles.length > 0 && !isUploading && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          className="mt-2"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Agregar más
+        </Button>
+      )}
+
       {/* Mensaje de límite alcanzado */}
-      {!canAddMore && !previewUrl && (
+      {!canAddMore && pendingFiles.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-2">
           Máximo de {maxImages} imágenes alcanzado
         </p>
