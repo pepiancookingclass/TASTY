@@ -284,10 +284,36 @@ export function ProductCard({ product, creator }: ProductCardProps) {
             </div>
           </div>
           
-          {/* Nombre del producto */}
-          <div className="absolute top-4 left-4 text-white">
+          {/* Info del producto */}
+          <div className="absolute top-4 left-4 right-16 text-white max-h-[40%] overflow-y-auto">
             <h3 className="text-lg font-bold">{productName}</h3>
-            <p className="text-sm text-gray-300">{formatPrice(product.price)}</p>
+            <p className="text-sm text-gray-300 mb-2">{formatPrice(product.price)}</p>
+            
+            {/* Descripción */}
+            {productDescription && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-200 leading-relaxed">{productDescription}</p>
+              </div>
+            )}
+            
+            {/* Ingredientes (solo si existen) */}
+            {product.ingredients[language] && product.ingredients[language].trim() !== '' && (
+              <div className="mt-3 pt-2 border-t border-white/20">
+                <p className="text-xs text-gray-400 font-medium mb-1">{t?.ingredients ?? 'Ingredientes'}:</p>
+                <p className="text-xs text-gray-300">{product.ingredients[language]}</p>
+              </div>
+            )}
+            
+            {/* Badges dietéticos */}
+            {dietaryBadges.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-3">
+                {dietaryBadges.map(badge => (
+                  <span key={badge.key} className="bg-white/20 text-white text-xs px-2 py-0.5 rounded">
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

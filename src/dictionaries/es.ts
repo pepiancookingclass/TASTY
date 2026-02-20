@@ -157,7 +157,8 @@ const dictionary = {
     addedToCart: '¡Añadido al carrito!',
     inYourCart: (productName: string) => `${productName} está ahora en tu carrito.`,
     by: 'Por',
-    preparationLabel: 'Preparación'
+    preparationLabel: 'Preparación',
+    ingredients: 'Ingredientes'
   },
   cartView: {
     empty: {
