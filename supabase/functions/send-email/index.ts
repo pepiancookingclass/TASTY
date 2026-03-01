@@ -212,13 +212,15 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     const formattedDelivery = formatDateGuatemala(order.delivery_date)
     const formattedNow = getCurrentDateGuatemala()
 
-    // Construir lista de productos completa
+    // Construir lista de productos completa (sin duplicar precio cuando qty=1)
     const productsListHtml = items.map(item => {
       const name = item.product_name_es || (item.products as any)?.name_es || 'Producto'
       const qty = item.quantity
       const price = item.unit_price
       const total = qty * price
-      return `• ${qty}x ${name} - Q${price.toFixed(2)} (Q${total.toFixed(2)})`
+      // Truncar nombre si es muy largo
+      const shortName = name.length > 35 ? name.substring(0, 32) + '...' : name
+      return `   ${qty}× ${shortName} .......... Q${total.toFixed(0)}`
     }).join('<br>')
 
     // Desglose global
@@ -299,64 +301,105 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     console.log('📧 ENVIANDO EMAIL AL CLIENTE')
     console.log('📧 ========================================')
 
-    // Construir sección de pagos por creador (con delivery integrado)
-    let clientPaymentSection = ''
+    // Construir sección de entregas por creador (con productos y desglose)
+    let clientDeliveriesSection = ''
     if (numCreators > 1) {
-      clientPaymentSection = `💳 <strong>CÓMO VAS A PAGAR (${numCreators} entregas separadas):</strong><br><br>`
+      clientDeliveriesSection = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br>`
+      clientDeliveriesSection += `🚚 <strong>ENTREGAS (${numCreators} por separado):</strong><br>`
+      clientDeliveriesSection += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>`
       
       creatorMap.forEach(creator => {
         const creatorIva = creator.subtotal * 0.12
         const creatorTotal = creator.subtotal + creatorIva + creator.deliveryFee
-        const productsList = creator.items.map(item => 
-          `${item.product_name_es || (item.products as any)?.name_es || 'Producto'} (${item.quantity})`
-        ).join(' + ')
         const vehicleText = creator.vehicle === 'auto' ? 'Auto' : 'Moto'
         
-        clientPaymentSection += `🚚 <strong>CUANDO LLEGUE ${creator.name.toUpperCase()}:</strong><br>`
-        clientPaymentSection += `• ${productsList}<br>`
-        clientPaymentSection += `• Total productos: Q${creator.subtotal.toFixed(2)}<br>`
-        clientPaymentSection += `• Delivery (${vehicleText}): Q${creator.deliveryFee.toFixed(2)}<br>`
-        clientPaymentSection += `• IVA (12%): Q${creatorIva.toFixed(2)}<br>`
-        clientPaymentSection += `• 💰 <strong>Pagas a ${creator.name}: Q${creatorTotal.toFixed(2)}</strong><br>`
-        clientPaymentSection += `• Incluye impuestos y envío<br><br>`
+        // Obtener zona del creador desde delivery_breakdown
+        let creatorZone = ''
+        if (order.delivery_breakdown && Array.isArray(order.delivery_breakdown)) {
+          const breakdown = order.delivery_breakdown.find((b: any) => b.creator_id === creator.id)
+          if (breakdown?.creator_zone) {
+            creatorZone = ` desde ${breakdown.creator_zone}`
+          }
+        }
+        
+        clientDeliveriesSection += `📦 <strong>${creator.name.toUpperCase()}</strong> (${vehicleText}${creatorZone})<br>`
+        
+        // Lista de productos de este creador
+        creator.items.forEach(item => {
+          const name = item.product_name_es || (item.products as any)?.name_es || 'Producto'
+          const shortName = name.length > 30 ? name.substring(0, 27) + '...' : name
+          const total = item.quantity * item.unit_price
+          clientDeliveriesSection += `   ${item.quantity}× ${shortName} .......... Q${total.toFixed(0)}<br>`
+        })
+        
+        clientDeliveriesSection += `   ─────<br>`
+        clientDeliveriesSection += `   Productos ................. Q${creator.subtotal.toFixed(0)}<br>`
+        clientDeliveriesSection += `   IVA (12%) .................. Q${creatorIva.toFixed(0)}<br>`
+        clientDeliveriesSection += `   Delivery ................... Q${creator.deliveryFee.toFixed(0)}<br>`
+        clientDeliveriesSection += `   ═════════════════════════<br>`
+        clientDeliveriesSection += `   💰 <strong>Pagarás: Q${creatorTotal.toFixed(0)}</strong><br><br>`
       })
-      
-      clientPaymentSection += `📝 <strong>IMPORTANTE:</strong><br>`
-      clientPaymentSection += `• Recibirás ${numCreators} entregas en momentos diferentes<br>`
-      clientPaymentSection += `• Cada creador te cobrará solo por sus productos<br>`
-      clientPaymentSection += `• Paga en efectivo a cada uno cuando llegue<br><br>`
     } else {
-      // Solo un creador: ya se muestra el desglose global
-      clientPaymentSection = ''
+      clientDeliveriesSection = ''
     }
 
-    const clientSubject = `🍳 [CLIENTE] Confirmación Pedido #${orderUuid.substring(0, 8)}`
+    const clientSubject = `🎉 Pedido Confirmado #${orderUuid.substring(0, 8)} - TASTY`
+    
+    // Formato de fecha más legible
+    const dateCreated = formattedNow.split(' ')[0] || formattedNow
+    const dateDelivery = formattedDelivery.split(' ')[0] || formattedDelivery
+    
     const clientHtml = `
-      ¡Hola ${order.customer_name}!<br><br>
-      🎉 <strong>¡Tu pedido ha sido confirmado exitosamente!</strong><br><br>
-      📋 <strong>DETALLES DE TU PEDIDO:</strong><br>
-      • Número: #${orderUuid.substring(0, 8)}<br>
-      • Fecha: ${formattedNow}<br>
-      • Entrega estimada: ${formattedDelivery}<br>
-      • Dirección: ${fullAddress}<br><br>
-      🛍️ <strong>TU PEDIDO COMPLETO:</strong> Q${order.total.toFixed(2)}<br>
-      ${productsListHtml}<br><br>
-      💰 <strong>DESGLOSE:</strong><br>
-      • Subtotal: Q${globalSubtotal.toFixed(2)}<br>
-      • IVA (12%): Q${globalIva.toFixed(2)}<br>
-      • Delivery: Q${globalDelivery.toFixed(2)}<br>
-      • <strong>TOTAL: Q${order.total.toFixed(2)}</strong><br><br>
-      ${clientPaymentSection}
-      📱 <strong>PRÓXIMOS PASOS:</strong><br>
-      1. Recuerda enviar el WhatsApp desde tu plataforma de "Mis Pedidos" para que nuestro agente te ayude a coordinar la entrega<br>
-      2. Los creadores prepararán tu pedido con amor<br>
-      3. Te contactaremos para confirmar fecha y hora exacta de cada entrega<br>
-      4. ¡Disfruta tus deliciosos productos artesanales!<br><br>
-      💡 Si ya enviaste el WhatsApp, puedes omitir el paso 1<br><br>
-      ¡Gracias por elegir TASTY! 🍰<br><br>
-      ---<br>
-      Equipo TASTY<br>
-      WhatsApp: +502 30635323
+      <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #fffbeb; padding: 20px; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #f59e0b; margin: 0;">🎉 ¡Pedido Confirmado!</h1>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+          <pre style="margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 <strong>PEDIDO #${orderUuid.substring(0, 8)}</strong>
+   ${dateCreated} • Entrega: ${dateDelivery}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 <strong>ENTREGA:</strong>
+   ${order.delivery_street || 'Dirección no especificada'}
+   ${order.delivery_city || ''}, ${order.delivery_state || ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛒 <strong>TUS PRODUCTOS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${productsListHtml}
+                                  ─────
+   Subtotal ................. Q${globalSubtotal.toFixed(0)}
+   IVA (12%) .................. Q${globalIva.toFixed(0)}
+
+${clientDeliveriesSection}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   <strong>TOTAL PEDIDO ............ Q${order.total.toFixed(0)}</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${numCreators > 1 ? `📝 <strong>IMPORTANTE:</strong>
+   • Recibirás ${numCreators} entregas en momentos diferentes
+   • Cada creador te cobrará solo por sus productos
+   • Paga en efectivo a cada uno cuando llegue
+
+` : ''}📱 <strong>PRÓXIMOS PASOS:</strong>
+   1. Envía el WhatsApp desde "Mis Pedidos" para
+      coordinar tu entrega con nuestro agente
+   2. Los creadores prepararán tu pedido con amor
+   3. Continuaremos la comunicación para confirmar
+      fecha y hora de cada entrega
+   4. ¡Disfruta tus productos artesanales!
+
+   💡 ¿Ya enviaste el WhatsApp? Omite el paso 1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+¡Gracias por elegir TASTY! 🍰
+WhatsApp: +502 3063-5323
+          </pre>
+        </div>
+      </div>
     `
 
     // Para ver el correo de cliente en sandbox, enviamos al ADMIN_EMAIL (Resend limita destinos no verificados)
@@ -479,50 +522,83 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         return `• ${item.product_name_es || product?.name_es || 'Producto'} (Cantidad: ${item.quantity}) - Q${(item.quantity * item.unit_price).toFixed(2)} | Tiempo: ${prepTime}h`
       }).join('<br>')
 
-      const creatorSubject = `🍳 [CREADOR] Nuevo Pedido para ${creatorData.name} #${orderUuid.substring(0, 8)}`
+      const creatorSubject = `🎉 Nuevo Pedido #${orderUuid.substring(0, 8)} - TASTY`
+      
+      // Lista de productos formateada
+      const creatorProductsFormatted = creatorData.items.map(item => {
+        const product = item.products as any
+        const name = item.product_name_es || product?.name_es || 'Producto'
+        const shortName = name.length > 30 ? name.substring(0, 27) + '...' : name
+        const total = item.quantity * item.unit_price
+        return `   ${item.quantity}× ${shortName} .......... Q${total.toFixed(0)}`
+      }).join('<br>')
+      
       const creatorHtml = `
-        ¡Hola ${creatorData.name}!<br><br>
-        🎉 <strong>¡Tienes un nuevo pedido!</strong><br><br>
-        📋 <strong>DETALLES DEL PEDIDO:</strong><br>
-        • Número: #${orderUuid.substring(0, 8)}<br>
-        • Fecha: ${formattedNow}<br>
-        • Cliente: ${order.customer_name}<br>
-        • Teléfono cliente: ${order.customer_phone}<br><br>
-        📦 <strong>TUS PRODUCTOS ESPECÍFICOS:</strong><br>
-        ${creatorProductsList}<br><br>
-        💰 <strong>TU PARTE FINANCIERA DEL PEDIDO:</strong><br>
-        • Valor de tus productos: Q${creatorData.subtotal.toFixed(2)}<br>
-        • IVA de tus productos (12%): Q${creatorIva.toFixed(2)}<br>
-        • Delivery (${vehicleText}): Q${creatorData.deliveryFee.toFixed(2)}<br>
-        • <strong>TOTAL QUE EL CLIENTE TE PAGARÁ: Q${creatorTotal.toFixed(2)}</strong><br><br>
-        🏦 <strong>TUS GANANCIAS:</strong><br>
-        • Tu ganancia (90%): Q${ganancia90.toFixed(2)}<br>
-        • Comisión TASTY (10%): Q${comisionTasty.toFixed(2)}<br>
-        • Tiempo de preparación: ${creatorData.totalHours} horas<br><br>
-        📊 <strong>CONTEXTO DEL PEDIDO COMPLETO:</strong><br>
-        • Total general del pedido: Q${order.total.toFixed(2)}<br>
-        • Nota: ${numCreators > 1 ? 'Este es un pedido multi-creador. El cliente pagará por separado a cada creador según sus entregas individuales.' : 'Este pedido es solo tuyo.'}<br><br>
-        📍 <strong>INFORMACIÓN DE ENTREGA:</strong><br>
-        • Dirección: ${fullAddress}<br>
-        • Fecha estimada: ${formattedDelivery}<br>
-        • Notas especiales: ${order.delivery_notes || 'Sin notas'}<br><br>
-        📱 <strong>PRÓXIMOS PASOS PARA TI:</strong><br>
-        1. Prepara tus productos según especificaciones<br>
-        2. La fecha y hora exacta de entrega se acordará con nuestro agente de servicio al cliente<br>
-        3. Coordínate directamente con el cliente si es necesario<br>
-        4. El cliente te pagará Q${creatorTotal.toFixed(2)} en efectivo al momento de tu entrega<br>
-        5. Transfiere Q${comisionTasty.toFixed(2)} (10%) a TASTY después de recibir el pago<br><br>
-        ${numCreators > 1 ? `⚠️ <strong>NOTA IMPORTANTE SOBRE ENTREGAS:</strong><br>
-        Este pedido involucra múltiples creadores. Cada creador entrega por separado y cobra por separado. El cliente sabe que debe pagar Q${creatorTotal.toFixed(2)} específicamente a ti cuando reciba tus productos.<br><br>` : ''}
-        💡 <strong>RECORDATORIO FINANCIERO:</strong><br>
-        • El cliente te pagará: Q${creatorTotal.toFixed(2)}<br>
-        • Tú transfieres a TASTY: Q${comisionTasty.toFixed(2)}<br>
-        • Tu ganancia neta final: Q${ganancia90.toFixed(2)}<br><br>
-        ¡Gracias por ser parte de TASTY! 🍰<br><br>
-        ---<br>
-        Panel Creador: https://tasty.lat/creator<br>
-        WhatsApp Soporte: +502 30635323<br>
-        Equipo TASTY
+        <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #fffbeb; padding: 20px; border-radius: 12px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #f59e0b; margin: 0;">🎉 ¡Nuevo Pedido!</h1>
+          </div>
+          
+          <div style="background: white; padding: 20px; border-radius: 8px;">
+            <pre style="margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+¡Hola <strong>${creatorData.name}</strong>!
+
+Tienes un nuevo pedido de <strong>${order.customer_name}</strong>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 <strong>PEDIDO #${orderUuid.substring(0, 8)}</strong>
+   ${formattedNow}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👤 <strong>CLIENTE:</strong>
+   ${order.customer_name}
+   📞 ${order.customer_phone}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 <strong>TUS PRODUCTOS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${creatorProductsFormatted}
+                                  ─────
+   Productos ................. Q${creatorData.subtotal.toFixed(0)}
+   IVA (12%) .................. Q${creatorIva.toFixed(0)}
+   Delivery (${vehicleText}) ............. Q${creatorData.deliveryFee.toFixed(0)}
+   ═════════════════════════════════
+   💰 <strong>CLIENTE TE PAGA: Q${creatorTotal.toFixed(0)}</strong>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏦 <strong>TUS GANANCIAS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Tu ganancia (90%) ........ Q${ganancia90.toFixed(0)}
+   Comisión TASTY (10%) ...... Q${comisionTasty.toFixed(0)}
+   Tiempo preparación ....... ${creatorData.totalHours}h
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 <strong>ENTREGA:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ${order.delivery_street || 'Dirección no especificada'}
+   ${order.delivery_city || ''}, ${order.delivery_state || ''}
+   Fecha: ${formattedDelivery}
+   ${order.delivery_notes ? `Notas: ${order.delivery_notes}` : ''}
+
+${numCreators > 1 ? `⚠️ <strong>PEDIDO MULTI-CREADOR:</strong>
+   El cliente pagará a cada creador por
+   separado. Él sabe que te paga Q${creatorTotal.toFixed(0)}
+
+` : ''}━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 <strong>PRÓXIMOS PASOS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   1. Prepara tus productos
+   2. Coordinaremos fecha/hora de entrega
+   3. Cliente te paga Q${creatorTotal.toFixed(0)} en efectivo
+   4. Transfiere Q${comisionTasty.toFixed(0)} (10%) a TASTY
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+¡Gracias por ser parte de TASTY! 🍰
+Panel: tasty.lat/creator
+WhatsApp: +502 3063-5323
+            </pre>
+          </div>
+        </div>
       `
 
       const creatorResult = await sendEmailWithResend(creatorData.email || ADMIN_EMAIL, creatorSubject, creatorHtml)

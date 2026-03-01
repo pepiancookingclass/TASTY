@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 20 Febrero 2026  
+> **Última actualización:** 1 Marzo 2026 (v2)  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -131,6 +131,39 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Rediseño de Emails
+- **Estado:** ✅ COMPLETADO (1 Mar 2026)
+- **Implementación:**
+  - **Formato unificado:** Todos los emails usan diseño monospace con líneas separadoras
+  - **Email cliente:** Desglose claro por creador con productos, IVA, delivery y total a pagar
+  - **Email creador:** Info financiera clara (ganancia 90%, comisión TASTY 10%)
+  - **Email bienvenida:** Formato alineado para creadores y clientes
+  - **Sin duplicación de precios:** Eliminado el formato "Q175 (Q175)" cuando qty=1
+  - **Nombres truncados:** Productos largos se cortan a 30-35 caracteres
+- **Archivos modificados:**
+  - `supabase/functions/send-email/index.ts` — Email cliente/admin/creador rediseñado
+  - `supabase/functions/send-welcome-email/index.ts` — Email bienvenida rediseñado
+
+#### Sistema de Delivery Mejorado
+- **Estado:** ✅ COMPLETADO (1 Mar 2026)
+- **Implementación:**
+  - **Tarifas separadas moto/carro:** Creadores configuran tarifas independientes para cada vehículo
+  - **Radio de entrega 50km:** Default aumentado de 25km a 50km (cubre Antigua-Guatemala)
+  - **Factor de corrección 1.4:** Distancia calculada considera ruta real vs línea recta
+  - **Zona del creador visible:** Se muestra ciudad/departamento en checkout, carrito y ficha de producto
+  - **Warning distancia larga (>50km):** Banner rojo con botón WhatsApp para coordinar entregas lejanas
+  - **Bloqueo sin ubicación:** Si creador no tiene ubicación configurada, se bloquea el pedido
+  - **Inputs sin decimales:** Tarifas en quetzales enteros para fácil uso en móvil
+- **Archivos modificados:**
+  - `src/app/checkout/page.tsx` — Warning distancia, zona creador, bloqueo sin ubicación
+  - `src/app/user/profile/page.tsx` — Tarifas moto/carro separadas, radio 50km
+  - `src/components/cart/CartView.tsx` — Zona del creador en header
+  - `src/components/product/ProductCard.tsx` — Zona del creador junto al nombre
+  - `src/lib/types.ts` — Campos addressCity, addressState en Creator
+  - `src/lib/services/users.ts` — Transform incluye zona
+  - `src/dictionaries/es.ts`, `en.ts` — Traducciones nuevas
+- **SQL actualizado:** Función `calculate_creator_delivery_fee` usa tarifas moto/auto y retorna `NO_LOCATION` si falta ubicación
 
 #### Login con Google OAuth + Sistema de Disponibilidad
 - **Estado:** ✅ COMPLETADO (20 Feb 2026)

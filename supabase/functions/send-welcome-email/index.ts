@@ -128,71 +128,91 @@ async function processWelcomeEmails(userId: string): Promise<{ success: boolean;
     if (isCreator) {
       userSubject = '🎉 ¡Bienvenido a TASTY como Creador!'
       userHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #f59e0b;">🎉 ¡Bienvenido a TASTY como Creador!</h1>
+        <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #fffbeb; padding: 20px; border-radius: 12px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #f59e0b; margin: 0;">🎉 ¡Bienvenido a TASTY!</h1>
+          </div>
           
-          <p>¡Hola <strong>${userData.name}</strong>!</p>
-          
-          <p>Estamos emocionados de tenerte en nuestra plataforma. Como creador, podrás:</p>
-          
-          <h3 style="color: #f59e0b;">✨ BENEFICIOS PARA TI:</h3>
-          <ul>
-            <li>Vender tus productos artesanales</li>
-            <li>Recibir 90% de las ganancias</li>
-            <li>Crear combos colaborativos</li>
-            <li>Gestionar tus pedidos fácilmente</li>
-            <li>Acceso a analytics de ventas</li>
-          </ul>
-          
-          <h3 style="color: #f59e0b;">🚀 PRÓXIMOS PASOS:</h3>
-          <ol>
-            <li>Completa tu perfil de creador</li>
-            <li>Sube fotos de tu workspace</li>
-            <li>Agrega tus primeros productos</li>
-            <li>Crea ofertas especiales</li>
-          </ol>
-          
-          <h3 style="color: #f59e0b;">📱 RECURSOS ÚTILES:</h3>
-          <ul>
-            <li>WhatsApp Soporte: +502 30635323</li>
-          </ul>
-          
-          <p>¡Gracias por ser parte de la familia TASTY! 🍰</p>
-          
-          <hr>
-          <p><strong>Equipo TASTY</strong><br>
-          WhatsApp: +502 30635323</p>
+          <div style="background: white; padding: 20px; border-radius: 8px;">
+            <pre style="margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+¡Hola <strong>${userData.name}</strong>!
+
+Estamos emocionados de tenerte como creador
+en nuestra plataforma.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ <strong>BENEFICIOS PARA TI:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   • Vende tus productos artesanales
+   • Recibe 90% de las ganancias
+   • Crea combos colaborativos
+   • Gestiona tus pedidos fácilmente
+   • Accede a analytics de ventas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 <strong>PRÓXIMOS PASOS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   1. Completa tu perfil de creador
+   2. Sube fotos de tu workspace
+   3. Configura tu ubicación de entrega
+   4. Agrega tus primeros productos
+   5. ¡Empieza a vender!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 <strong>ACCEDE A TU PANEL:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   tasty.lat/creator
+
+¡Gracias por ser parte de TASTY! 🍰
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Equipo TASTY
+WhatsApp: +502 3063-5323
+            </pre>
+          </div>
         </div>
       `
     } else {
       userSubject = '🍰 ¡Bienvenido a TASTY!'
       userHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #f59e0b;">🍰 ¡Bienvenido a TASTY!</h1>
+        <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #fffbeb; padding: 20px; border-radius: 12px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #f59e0b; margin: 0;">🍰 ¡Bienvenido a TASTY!</h1>
+          </div>
           
-          <p>¡Hola <strong>${userData.name}</strong>!</p>
-          
-          <p>Gracias por unirte a nuestra comunidad de amantes de la comida artesanal.</p>
-          
-          <h3 style="color: #f59e0b;">✨ DESCUBRE TASTY:</h3>
-          <ul>
-            <li>Productos artesanales únicos</li>
-            <li>Creadores locales talentosos</li>
-            <li>Combos especiales colaborativos</li>
-            <li>Entrega a domicilio</li>
-          </ul>
-          
-          <h3 style="color: #f59e0b;">🎁 OFERTAS ESPECIALES:</h3>
-          <p>¡Aprovecha nuestras ofertas de bienvenida!</p>
-          
-          <h3 style="color: #f59e0b;">💡 CONSEJO:</h3>
-          <p>Completa tu perfil para una mejor experiencia de compra.</p>
-          
-          <p>¡Disfruta explorando TASTY! 🎉</p>
-          
-          <hr>
-          <p><strong>Equipo TASTY</strong><br>
-          WhatsApp: +502 30635323</p>
+          <div style="background: white; padding: 20px; border-radius: 8px;">
+            <pre style="margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+¡Hola <strong>${userData.name}</strong>!
+
+Gracias por unirte a nuestra comunidad de
+amantes de la comida artesanal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ <strong>DESCUBRE TASTY:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   • Productos artesanales únicos
+   • Creadores locales talentosos
+   • Combos especiales colaborativos
+   • Entrega a domicilio
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 <strong>CONSEJO:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Completa tu perfil para una mejor
+   experiencia de compra.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛒 <strong>EMPIEZA A COMPRAR:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   tasty.lat
+
+¡Disfruta explorando TASTY! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Equipo TASTY
+WhatsApp: +502 3063-5323
+            </pre>
+          </div>
         </div>
       `
     }
