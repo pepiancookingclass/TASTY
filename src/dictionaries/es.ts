@@ -212,6 +212,8 @@ const dictionary = {
     sweets: 'Dulces',
     savory: 'Salados',
     handmades: 'Hecho a Mano',
+    seasonal: 'Temporada',
+    others: 'Otros',
     combos: 'Combos',
     creators: 'Creadores',
     creatorDashboard: 'Panel de Creador',
@@ -310,9 +312,9 @@ const dictionary = {
       configured: '📍 Ubicación de entrega configurada',
       latlng: (lat: string, lng: string) => `Lat: ${lat}, Lng: ${lng}`,
       radiusLabel: '📏 Radio de Entrega (km)',
-      baseFeeLabel: '💰 Tarifa Base (Q)',
-      perKmFeeLabel: '🚗 Por km extra (Q)',
-      hint: '💡 Los primeros 3km están incluidos en la tarifa base. El sistema calculará automáticamente el costo de entrega basado en la distancia desde tu ubicación.',
+      baseFeeLabel: 'Tarifa Base (Q)',
+      perKmFeeLabel: 'Por km extra (Q)',
+      hint: '💡 Los primeros 3km están incluidos en la tarifa base. El sistema usa la tarifa de moto o carro según el tipo de producto.',
       locationErrorFallback: '💡 Puedes usar la opción "Seleccionar en mapa" si no puedes compartir tu ubicación.',
       gettingLocation: 'Obteniendo ubicación...',
       locationConfigured: 'Ubicación GPS: ',
@@ -748,7 +750,7 @@ const dictionary = {
       description: 'Platos salados artesanales preparados con ingredientes frescos'
     },
     handcrafts: {
-      name: 'Artesanías',
+      name: 'Hecho a Mano',
       description: 'Productos hechos a mano con amor y dedicación'
     },
     season: {
@@ -935,6 +937,7 @@ const dictionary = {
     transferDesc: 'Te enviaremos los datos bancarios después de confirmar tu pedido.',
     summaryTitle: 'Resumen del Pedido',
     creatorGroupTitle: 'Productos del mismo creador',
+    productsFrom: 'Productos de',
     preparationLabel: 'Preparación',
     productsLabel: 'Productos',
     ivaLabel: 'I.V.A. (12%)',
@@ -949,7 +952,12 @@ const dictionary = {
     deliveryMultipleFallback: 'El costo final se mostrará por creador según la distancia calculada.',
     highDeliveryWarning: (km?: number) =>
       `⚠️ Delivery alto (>Q100) por distancia${Number.isFinite(km) ? ` (~${km?.toFixed(1)} km)` : ''}. Deberás confirmar con servicio al cliente la disponibilidad y horario de entrega.`,
-    finalCostNote: '💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación.',
+    deliveryCostNoticeTitle: 'Aviso sobre costo de delivery',
+    deliveryCostNoticeBody: 'El costo de delivery mostrado es un estimado basado en la ubicación que seleccionaste. El monto final será confirmado por nuestro equipo de servicio al cliente, quienes verificarán tu dirección y ubicación de entrega. Si hay diferencia, te contactaremos por WhatsApp antes de procesar tu pedido.',
+    longDistanceWarningTitle: 'Distancia de entrega muy larga',
+    longDistanceWarningBody: (km: number, creatorName: string) => 
+      `La distancia a ${creatorName} es de aproximadamente ${km}km. Para entregas fuera del área metropolitana, te recomendamos coordinar directamente con nuestro servicio al cliente para confirmar disponibilidad y costo final de envío.`,
+    longDistanceWhatsAppButton: 'Contactar por WhatsApp',
     totalLabel: 'Total',
     estimatedDeliveryTitle: 'Entrega estimada',
     policy48h: '⏰ Política de entrega: Mínimo 48 horas de anticipación para garantizar la frescura de tus productos.',

@@ -3,11 +3,32 @@
 import { useEffect } from 'react';
 import { useUserRoles } from '@/hooks/useUserRoles';
 
+// Verificar si estamos en ambiente de desarrollo/preview
+function isDevEnvironment(): boolean {
+  if (typeof window === 'undefined') return true;
+  
+  const hostname = window.location.hostname;
+  
+  // Excluir localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  
+  // Excluir previews de Vercel (*.vercel.app)
+  if (hostname.endsWith('.vercel.app')) return true;
+  
+  return false;
+}
+
 export function ConditionalAnalytics() {
   const { roles, loading } = useUserRoles();
 
   useEffect(() => {
     if (loading) return;
+
+    // No cargar en localhost o Vercel preview
+    if (isDevEnvironment()) {
+      console.log('📊 Analytics: Skipping (dev/preview environment)');
+      return;
+    }
 
     // Solo cargar analytics si NO es admin, creator o agent
     const isExcludedRole = roles.some(role => ['admin', 'creator', 'agent'].includes(role));

@@ -76,6 +76,8 @@ export type Creator = {
   skills?: ('pastry' | 'savory' | 'handmade')[];
   hasDelivery?: boolean;
   availabilityStatus?: AvailabilityStatus;
+  addressCity?: string;
+  addressState?: string;
 };
 
 export type CartItem = {

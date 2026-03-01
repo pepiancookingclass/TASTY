@@ -219,6 +219,11 @@ export function ProductCard({ product, creator }: ProductCardProps) {
                 </Avatar>
                 <span className="text-xs text-muted-foreground font-medium group-hover:text-primary transition-colors">
                   {t?.by ?? dict.productCard.by} {creator.name}
+                  {(creator.addressCity || creator.addressState) && (
+                    <span className="text-gray-400 ml-1">
+                      · {[creator.addressCity, creator.addressState].filter(Boolean).join(', ')}
+                    </span>
+                  )}
                 </span>
             </Link>
         )}

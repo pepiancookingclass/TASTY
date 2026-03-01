@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 const DELIVERY_DATETIME_KEY = 'tasty-delivery-datetime';
+import { supabase } from '@/lib/supabase';
 
 export function CartView() {
   const { state, dispatch } = useCart();
@@ -33,6 +34,7 @@ export function CartView() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [deliveryDateInput, setDeliveryDateInput] = useState<string>('');
+  const [creatorInfo, setCreatorInfo] = useState<Record<string, { name: string; zone: string }>>({});
   const locale = language === 'es' ? esLocale : enUS;
   const dateFormat = language === 'es' ? "EEEE, d 'de' MMMM 'a las' h:mm a" : "EEEE, MMM d 'at' h:mm a";
 
@@ -40,6 +42,30 @@ export function CartView() {
     const pad = (n: number) => n.toString().padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
+
+  // Cargar info de creadores (nombre y zona)
+  useEffect(() => {
+    const loadCreatorInfo = async () => {
+      const creatorIds = [...new Set(items.map(item => item.product.creatorId))];
+      if (creatorIds.length === 0) return;
+      
+      const { data } = await supabase
+        .from('users')
+        .select('id, name, address_city, address_state')
+        .in('id', creatorIds);
+      
+      const info: Record<string, { name: string; zone: string }> = {};
+      (data || []).forEach((c: { id: string; name?: string; address_city?: string; address_state?: string }) => {
+        const parts = [c.address_city, c.address_state].filter(Boolean);
+        info[c.id] = {
+          name: c.name || 'Creador',
+          zone: parts.join(', ') || ''
+        };
+      });
+      setCreatorInfo(info);
+    };
+    loadCreatorInfo();
+  }, [items]);
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
@@ -188,7 +214,10 @@ export function CartView() {
             <div className="flex items-center gap-2 pb-2 border-b">
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">
-                {dict.cartView.creatorGroupTitle}
+                {creatorInfo[creatorId]?.name || dict.cartView.creatorGroupTitle}
+                {creatorInfo[creatorId]?.zone && (
+                  <span className="text-xs text-gray-500 ml-1">· {creatorInfo[creatorId].zone}</span>
+                )}
               </span>
             </div>
             {creatorItems.map(({ product, quantity }) => {

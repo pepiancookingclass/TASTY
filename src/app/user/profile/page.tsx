@@ -83,9 +83,13 @@ export default function UserProfilePage() {
     latitude: null as number | null,
     longitude: null as number | null,
     address: '',
-    deliveryRadius: 25,
-    baseFee: 25.00,
-    perKmFee: 3.00
+    deliveryRadius: 50,
+    // Tarifas para MOTO
+    baseFeeMoto: 25.00,
+    perKmFeeMoto: 3.00,
+    // Tarifas para CARRO
+    baseFeeAuto: 40.00,
+    perKmFeeAuto: 5.00
   });
   
   const finalCreatorLocation = creatorGPSLocation || creatorManualLocation;
@@ -143,15 +147,23 @@ export default function UserProfilePage() {
             latitude: userData.creator_latitude ?? null,
             longitude: userData.creator_longitude ?? null,
             address: userData.creator_address || '',
-            deliveryRadius: userData.creator_delivery_radius || 25,
-            baseFee: userData.creator_base_delivery_fee || 25.00,
-            perKmFee: userData.creator_per_km_fee || 3.00
+            deliveryRadius: userData.creator_delivery_radius || 50,
+            // Tarifas MOTO
+            baseFeeMoto: userData.creator_base_delivery_fee_moto ?? userData.creator_base_delivery_fee ?? 25.00,
+            perKmFeeMoto: userData.creator_per_km_fee_moto ?? userData.creator_per_km_fee ?? 3.00,
+            // Tarifas CARRO
+            baseFeeAuto: userData.creator_base_delivery_fee_auto ?? 40.00,
+            perKmFeeAuto: userData.creator_per_km_fee_auto ?? 5.00
           });
           console.log('🚚 Profile: Configuración delivery cargada:', {
             lat: userData.creator_latitude,
             lng: userData.creator_longitude,
             address: userData.creator_address,
-            radius: userData.creator_delivery_radius
+            radius: userData.creator_delivery_radius,
+            baseFeeMoto: userData.creator_base_delivery_fee_moto,
+            perKmFeeMoto: userData.creator_per_km_fee_moto,
+            baseFeeAuto: userData.creator_base_delivery_fee_auto,
+            perKmFeeAuto: userData.creator_per_km_fee_auto
           });
           
           // Configurar departamento y municipios si ya hay datos
@@ -407,18 +419,38 @@ export default function UserProfilePage() {
           creator_longitude: creatorDeliveryConfig.longitude,
           creator_address: creatorDeliveryConfig.address,
           creator_delivery_radius: creatorDeliveryConfig.deliveryRadius,
-          creator_base_delivery_fee: creatorDeliveryConfig.baseFee,
-          creator_per_km_fee: creatorDeliveryConfig.perKmFee
+          // Tarifas separadas para MOTO y CARRO
+          creator_base_delivery_fee_moto: creatorDeliveryConfig.baseFeeMoto,
+          creator_per_km_fee_moto: creatorDeliveryConfig.perKmFeeMoto,
+          creator_base_delivery_fee_auto: creatorDeliveryConfig.baseFeeAuto,
+          creator_per_km_fee_auto: creatorDeliveryConfig.perKmFeeAuto
         })
       };
 
       console.log('💾 Profile: Guardando datos del creador:', dataToSave);
+      
+      if (isCreator) {
+        console.log('🚚 Profile: CONFIGURACIÓN DELIVERY A GUARDAR:', {
+          latitude: creatorDeliveryConfig.latitude,
+          longitude: creatorDeliveryConfig.longitude,
+          address: creatorDeliveryConfig.address,
+          deliveryRadius: creatorDeliveryConfig.deliveryRadius,
+          baseFeeMoto: creatorDeliveryConfig.baseFeeMoto,
+          perKmFeeMoto: creatorDeliveryConfig.perKmFeeMoto,
+          baseFeeAuto: creatorDeliveryConfig.baseFeeAuto,
+          perKmFeeAuto: creatorDeliveryConfig.perKmFeeAuto,
+          nota: 'El cálculo final aplica factor 1.4 a la distancia línea recta'
+        });
+      }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .upsert(dataToSave);
+        .upsert(dataToSave)
+        .select();
 
       if (error) throw error;
+
+      console.log('✅ Profile: Datos guardados exitosamente:', data);
 
       toast({
         title: '✅ Perfil guardado',
@@ -887,7 +919,8 @@ export default function UserProfilePage() {
                           )}
                           
                           {/* Configuración de delivery */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                          <div className="space-y-4 mt-4">
+                            {/* Radio de entrega */}
                             <div className="space-y-2">
                               <Label>{dict.userProfile.creatorLocation.radiusLabel}</Label>
                               <Input 
@@ -902,59 +935,131 @@ export default function UserProfilePage() {
                                   }));
                                 }}
                                 onBlur={(e) => {
+                                  const finalValue = (!e.target.value || parseInt(e.target.value) <= 0) ? 50 : parseInt(e.target.value);
+                                  console.log('🚚 Profile: Radio delivery modificado:', finalValue, 'km');
                                   if (!e.target.value || parseInt(e.target.value) <= 0) {
-                                    setCreatorDeliveryConfig(prev => ({ ...prev, deliveryRadius: 25 }));
+                                    setCreatorDeliveryConfig(prev => ({ ...prev, deliveryRadius: 50 }));
                                   }
                                 }}
-                                placeholder="25"
+                                placeholder="50"
+                                className="max-w-[200px]"
                                 disabled={isSaving}
                               />
+                              <p className="text-xs text-gray-500">Ejemplo: Antigua a Ciudad de Guatemala son ~45km</p>
                             </div>
-                            <div className="space-y-2">
-                              <Label>{dict.userProfile.creatorLocation.baseFeeLabel}</Label>
-                              <Input 
-                                type="number" 
-                                inputMode="decimal"
-                                step="0.01"
-                                value={creatorDeliveryConfig.baseFee === 0 ? '' : creatorDeliveryConfig.baseFee} 
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setCreatorDeliveryConfig(prev => ({
-                                    ...prev,
-                                    baseFee: val === '' ? 0 : parseFloat(val) || 0
-                                  }));
-                                }}
-                                onBlur={(e) => {
-                                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
-                                    setCreatorDeliveryConfig(prev => ({ ...prev, baseFee: 25.00 }));
-                                  }
-                                }}
-                                placeholder="25.00"
-                                disabled={isSaving}
-                              />
+                            
+                            {/* Tarifas MOTO */}
+                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <p className="font-medium text-blue-800 mb-2">🏍️ Tarifas Moto</p>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label className="text-sm">{dict.userProfile.creatorLocation.baseFeeLabel}</Label>
+                                  <Input 
+                                    type="number" 
+                                    inputMode="numeric"
+                                    step="1"
+                                    value={creatorDeliveryConfig.baseFeeMoto === 0 ? '' : Math.round(creatorDeliveryConfig.baseFeeMoto)} 
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setCreatorDeliveryConfig(prev => ({
+                                        ...prev,
+                                        baseFeeMoto: val === '' ? 0 : parseFloat(val) || 0
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const finalValue = (!e.target.value || parseFloat(e.target.value) <= 0) ? 25.00 : parseFloat(e.target.value);
+                                      console.log('🚚 Profile: Tarifa base MOTO modificada: Q', finalValue);
+                                      if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                        setCreatorDeliveryConfig(prev => ({ ...prev, baseFeeMoto: 25.00 }));
+                                      }
+                                    }}
+                                    placeholder="25.00"
+                                    disabled={isSaving}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-sm">{dict.userProfile.creatorLocation.perKmFeeLabel}</Label>
+                                  <Input 
+                                    type="number" 
+                                    inputMode="numeric"
+                                    step="1"
+                                    value={creatorDeliveryConfig.perKmFeeMoto === 0 ? '' : Math.round(creatorDeliveryConfig.perKmFeeMoto)} 
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setCreatorDeliveryConfig(prev => ({
+                                        ...prev,
+                                        perKmFeeMoto: val === '' ? 0 : parseFloat(val) || 0
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const finalValue = (!e.target.value || parseFloat(e.target.value) <= 0) ? 3.00 : parseFloat(e.target.value);
+                                      console.log('🚚 Profile: Tarifa por km MOTO modificada: Q', finalValue);
+                                      if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                        setCreatorDeliveryConfig(prev => ({ ...prev, perKmFeeMoto: 3.00 }));
+                                      }
+                                    }}
+                                    placeholder="3.00"
+                                    disabled={isSaving}
+                                  />
+                                </div>
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                              <Label>{dict.userProfile.creatorLocation.perKmFeeLabel}</Label>
-                              <Input 
-                                type="number" 
-                                inputMode="decimal"
-                                step="0.01"
-                                value={creatorDeliveryConfig.perKmFee === 0 ? '' : creatorDeliveryConfig.perKmFee} 
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setCreatorDeliveryConfig(prev => ({
-                                    ...prev,
-                                    perKmFee: val === '' ? 0 : parseFloat(val) || 0
-                                  }));
-                                }}
-                                onBlur={(e) => {
-                                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
-                                    setCreatorDeliveryConfig(prev => ({ ...prev, perKmFee: 3.00 }));
-                                  }
-                                }}
-                                placeholder="3.00"
-                                disabled={isSaving}
-                              />
+                            
+                            {/* Tarifas CARRO */}
+                            <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                              <p className="font-medium text-orange-800 mb-2">🚗 Tarifas Carro</p>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label className="text-sm">{dict.userProfile.creatorLocation.baseFeeLabel}</Label>
+                                  <Input 
+                                    type="number" 
+                                    inputMode="numeric"
+                                    step="1"
+                                    value={creatorDeliveryConfig.baseFeeAuto === 0 ? '' : Math.round(creatorDeliveryConfig.baseFeeAuto)} 
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setCreatorDeliveryConfig(prev => ({
+                                        ...prev,
+                                        baseFeeAuto: val === '' ? 0 : parseFloat(val) || 0
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const finalValue = (!e.target.value || parseFloat(e.target.value) <= 0) ? 40.00 : parseFloat(e.target.value);
+                                      console.log('🚚 Profile: Tarifa base CARRO modificada: Q', finalValue);
+                                      if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                        setCreatorDeliveryConfig(prev => ({ ...prev, baseFeeAuto: 40.00 }));
+                                      }
+                                    }}
+                                    placeholder="40.00"
+                                    disabled={isSaving}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-sm">{dict.userProfile.creatorLocation.perKmFeeLabel}</Label>
+                                  <Input 
+                                    type="number" 
+                                    inputMode="numeric"
+                                    step="1"
+                                    value={creatorDeliveryConfig.perKmFeeAuto === 0 ? '' : Math.round(creatorDeliveryConfig.perKmFeeAuto)} 
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setCreatorDeliveryConfig(prev => ({
+                                        ...prev,
+                                        perKmFeeAuto: val === '' ? 0 : parseFloat(val) || 0
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const finalValue = (!e.target.value || parseFloat(e.target.value) <= 0) ? 5.00 : parseFloat(e.target.value);
+                                      console.log('🚚 Profile: Tarifa por km CARRO modificada: Q', finalValue);
+                                      if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                                        setCreatorDeliveryConfig(prev => ({ ...prev, perKmFeeAuto: 5.00 }));
+                                      }
+                                    }}
+                                    placeholder="5.00"
+                                    disabled={isSaving}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </div>
                           

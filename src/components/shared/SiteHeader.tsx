@@ -48,6 +48,8 @@ export function SiteHeader() {
     { href: '/#sweets', label: dict.siteHeader.sweets },
     { href: '/#savory', label: dict.siteHeader.savory },
     { href: '/#handmades', label: dict.siteHeader.handmades },
+    { href: '/#seasonal', label: dict.siteHeader.seasonal },
+    { href: '/#others', label: dict.siteHeader.others },
     { href: '/combos', label: dict.siteHeader.combos },
     { href: '/creators', label: dict.siteHeader.creators },
   ];

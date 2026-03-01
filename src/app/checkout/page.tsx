@@ -92,6 +92,7 @@ export default function CheckoutPage() {
   const [deliveryBreakdown, setDeliveryBreakdown] = useState<Array<{
     creator_id: string;
     creator_name: string;
+    creator_zone: string;
     delivery_fee: number;
     distance_km: number;
     vehicle?: string;
@@ -102,6 +103,16 @@ export default function CheckoutPage() {
     message?: string;
   }>({ state: 'idle' });
   
+  // Warning para distancias largas (>50km)
+  const [longDistanceWarning, setLongDistanceWarning] = useState<{
+    show: boolean;
+    maxDistance?: number;
+    creatorName?: string;
+  }>({ show: false });
+  
+  // Info de creadores (nombre y zona) para el resumen
+  const [creatorInfoMap, setCreatorInfoMap] = useState<Record<string, { name: string; zone: string }>>({});
+  
   // Estado para ubicación manual
   const [manualLocation, setManualLocation] = useState<{lat: number, lng: number} | null>(null);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
@@ -111,6 +122,30 @@ export default function CheckoutPage() {
   useEffect(() => {
     setAddressValidation((prev) => (prev.state === 'blocked' ? { state: 'idle' } : prev));
   }, [deliveryData.street, deliveryData.municipality, deliveryData.department, finalLocation?.lat, finalLocation?.lng]);
+
+  // Cargar info de creadores (nombre y zona) para el resumen
+  useEffect(() => {
+    const loadCreatorInfo = async () => {
+      const creatorIds = [...new Set(items.map(item => item.product.creatorId))];
+      if (creatorIds.length === 0) return;
+      
+      const { data } = await supabase
+        .from('users')
+        .select('id, name, address_city, address_state')
+        .in('id', creatorIds);
+      
+      const info: Record<string, { name: string; zone: string }> = {};
+      (data || []).forEach((c: { id: string; name?: string; address_city?: string; address_state?: string }) => {
+        const parts = [c.address_city, c.address_state].filter(Boolean);
+        info[c.id] = {
+          name: c.name || 'Creador',
+          zone: parts.join(', ') || ''
+        };
+      });
+      setCreatorInfoMap(info);
+    };
+    loadCreatorInfo();
+  }, [items]);
 
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -224,34 +259,17 @@ export default function CheckoutPage() {
       ADDRESS_DISTANCE_THRESHOLD_KM
     );
     console.log('📍 Checkout: resultado validación dirección', validation);
+    // Ya no bloqueamos - siempre permitir continuar con pending_verification
+    // Servicio al cliente verificará la ubicación y dirección
     if (!validation.ok) {
       setAddressValidation({
-        state: 'blocked',
+        state: 'pending_verification',
         distanceKm: validation.distanceKm,
         message: validation.warning || validation.error || '',
       });
-      const distanceText = validation.distanceKm
-        ? `Distancia: ~${Math.round(validation.distanceKm * 1000)} m`
-        : undefined;
-      toast({
-        variant: "destructive",
-        title: dict.addressValidation?.warningTitle ?? "Tu dirección no coincide con tu ubicación",
-        description:
-          (dict.addressValidation?.warningBody ??
-            "Reintenta coincidir tu dirección con tu ubicación. Si no, contáctanos por WhatsApp para obtener ayuda.") +
-          (distanceText ? ` (${distanceText})` : ''),
-        action: (
-          <a
-            className="text-green-700 font-semibold underline"
-            href={WHATSAPP_SUPPORT_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            WhatsApp
-          </a>
-        ) as any
-      });
-      return { ok: false };
+      // Solo log, no toast destructivo - el mensaje de aviso ya está visible en el checkout
+      console.log('📍 Checkout: Validación con diferencia, marcando como pending_verification');
+      return { ok: true }; // Permitir continuar
     }
     
     // Si hay warning (timeout, error de red), permitir pero marcar para verificación
@@ -326,22 +344,28 @@ export default function CheckoutPage() {
             source: userLocation ? 'GPS' : 'Manual'
           });
           
-          // Obtener nombres de creadores
+          // Obtener nombres y zonas de creadores
           const { data: creatorsData } = await supabase
             .from('users')
-            .select('id, name')
+            .select('id, name, address_city, address_state')
             .in('id', creatorIds);
           const creatorNames: Record<string, string> = {};
-          (creatorsData || []).forEach((c: { id: string; name: string }) => {
+          const creatorZones: Record<string, string> = {};
+          (creatorsData || []).forEach((c: { id: string; name: string; address_city?: string; address_state?: string }) => {
             creatorNames[c.id] = c.name || 'Creador';
+            // Zona: "Ciudad, Departamento" o solo uno si el otro no existe
+            const parts = [c.address_city, c.address_state].filter(Boolean);
+            creatorZones[c.id] = parts.join(', ') || '';
           });
           console.log('👤 Checkout: Nombres de creadores:', creatorNames);
+          console.log('📍 Checkout: Zonas de creadores:', creatorZones);
           
           let totalDeliveryFee = 0;
           let allCreatorsWithinRange = true;
           const deliveryResults: Array<{
             creatorId: string;
             creator_name: string;
+            creator_zone: string;
             delivery_fee: string;
             distance_km: string;
             creator_location: string;
@@ -417,22 +441,35 @@ export default function CheckoutPage() {
             deliveryResults.push({ 
               creatorId, 
               creator_name: creatorNames[creatorId] || 'Creador',
-              vehicle_used: vehicleForCreator, // ✅ Guardar el vehículo que realmente usamos (de BD fresca)
+              creator_zone: creatorZones[creatorId] || '',
+              vehicle_used: vehicleForCreator,
               ...deliveryInfo 
             });
             
             console.log(`📊 Checkout: Resultado delivery creador ${creatorId}:`, {
               delivery_fee: deliveryInfo.delivery_fee,
               distance_km: deliveryInfo.distance_km,
+              distance_km_nota: 'Esta distancia ya incluye factor 1.4 (ruta real vs línea recta)',
               creator_location: deliveryInfo.creator_location,
-              is_within_radius: deliveryInfo.is_within_radius
+              is_within_radius: deliveryInfo.is_within_radius,
+              vehicle_used: deliveryInfo.vehicle_used
+            });
+            console.log(`🧮 Checkout: CÁLCULO DELIVERY creador ${creatorId}:`, {
+              distancia_corregida_km: deliveryInfo.distance_km,
+              vehiculo: deliveryInfo.vehicle_used,
+              tarifa_final: `Q${deliveryInfo.delivery_fee}`,
+              formula: 'base + ((distancia - 3km gratis) × precio_por_km)'
             });
             
             // Verificar si el creador tiene ubicación configurada
-            if (deliveryInfo.creator_location === 'Ubicación no configurada') {
-              console.log(`⚠️ Checkout: Creador ${creatorId} NO TIENE UBICACIÓN CONFIGURADA`);
-              console.log(`💡 Checkout: Usando tarifa base de Q${deliveryInfo.delivery_fee} (sin validación de distancia)`);
-              totalDeliveryFee += parseFloat(deliveryInfo.delivery_fee);
+            if (deliveryInfo.creator_location === 'Ubicación no configurada' || deliveryInfo.creator_location === 'NO_LOCATION') {
+              console.log(`🚫 Checkout: Creador ${creatorId} NO TIENE UBICACIÓN CONFIGURADA - BLOQUEANDO PEDIDO`);
+              setDeliveryFee(0);
+              setDeliveryError(
+                `⚠️ ${creatorNames[creatorId] || 'Un creador'} no tiene ubicación configurada. No podemos calcular el costo de entrega. Contacta al creador o a servicio al cliente.`
+              );
+              setIsCalculatingDelivery(false);
+              return;
             } else if (!deliveryInfo.is_within_radius) {
               console.log(`🚫 Checkout: Creador ${creatorId} FUERA DE RANGO`);
               console.log(`📏 Checkout: Distancia: ${deliveryInfo.distance_km}km`);
@@ -493,15 +530,31 @@ export default function CheckoutPage() {
             const breakdown = deliveryResults.map(r => ({
               creator_id: r.creatorId,
               creator_name: r.creator_name || 'Creador',
+              creator_zone: r.creator_zone || '',
               delivery_fee: parseFloat(r.delivery_fee),
               distance_km: parseFloat(r.distance_km),
               vehicle: r.vehicle_used || 'moto'
             }));
             console.log('📊 Checkout: BREAKDOWN FINAL:', breakdown);
             console.log('💰 Checkout: RESUMEN TARIFAS:', breakdown.map(b => 
-              `${b.creator_name}: ${b.vehicle === 'auto' ? '🚗 AUTO' : '🏍️ MOTO'} = Q${b.delivery_fee} (${b.distance_km}km)`
+              `${b.creator_name} (${b.creator_zone}): ${b.vehicle === 'auto' ? '🚗 AUTO' : '🏍️ MOTO'} = Q${b.delivery_fee} (${b.distance_km}km)`
             ));
             setDeliveryBreakdown(breakdown);
+            
+            // Verificar si algún creador está a más de 50km (distancia larga)
+            const LONG_DISTANCE_THRESHOLD = 50;
+            const longDistanceCreators = breakdown.filter(b => b.distance_km > LONG_DISTANCE_THRESHOLD);
+            if (longDistanceCreators.length > 0) {
+              const maxDistanceCreator = longDistanceCreators.reduce((a, b) => a.distance_km > b.distance_km ? a : b);
+              console.log(`⚠️ Checkout: ADVERTENCIA DISTANCIA LARGA - ${maxDistanceCreator.creator_name} a ${maxDistanceCreator.distance_km}km`);
+              setLongDistanceWarning({
+                show: true,
+                maxDistance: Math.round(maxDistanceCreator.distance_km),
+                creatorName: maxDistanceCreator.creator_name
+              });
+            } else {
+              setLongDistanceWarning({ show: false });
+            }
           }
           
           setIsCalculatingDelivery(false);
@@ -593,14 +646,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (addressValidation.state === 'blocked') {
-        toast({
-          variant: "destructive",
-          title: dict.addressValidation?.warningTitle ?? t?.toastLocationRequiredTitle ?? "Tu dirección no coincide con tu ubicación",
-          description: dict.addressValidation?.warningBody ?? t?.toastLocationRequiredDesc ?? "Verifica tu dirección o contáctanos por WhatsApp.",
-        });
-        return;
-      }
+      // Ya no bloqueamos por validación de dirección - servicio al cliente verificará
 
       setIsProcessing(true);
       const result = await createOrder({
@@ -1082,7 +1128,10 @@ export default function CheckoutPage() {
                 {Object.entries(itemsByCreator).map(([creatorId, creatorItems]) => (
                   <div key={creatorId} className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground border-b pb-1">
-                      {t?.creatorGroupTitle ?? "Productos del mismo creador"}
+                      {t?.productsFrom ?? "Productos de"} {creatorInfoMap[creatorId]?.name || t?.creatorGroupTitle || "Creador"}
+                      {creatorInfoMap[creatorId]?.zone && (
+                        <span className="text-xs text-gray-400 ml-1">· {creatorInfoMap[creatorId].zone}</span>
+                      )}
                     </div>
                     {creatorItems.map(({ product, quantity }) => {
                       const productName = product.name[language];
@@ -1174,6 +1223,7 @@ export default function CheckoutPage() {
                             <div key={`${d.creator_id || idx}`} className="flex justify-between">
                               <span>
                                 {d.vehicle === 'auto' ? '🚗' : '🏍️'} {d.creator_name || `Creador ${idx + 1}`}
+                                {d.creator_zone && <span className="text-amber-600 text-xs ml-1">({d.creator_zone})</span>}
                                 {Number.isFinite(d.distance_km) && ` · ${Number(d.distance_km).toFixed(1)} km`}
                               </span>
                               <span>Q {Number(d.delivery_fee || 0).toFixed(2)}</span>
@@ -1204,10 +1254,40 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 
-                <div className="text-xs text-muted-foreground mt-2 p-2 bg-blue-50 rounded">
-                  {t?.finalCostNote ??
-                    "💡 El costo final se verificará por distancia y tipo de producto al confirmar tu ubicación."}
+                <div className="text-xs text-amber-700 mt-2 p-3 bg-amber-50 border border-amber-200 rounded">
+                  <p className="font-medium mb-1">⚠️ {t?.deliveryCostNoticeTitle ?? "Aviso sobre costo de delivery"}</p>
+                  <p>
+                    {t?.deliveryCostNoticeBody ??
+                      "El costo de delivery mostrado es un estimado basado en la ubicación que seleccionaste. El monto final será confirmado por nuestro equipo de servicio al cliente, quienes verificarán tu dirección y ubicación de entrega. Si hay diferencia, te contactaremos por WhatsApp antes de procesar tu pedido."}
+                  </p>
                 </div>
+                
+                {/* Warning de distancia larga (>50km) */}
+                {longDistanceWarning.show && (
+                  <div className="mt-2 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                    <p className="font-bold text-red-800 mb-2">
+                      🚨 {t?.longDistanceWarningTitle ?? "Distancia de entrega muy larga"}
+                    </p>
+                    <p className="text-sm text-red-700 mb-3">
+                      {t?.longDistanceWarningBody 
+                        ? t.longDistanceWarningBody(longDistanceWarning.maxDistance || 0, longDistanceWarning.creatorName || '')
+                        : `La distancia a ${longDistanceWarning.creatorName} es de aproximadamente ${longDistanceWarning.maxDistance}km. Para entregas fuera del área metropolitana, te recomendamos coordinar directamente con nuestro servicio al cliente para confirmar disponibilidad y costo final de envío.`}
+                    </p>
+                    <a
+                      href={`https://wa.me/50230635323?text=${encodeURIComponent(
+                        `Hola! 👋 Quiero hacer un pedido pero la distancia es de ${longDistanceWarning.maxDistance}km (a ${longDistanceWarning.creatorName}). ¿Es posible coordinar la entrega? Mi ubicación es: ${deliveryData.municipality}, ${deliveryData.department}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                      </svg>
+                      {t?.longDistanceWhatsAppButton ?? "Contactar por WhatsApp"}
+                    </a>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>{t?.totalLabel ?? "Total"}</span>

@@ -51,6 +51,8 @@ function transformToCreator(data: any): Creator {
     skills: data.skills || [],
     hasDelivery: data.has_delivery || false,
     availabilityStatus: data.availability_status || 'available',
+    addressCity: data.address_city || '',
+    addressState: data.address_state || '',
   };
 }
 

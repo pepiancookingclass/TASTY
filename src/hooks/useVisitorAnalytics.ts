@@ -6,6 +6,21 @@ import { useUserRoles } from '@/hooks/useUserRoles';
 
 const STORAGE_KEY = 'tasty_visitor_id';
 
+// Verificar si estamos en ambiente de desarrollo/preview
+function isDevEnvironment(): boolean {
+  if (typeof window === 'undefined') return true;
+  
+  const hostname = window.location.hostname;
+  
+  // Excluir localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  
+  // Excluir previews de Vercel (*.vercel.app)
+  if (hostname.endsWith('.vercel.app')) return true;
+  
+  return false;
+}
+
 // Generar visitor ID único persistente
 function getVisitorId(): string {
   if (typeof window === 'undefined') return '';
@@ -58,8 +73,13 @@ export function useVisitorAnalytics() {
     visitorIdRef.current = getVisitorId();
   }, []);
   
-  // Verificar si debe trackear (NO trackear admins/creators/agents)
+  // Verificar si debe trackear (NO trackear admins/creators/agents ni en dev)
   const shouldTrack = useCallback((): boolean => {
+    // No trackear en localhost o Vercel preview
+    if (isDevEnvironment()) {
+      return false;
+    }
+    
     // No trackear si es admin, creator o agent - solo clientes reales (user/customer)
     // Nota: 'user' y 'customer' son ambos roles de cliente (inconsistencia histórica)
     if (roles?.includes('admin') || roles?.includes('creator') || roles?.includes('agent')) {
