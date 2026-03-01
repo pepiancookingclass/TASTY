@@ -101,6 +101,13 @@ export function useAnalytics() {
     });
   };
 
+  const trackInstagramClick = (creatorId: string, creatorName: string) => {
+    track('instagram_click', {
+      creator_id: creatorId,
+      creator_name: creatorName
+    });
+  };
+
   return {
     trackProductView,
     trackProductAddToCart,
@@ -113,7 +120,8 @@ export function useAnalytics() {
     trackUserLogin,
     trackOfferView,
     trackOfferClick,
-    trackWhatsAppClick
+    trackWhatsAppClick,
+    trackInstagramClick
   };
 }
 

@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { ProductCard } from '@/components/product/ProductCard';
 import { cn } from '@/lib/utils';
 import { 
@@ -40,6 +41,7 @@ export default function CreatorProfilePage() {
   const creatorId = params.id as string;
   const dict = useDictionary();
   const { language } = useLanguage();
+  const { trackInstagramClick } = useAnalytics();
   
   const [creator, setCreator] = useState<Creator | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -337,6 +339,7 @@ export default function CreatorProfilePage() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 rounded-lg text-white hover:opacity-90 transition-opacity"
+              onClick={() => trackInstagramClick(creatorId, creator?.name || 'Creador')}
             >
               <Instagram className="h-6 w-6" />
               <div>
