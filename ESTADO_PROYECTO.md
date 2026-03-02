@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 1 Marzo 2026 (v3)  
+> **Última actualización:** 2 Marzo 2026 (v4)  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -131,6 +131,33 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Modelo de Monetización TASTY
+- **Estado:** ✅ COMPLETADO (2 Mar 2026)
+- **Implementación:**
+  - **Comisión producto:** 10% (primeros 15 creadores) → 15% (después)
+  - **Comisión delivery:** 20% independiente de quién entregue
+  - **Service fee:** Q15 fijo distribuido entre creadores
+  - **Columna `commission_rate`:** Agregada a tabla `users` (10 o 15%)
+  - **Columna `service_fee`:** Agregada a tabla `orders` (default Q15)
+  - **Precios sin decimales:** Toda la app usa `Math.round()` para Q enteros
+  - **Email cliente:** Desglose con fee de servicio distribuido por creador
+  - **Email creador:** Sección "TRANSFERIR A TASTY" con comisión producto + delivery + fee
+  - **Email admin:** Formato monospace + desglose ingresos TASTY (comisiones + fees)
+  - **Página Mis Pedidos:** Productos reales por creador (no 50/50)
+- **Archivos modificados:**
+  - `src/app/checkout/page.tsx` — SERVICE_FEE Q15, sin decimales
+  - `src/app/user/orders/page.tsx` — Cálculo real por creador, fee distribuido
+  - `src/lib/services/orders.ts` — Guarda service_fee
+  - `src/components/cart/CartView.tsx` — Sin decimales
+  - `src/components/product/ProductCard.tsx` — Sin decimales
+  - `src/dictionaries/es.ts`, `en.ts` — serviceFeeLabel
+  - `supabase/functions/send-email/index.ts` — Modelo completo con commission_rate
+- **SQL ejecutado:**
+  - `ALTER TABLE users ADD COLUMN commission_rate INTEGER DEFAULT 15`
+  - `ALTER TABLE orders ADD COLUMN service_fee DECIMAL(8,2) DEFAULT 15`
+  - `UPDATE users SET commission_rate = 10 WHERE 'creator' = ANY(roles)`
+  - Función `get_order_items_complete` actualizada para incluir `creator_name`
 
 #### Tracking Clics Instagram
 - **Estado:** ✅ COMPLETADO (1 Mar 2026)
@@ -366,4 +393,4 @@ npm run build
 
 ---
 
-*Última actualización: 20 Febrero 2026 - Login con Google OAuth + Sistema de disponibilidad de creadores (vacation/busy/available) con guardado instantáneo*
+*Última actualización: 2 Marzo 2026 - Modelo de monetización TASTY (comisiones 10-15%, delivery 20%, service fee Q15)*
