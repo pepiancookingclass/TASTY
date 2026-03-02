@@ -152,7 +152,8 @@ export default function CheckoutPage() {
   const ivaRate = 0.12; // 12% IVA
   const ivaAmount = subtotal * ivaRate;
   const subtotalWithIva = subtotal + ivaAmount;
-  const total = subtotalWithIva + (deliveryFee || 0);
+  const SERVICE_FEE = 15; // Fee de servicio TASTY
+  const total = subtotalWithIva + (deliveryFee || 0) + SERVICE_FEE;
 
   const maxPreparationTime = Math.max(...items.map(item => item.product.preparationTime), 0);
   
@@ -240,7 +241,9 @@ export default function CheckoutPage() {
     return new Intl.NumberFormat('es-GT', {
       style: 'currency',
       currency: 'GTQ',
-    }).format(price);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Math.round(price));
   };
 
   const runAddressValidation = async () => {
@@ -670,7 +673,8 @@ export default function CheckoutPage() {
         saveLocationData: saveLocationData,
         autoDeleteAfterDelivery: autoDeleteAfterDelivery,
         // Desglose de delivery
-        deliveryBreakdown: deliveryBreakdown
+        deliveryBreakdown: deliveryBreakdown,
+        serviceFee: SERVICE_FEE
       });
 
       if (result.order) {
@@ -685,14 +689,17 @@ export default function CheckoutPage() {
         }
         
         // ✅ LIMPIAR CARRITO EN BD TAMBIÉN (tabla correcta: user_carts)
-        try {
-          await supabase
-            .from('user_carts')
-            .delete()
-            .eq('user_id', authUser.id);
-          console.log('🗄️ Checkout: Carrito limpiado en BD (user_carts)');
-        } catch (error) {
-          console.error('❌ Error limpiando carrito en BD:', error);
+        console.log('🗑️ Checkout: Intentando borrar carrito de BD para user_id:', authUser.id);
+        const { error: deleteError, count } = await supabase
+          .from('user_carts')
+          .delete()
+          .eq('user_id', authUser.id)
+          .select();
+        
+        if (deleteError) {
+          console.error('❌ Error limpiando carrito en BD:', deleteError);
+        } else {
+          console.log('🗄️ Checkout: Carrito limpiado en BD (user_carts), registros afectados:', count);
         }
         
         // ✅ MARCAR QUE EL CARRITO FUE LIMPIADO INTENCIONALMENTE
@@ -1203,6 +1210,10 @@ export default function CheckoutPage() {
                     )}
                   </span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span>{t?.serviceFeeLabel ?? "Fee de servicio"}</span>
+                  <span>{formatPrice(SERVICE_FEE)}</span>
+                </div>
                 {/* Explicación de delivery múltiple */}
                 {Object.keys(itemsByCreator).length > 1 && (
                   <div className="text-xs text-muted-foreground mt-2 p-3 bg-amber-50 border border-amber-200 rounded">
@@ -1226,7 +1237,7 @@ export default function CheckoutPage() {
                                 {d.creator_zone && <span className="text-amber-600 text-xs ml-1">({d.creator_zone})</span>}
                                 {Number.isFinite(d.distance_km) && ` · ${Number(d.distance_km).toFixed(1)} km`}
                               </span>
-                              <span>Q {Number(d.delivery_fee || 0).toFixed(2)}</span>
+                              <span>Q {Math.round(Number(d.delivery_fee || 0))}</span>
                             </div>
                           ))}
                         </div>

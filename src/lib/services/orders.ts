@@ -159,6 +159,7 @@ export interface CreateOrderInput {
     distance_km: number;
     vehicle?: string;
   }>;
+  serviceFee?: number;
 }
 
 // Transformar datos de Supabase a Order
@@ -256,6 +257,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ order: Ord
       iva_amount: ivaAmount,
       delivery_fee: deliveryFee,
       delivery_breakdown: input.deliveryBreakdown || [],
+      service_fee: input.serviceFee || 15,
       delivery_date: input.deliveryDate.toISOString(),
       delivery_street: input.deliveryAddress?.street,
       delivery_city: input.deliveryAddress?.municipality,

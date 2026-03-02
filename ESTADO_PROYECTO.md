@@ -1,6 +1,6 @@
 # 🍳 TASTY - Instrucciones para Agentes IA
 
-> **Última actualización:** 1 Marzo 2026 (v2)  
+> **Última actualización:** 1 Marzo 2026 (v3)  
 > **Idioma:** Siempre responder en ESPAÑOL
 
 ---
@@ -131,6 +131,13 @@
 - **Archivos:** `src/app/creator/combos/new/page.tsx`, `src/app/combos/page.tsx`
 
 ### ✅ COMPLETADO RECIENTEMENTE
+
+#### Tracking Clics Instagram
+- **Estado:** ✅ COMPLETADO (1 Mar 2026)
+- **Implementación:** Evento `instagram_click` registra cuando usuarios hacen clic en Instagram de creadores
+- **Archivos modificados:**
+  - `src/hooks/useAnalytics.ts` — Función `trackInstagramClick`
+  - `src/app/creators/[id]/page.tsx` — onClick en link de Instagram
 
 #### Rediseño de Emails
 - **Estado:** ✅ COMPLETADO (1 Mar 2026)

@@ -134,6 +134,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
         iva_amount,
         delivery_fee,
         delivery_breakdown,
+        service_fee,
         status,
         delivery_street,
         delivery_city,
@@ -190,7 +191,8 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
           users!products_creator_id_fkey (
             id,
             name,
-            email
+            email,
+            commission_rate
           )
         )
       `)
@@ -227,6 +229,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
     const globalSubtotal = typeof order.subtotal === 'number' ? order.subtotal : items.reduce((s, it) => s + it.quantity * it.unit_price, 0)
     const globalIva = typeof order.iva_amount === 'number' ? order.iva_amount : globalSubtotal * 0.12
     const globalDelivery = typeof order.delivery_fee === 'number' ? order.delivery_fee : 0
+    const serviceFee = typeof order.service_fee === 'number' ? order.service_fee : 15
 
     // Agrupar items por creador
     const creatorMap = new Map<string, {
@@ -238,6 +241,7 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       totalHours: number
       deliveryFee: number
       vehicle: string
+      commissionRate: number
     }>()
 
     items.forEach(item => {
@@ -264,7 +268,8 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
             subtotal: 0,
             totalHours: 0,
             deliveryFee: creatorDeliveryFee,
-            vehicle: creatorVehicle
+            vehicle: creatorVehicle,
+            commissionRate: creator.commission_rate || 10
           })
         }
         const creatorData = creatorMap.get(creator.id)!
@@ -310,7 +315,8 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
       
       creatorMap.forEach(creator => {
         const creatorIva = creator.subtotal * 0.12
-        const creatorTotal = creator.subtotal + creatorIva + creator.deliveryFee
+        const serviceFeePerCreator = serviceFee / numCreators
+        const creatorTotal = creator.subtotal + creatorIva + creator.deliveryFee + serviceFeePerCreator
         const vehicleText = creator.vehicle === 'auto' ? 'Auto' : 'Moto'
         
         // Obtener zona del creador desde delivery_breakdown
@@ -329,15 +335,16 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
           const name = item.product_name_es || (item.products as any)?.name_es || 'Producto'
           const shortName = name.length > 30 ? name.substring(0, 27) + '...' : name
           const total = item.quantity * item.unit_price
-          clientDeliveriesSection += `   ${item.quantity}× ${shortName} .......... Q${total.toFixed(0)}<br>`
+          clientDeliveriesSection += `   ${item.quantity}× ${shortName} .......... Q${Math.round(total)}<br>`
         })
         
         clientDeliveriesSection += `   ─────<br>`
-        clientDeliveriesSection += `   Productos ................. Q${creator.subtotal.toFixed(0)}<br>`
-        clientDeliveriesSection += `   IVA (12%) .................. Q${creatorIva.toFixed(0)}<br>`
-        clientDeliveriesSection += `   Delivery ................... Q${creator.deliveryFee.toFixed(0)}<br>`
+        clientDeliveriesSection += `   Productos ................. Q${Math.round(creator.subtotal)}<br>`
+        clientDeliveriesSection += `   IVA (12%) .................. Q${Math.round(creatorIva)}<br>`
+        clientDeliveriesSection += `   Delivery ................... Q${Math.round(creator.deliveryFee)}<br>`
+        clientDeliveriesSection += `   Fee de servicio ........... Q${Math.round(serviceFeePerCreator)}<br>`
         clientDeliveriesSection += `   ═════════════════════════<br>`
-        clientDeliveriesSection += `   💰 <strong>Pagarás: Q${creatorTotal.toFixed(0)}</strong><br><br>`
+        clientDeliveriesSection += `   💰 <strong>Pagarás: Q${Math.round(creatorTotal)}</strong><br><br>`
       })
     } else {
       clientDeliveriesSection = ''
@@ -371,12 +378,14 @@ async function processOrderEmails(orderUuid: string): Promise<{ success: boolean
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${productsListHtml}
                                   ─────
-   Subtotal ................. Q${globalSubtotal.toFixed(0)}
-   IVA (12%) .................. Q${globalIva.toFixed(0)}
+   Subtotal ................. Q${Math.round(globalSubtotal)}
+   IVA (12%) .................. Q${Math.round(globalIva)}
+   Delivery .................. Q${Math.round(globalDelivery)}
+   Fee de servicio ........... Q${Math.round(serviceFee)}
 
 ${clientDeliveriesSection}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   <strong>TOTAL PEDIDO ............ Q${order.total.toFixed(0)}</strong>
+   <strong>TOTAL PEDIDO ............ Q${Math.round(order.total)}</strong>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${numCreators > 1 ? `📝 <strong>IMPORTANTE:</strong>
@@ -428,19 +437,27 @@ WhatsApp: +502 3063-5323
 
     // Construir sección de creadores para admin
     let adminCreatorsSection = '👥 <strong>CREADORES Y PAGOS SEPARADOS:</strong><br><br>'
-    let totalComisionTasty = 0
+    let totalComisionProducto = 0
+    let totalComisionDelivery = 0
+    const totalServiceFee = serviceFee
     
     creatorMap.forEach(creator => {
       const creatorIva = creator.subtotal * 0.12
-      const creatorTotal = creator.subtotal + creatorIva + creator.deliveryFee
-      const ganancia90 = creator.subtotal * 0.9
-      const comisionTasty = creator.subtotal * 0.1
-      totalComisionTasty += comisionTasty
+      const commRate = creator.commissionRate || 10
+      const comisionProducto = creator.subtotal * (commRate / 100)
+      const comisionDelivery = creator.deliveryFee * 0.20
+      const serviceFeeCreator = serviceFee / numCreators
+      const creatorTotal = creator.subtotal + creatorIva + creator.deliveryFee + serviceFeeCreator
+      const gananciaCreador = creator.subtotal * ((100 - commRate) / 100)
+      totalComisionProducto += comisionProducto
+      totalComisionDelivery += comisionDelivery
       const vehicleText = creator.vehicle === 'auto' ? 'Auto' : 'Moto'
       
-      adminCreatorsSection += `📦 <strong>${creator.name.toUpperCase()}:</strong><br>`
-      adminCreatorsSection += `• Productos: Q${creator.subtotal.toFixed(2)} | Ganancia (90%): Q${ganancia90.toFixed(2)} | Comisión TASTY: Q${comisionTasty.toFixed(2)}<br>`
-      adminCreatorsSection += `• Delivery (${vehicleText}): Q${creator.deliveryFee.toFixed(2)} | IVA (12%): Q${creatorIva.toFixed(2)}<br>`
+      adminCreatorsSection += `📦 <strong>${creator.name.toUpperCase()} (${commRate}% comisión):</strong><br>`
+      adminCreatorsSection += `• Productos: Q${creator.subtotal.toFixed(2)} | Ganancia creador: Q${gananciaCreador.toFixed(2)}<br>`
+      adminCreatorsSection += `• Comisión producto (${commRate}%): Q${comisionProducto.toFixed(2)}<br>`
+      adminCreatorsSection += `• Delivery (${vehicleText}): Q${creator.deliveryFee.toFixed(2)} | Comisión delivery (20%): Q${comisionDelivery.toFixed(2)}<br>`
+      adminCreatorsSection += `• Service fee: Q${serviceFeeCreator.toFixed(2)}<br>`
       adminCreatorsSection += `• ITEMS:<br>`
       adminCreatorsSection += creator.items.map(it => {
         const name = it.product_name_es || (it.products as any)?.name_es || 'Producto'
@@ -450,42 +467,78 @@ WhatsApp: +502 3063-5323
       adminCreatorsSection += `<br>`
       adminCreatorsSection += `• <strong>CLIENTE PAGA A ${creator.name.toUpperCase()}: Q${creatorTotal.toFixed(2)}</strong><br><br>`
     })
+    
+    const totalIngresosTasty = totalComisionProducto + totalComisionDelivery + totalServiceFee
 
     const adminSubject = `🚨 [ADMIN] Nuevo Pedido #${orderUuid.substring(0, 8)}`
     const adminHtml = `
-      🚨 <strong>NUEVO PEDIDO RECIBIDO</strong><br><br>
-      📋 <strong>INFORMACIÓN DEL PEDIDO:</strong><br>
-      • Número: #${orderUuid.substring(0, 8)}<br>
-      • Fecha: ${formattedNow}<br>
-      • Estado: ${order.status}<br><br>
-      👤 <strong>DATOS DEL CLIENTE:</strong><br>
-      • Nombre: ${order.customer_name}<br>
-      • Email: ${order.customer_email}<br>
-      • Teléfono: ${order.customer_phone}<br><br>
-      ${adminProductsSection}
-      💰 <strong>DESGLOSE FINANCIERO ADMINISTRATIVO:</strong><br><br>
-      ${adminCreatorsSection}
-      📊 <strong>RESUMEN ADMINISTRATIVO:</strong><br>
-      • Total pedido: Q${order.total.toFixed(2)}<br>
-      • Total comisiones TASTY: Q${totalComisionTasty.toFixed(2)}<br>
-      • Entregas separadas: ${numCreators}<br><br>
-      📍 <strong>LOGÍSTICA DE ENTREGA:</strong><br>
-      • Dirección: ${fullAddress}<br>
-      • Fecha programada: ${formattedDelivery}<br>
-      • Tiempo total preparación: ${totalHours} horas<br>
-      • Notas: ${order.delivery_notes || 'Sin notas'}<br><br>
-      ⚡ <strong>ACCIONES ADMINISTRATIVAS REQUERIDAS:</strong><br>
-      1. Confirmar pedido con cliente<br>
-      2. Coordinar con todos los creadores<br>
-      3. Programar logística de entrega<br>
-      4. Monitorear preparación y tiempos<br><br>
-      📊 <strong>CONTROL NUMÉRICO:</strong><br>
-      • ID Orden: ${orderUuid}<br>
-      • Total productos: ${items.length}<br>
-      • Total creadores: ${numCreators}<br><br>
-      ---<br>
-      Panel Admin: https://tasty.lat/admin<br>
-      Sistema TASTY - Control Administrativo
+      <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #fef2f2; padding: 20px; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #dc2626; margin: 0;">🚨 Nuevo Pedido Admin</h1>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px;">
+          <pre style="margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 <strong>PEDIDO #${orderUuid.substring(0, 8)}</strong>
+   ${formattedNow} • Estado: ${order.status}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👤 <strong>CLIENTE:</strong>
+   ${order.customer_name}
+   📧 ${order.customer_email}
+   📞 ${order.customer_phone}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛒 <strong>PRODUCTOS:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${productsListHtml}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 <strong>INGRESOS TASTY:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Comisiones producto ....... Q${Math.round(totalComisionProducto)}
+   Comisiones delivery (20%) .. Q${Math.round(totalComisionDelivery)}
+   Service fee ............... Q${Math.round(totalServiceFee)}
+   ═════════════════════════════════
+   💳 <strong>TOTAL INGRESOS: Q${Math.round(totalIngresosTasty)}</strong>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 <strong>CREADORES (${numCreators}):</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${Array.from(creatorMap.values()).map(c => {
+  const cRate = c.commissionRate || 10
+  const cComProd = c.subtotal * (cRate / 100)
+  const cComDel = c.deliveryFee * 0.20
+  const cServiceFee = serviceFee / numCreators
+  const cIva = c.subtotal * 0.12
+  const cTotal = c.subtotal + cIva + c.deliveryFee + cServiceFee
+  return `📦 ${c.name.toUpperCase()} (${cRate}%)
+   Productos: Q${Math.round(c.subtotal)} | Delivery: Q${Math.round(c.deliveryFee)}
+   Comisión prod: Q${Math.round(cComProd)} | Comisión del: Q${Math.round(cComDel)}
+   Cliente paga: Q${Math.round(cTotal)}`
+}).join('<br><br>')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 <strong>ENTREGA:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ${order.delivery_street || 'Dirección no especificada'}
+   ${order.delivery_city || ''}, ${order.delivery_state || ''}
+   Fecha: ${formattedDelivery}
+   ${order.delivery_notes ? `Notas: ${order.delivery_notes}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 <strong>RESUMEN:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Total pedido .............. Q${Math.round(order.total)}
+   Entregas separadas ........ ${numCreators}
+   Tiempo preparación ........ ${totalHours}h
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Panel: tasty.lat/admin
+          </pre>
+        </div>
+      </div>
     `
 
     const adminResult = await sendEmailWithResend(ADMIN_EMAIL, adminSubject, adminHtml)
@@ -508,11 +561,15 @@ WhatsApp: +502 3063-5323
 
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Calcular finanzas del creador
+      // Calcular finanzas del creador con commission_rate dinámico
       const creatorIva = creatorData.subtotal * 0.12
-      const creatorTotal = creatorData.subtotal + creatorIva + creatorData.deliveryFee
-      const ganancia90 = creatorData.subtotal * 0.9
-      const comisionTasty = creatorData.subtotal * 0.1
+      const commissionRate = creatorData.commissionRate || 10
+      const comisionProducto = creatorData.subtotal * (commissionRate / 100)
+      const comisionDelivery = creatorData.deliveryFee * 0.20
+      const serviceFeeCreator = serviceFee / numCreators
+      const totalTransferirTasty = comisionProducto + comisionDelivery + serviceFeeCreator
+      const gananciaCreador = creatorData.subtotal * ((100 - commissionRate) / 100)
+      const creatorTotal = creatorData.subtotal + creatorIva + creatorData.deliveryFee + serviceFeeCreator
       const vehicleText = creatorData.vehicle === 'auto' ? 'Auto' : 'Moto'
 
       // Construir lista de productos del creador
@@ -562,15 +619,24 @@ ${creatorProductsFormatted}
    Productos ................. Q${creatorData.subtotal.toFixed(0)}
    IVA (12%) .................. Q${creatorIva.toFixed(0)}
    Delivery (${vehicleText}) ............. Q${creatorData.deliveryFee.toFixed(0)}
+   Fee de servicio ........... Q${serviceFeeCreator.toFixed(0)}
    ═════════════════════════════════
    💰 <strong>CLIENTE TE PAGA: Q${creatorTotal.toFixed(0)}</strong>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏦 <strong>TUS GANANCIAS:</strong>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Tu ganancia (90%) ........ Q${ganancia90.toFixed(0)}
-   Comisión TASTY (10%) ...... Q${comisionTasty.toFixed(0)}
-   Tiempo preparación ....... ${creatorData.totalHours}h
+   Tu ganancia (${100 - commissionRate}%) ........ Q${gananciaCreador.toFixed(0)}
+   Tiempo preparación ......... ${creatorData.totalHours}h
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💸 <strong>TRANSFERIR A TASTY:</strong>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Comisión producto (${commissionRate}%) ... Q${comisionProducto.toFixed(0)}
+   Comisión delivery (20%) .... Q${comisionDelivery.toFixed(0)}
+   Fee de servicio ........... Q${serviceFeeCreator.toFixed(0)}
+   ═════════════════════════════════
+   💳 <strong>TOTAL A TRANSFERIR: Q${totalTransferirTasty.toFixed(0)}</strong>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 <strong>ENTREGA:</strong>
@@ -590,7 +656,7 @@ ${numCreators > 1 ? `⚠️ <strong>PEDIDO MULTI-CREADOR:</strong>
    1. Prepara tus productos
    2. Coordinaremos fecha/hora de entrega
    3. Cliente te paga Q${creatorTotal.toFixed(0)} en efectivo
-   4. Transfiere Q${comisionTasty.toFixed(0)} (10%) a TASTY
+   4. Transfiere Q${totalTransferirTasty.toFixed(0)} a TASTY
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ¡Gracias por ser parte de TASTY! 🍰

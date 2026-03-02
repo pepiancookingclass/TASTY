@@ -53,6 +53,7 @@ interface UserOrder {
     distance_km: number;
     vehicle?: string;
   }>;
+  service_fee?: number;
   status: string;
   created_at: string;
   delivery_date: string;
@@ -90,7 +91,7 @@ export default function UserOrdersPage() {
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   const formatPrice = (price: number) => 
-    new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(price);
+    new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(price));
 
   // Verificar si se puede cancelar (48 horas antes de la entrega)
   const canCancelOrder = (deliveryDate: string) => {
@@ -381,10 +382,14 @@ export default function UserOrdersPage() {
                             </p>
                             
                             {order.delivery_breakdown.map((delivery, index) => {
-                              // Calcular productos del creador (proporcional)
-                              const creatorSubtotal = order.subtotal / order.delivery_breakdown.length; // Simplificado
+                              // Calcular productos REALES del creador
+                              const creatorItems = order.items.filter(item => 
+                                item.creator_name?.toLowerCase() === delivery.creator_name?.toLowerCase()
+                              );
+                              const creatorSubtotal = creatorItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
                               const creatorIva = creatorSubtotal * 0.12;
-                              const creatorTotal = creatorSubtotal + creatorIva + delivery.delivery_fee;
+                              const serviceFeePerCreator = (order.service_fee || 15) / order.delivery_breakdown.length;
+                              const creatorTotal = creatorSubtotal + creatorIva + delivery.delivery_fee + serviceFeePerCreator;
                               const vehicle = delivery.vehicle === 'auto' ? 'auto' : 'moto';
                               const vehicleIcon = vehicle === 'auto' ? '🚗' : '🏍️';
                               
@@ -398,21 +403,27 @@ export default function UserOrdersPage() {
                                       <span className="text-gray-600">
                                         {t?.deliveryCreatorProducts ?? "Sus productos:"}
                                       </span>
-                                      <span>Q{creatorSubtotal.toFixed(2)}</span>
+                                      <span>Q{Math.round(creatorSubtotal)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-600">
                                         {t?.deliveryCreatorIva ?? "IVA (12%):"}
                                       </span>
-                                      <span>Q{creatorIva.toFixed(2)}</span>
+                                      <span>Q{Math.round(creatorIva)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-600">
                                         {t?.deliveryCreatorFee
-                                          ? t.deliveryCreatorFee(delivery.distance_km)
-                                          : `Envío (${delivery.distance_km?.toFixed(1)}km):`}
+                                          ? t.deliveryCreatorFee(Math.round(delivery.distance_km))
+                                          : `Envío (${Math.round(delivery.distance_km)}km):`}
                                       </span>
-                                      <span>Q{delivery.delivery_fee.toFixed(2)}</span>
+                                      <span>Q{Math.round(delivery.delivery_fee)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">
+                                        {t?.serviceFeeLabel ?? "Fee de servicio:"}
+                                      </span>
+                                      <span>Q{Math.round(serviceFeePerCreator)}</span>
                                     </div>
                                     <Separator className="my-1" />
                                     <div className="flex justify-between font-semibold text-green-700">
@@ -421,7 +432,7 @@ export default function UserOrdersPage() {
                                           ? t.deliveryCreatorPay(delivery.creator_name)
                                           : `💰 Pagar a ${delivery.creator_name}:`}
                                       </span>
-                                      <span>Q{creatorTotal.toFixed(2)}</span>
+                                      <span>Q{Math.round(creatorTotal)}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -430,8 +441,8 @@ export default function UserOrdersPage() {
                             
                             <div className="text-center text-xs text-blue-600 font-medium pt-2 border-t border-blue-200">
                               {t?.deliverySumCheck
-                                ? t.deliverySumCheck(order.total.toFixed(2))
-                                : `✅ Verificación: Suma de pagos = Q${order.total.toFixed(2)}`}
+                                ? t.deliverySumCheck(Math.round(order.total))
+                                : `✅ Verificación: Suma de pagos = Q${Math.round(order.total)}`}
                             </div>
                           </div>
                         ) : (
@@ -445,19 +456,25 @@ export default function UserOrdersPage() {
                                 <span className="text-muted-foreground">
                                   {t?.productsBreakdown ?? "Productos:"}
                                 </span>
-                                <span>Q{order.subtotal.toFixed(2)}</span>
+                                <span>Q{Math.round(order.subtotal)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                   {t?.ivaLabel ?? "IVA (12%):"}
                                 </span>
-                                <span>Q{order.iva_amount.toFixed(2)}</span>
+                                <span>Q{Math.round(order.iva_amount)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                   {t?.deliveryBreakdown ?? "Envío:"}
                                 </span>
-                                <span>Q{order.delivery_fee.toFixed(2)}</span>
+                                <span>Q{Math.round(order.delivery_fee)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  {t?.serviceFeeLabel ?? "Fee de servicio:"}
+                                </span>
+                                <span>Q{Math.round(order.service_fee || 15)}</span>
                               </div>
                             </div>
                           </div>

@@ -82,7 +82,9 @@ export function ProductCard({ product, creator }: ProductCardProps) {
     return new Intl.NumberFormat('es-GT', {
       style: 'currency',
       currency: 'GTQ',
-    }).format(price);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Math.round(price));
   };
   
   const dietaryBadges = product.type !== 'handmade' 

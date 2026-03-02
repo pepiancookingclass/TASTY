@@ -943,6 +943,7 @@ const dictionary = {
     ivaLabel: 'I.V.A. (12%)',
     subtotalLabel: 'Subtotal',
     deliveryCostLabel: 'Costo de entrega',
+    serviceFeeLabel: 'Fee de servicio',
     deliveryCalculating: 'Calculando...',
     deliveryPlaceholder: 'Q 25.00 + ajuste por distancia',
     deliveryEstimatedTag: '(estimado)',
