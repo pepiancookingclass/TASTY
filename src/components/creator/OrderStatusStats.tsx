@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, Package, Clock, CheckCircle } from 'lucide-react';
+import { TrendingUp, Package, Clock, CheckCircle } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -90,9 +91,9 @@ export function OrderStatusStats() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-32">
-          <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          {dict.loading}
+        <CardContent className="flex flex-col items-center justify-center py-8 gap-3">
+          <AnimatedSwan size={48} />
+          <p className="text-sm text-muted-foreground">{dict.loading}</p>
         </CardContent>
       </Card>
     );

@@ -23,6 +23,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useUser } from '@/hooks/useUser';
 import { useAuth } from '@/providers/auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { useRouter } from 'next/navigation';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -81,9 +82,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center">
         
-        {/* Mobile Menu */}
-        <div className="md:hidden">
-           <Sheet>
+        {/* Mobile: menú + logo + cisne */}
+        <div className="flex flex-1 items-center gap-2 md:hidden">
+          <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
@@ -95,38 +96,49 @@ export function SiteHeader() {
                 <div className="border-b p-4">
                   <SheetClose asChild>
                     <Link href="/" className="flex items-center space-x-2">
-                        <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
-                            <ChefHat className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="inline-block font-headline text-2xl font-bold text-primary">
-                          Tasty
-                        </span>
+                      <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+                        <ChefHat className="h-6 w-6 text-white" />
+                      </div>
+                      <span className="inline-block font-headline text-2xl font-bold text-primary">
+                        Tasty
+                      </span>
                     </Link>
                   </SheetClose>
                 </div>
                 <nav className="flex flex-col gap-1 p-4">
                   {navLinks.map(link => (
-                     <SheetClose asChild key={link.label}>
-                        <Link href={link.href} className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted">
-                          {link.label}
-                        </Link>
-                      </SheetClose>
+                    <SheetClose asChild key={link.label}>
+                      <Link href={link.href} className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted">
+                        {link.label}
+                      </Link>
+                    </SheetClose>
                   ))}
                   <CreatorDashboardLink isMobile={true} />
                 </nav>
                 {roles.some(role => ['admin', 'agent'].includes(role)) && (
                   <div className="mt-auto border-t p-4">
-                      <SheetClose asChild>
-                        <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
-                            <Crown className="mr-2 h-5 w-5" />
-                            <span>{dict.siteHeader.admin}</span>
-                          </Link>
-                      </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/creator/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary rounded-md p-2 hover:bg-muted flex items-center">
+                        <Crown className="mr-2 h-5 w-5" />
+                        <span>{dict.siteHeader.admin}</span>
+                      </Link>
+                    </SheetClose>
                   </div>
                 )}
               </div>
             </SheetContent>
           </Sheet>
+
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
+              <ChefHat className="h-5 w-5 text-white" />
+            </div>
+            <span className="inline-block font-headline text-xl font-bold text-primary">
+              Tasty
+            </span>
+          </Link>
+
+          <AnimatedSwan size={28} className="shrink-0" />
         </div>
 
         {/* Desktop Menu */}
@@ -139,6 +151,7 @@ export function SiteHeader() {
               Tasty
             </span>
           </Link>
+          <AnimatedSwan size={30} className="shrink-0" />
           <nav className="flex gap-4 items-center">
             {navLinks.map(link => (
               <Link key={link.label} href={link.href} className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground">
@@ -148,18 +161,6 @@ export function SiteHeader() {
             <CreatorDashboardLink />
           </nav>
         </div>
-
-        {/* Center Logo on Mobile */}
-         <div className="flex md:hidden flex-1 justify-center">
-             <Link href="/" className="flex items-center space-x-2">
-                <div className="bg-primary rounded-full p-1.5 flex items-center justify-center">
-                    <ChefHat className="h-5 w-5 text-white" />
-                </div>
-                <span className="inline-block font-headline text-xl font-bold text-primary">
-                Tasty
-                </span>
-            </Link>
-         </div>
 
 
         <div className="flex items-center justify-end space-x-1">

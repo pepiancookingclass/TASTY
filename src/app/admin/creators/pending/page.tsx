@@ -19,6 +19,7 @@ import {
   ChefHat,
   Calendar
 } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -181,8 +182,9 @@ export default function PendingCreatorsPage() {
 
   if (permissionsLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={64} />
+        <p className="text-sm text-muted-foreground">Cargando...</p>
       </div>
     );
   }

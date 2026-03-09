@@ -2,7 +2,7 @@
 import { CreatorSidebar } from '@/components/creator/CreatorSidebar';
 import { CreatorBottomNav } from '@/components/creator/CreatorBottomNav';
 import { OrderProvider } from '@/context/OrderProvider';
-import { Loader2 } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { useUser } from '@/hooks/useUser';
 import { useRouter } from 'next/navigation';
@@ -32,16 +32,16 @@ export default function CreatorLayout({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={72} />
       </div>
     );
   }
 
   if (!user || !canAccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={72} />
       </div>
     );
   }

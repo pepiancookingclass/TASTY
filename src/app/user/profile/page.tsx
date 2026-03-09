@@ -15,6 +15,7 @@ import { useUserRoles } from '@/hooks/useUserRoles';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2, Check, X, MapPin, ChefHat } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { PrivacySettings } from '@/components/ui/privacy-settings';
 import { MultiImageUpload } from '@/components/ui/multi-image-upload';
 import { LocationSelector } from '@/components/ui/location-selector';
@@ -499,8 +500,9 @@ export default function UserProfilePage() {
   if (loading || rolesLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <AnimatedSwan size={48} />
+          <p className="text-sm text-muted-foreground">{dict.loading}</p>
         </div>
       </div>
     );

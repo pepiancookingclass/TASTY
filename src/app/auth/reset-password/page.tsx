@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, KeyRound, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -104,9 +105,9 @@ function ResetPasswordContent() {
 
   if (isValidSession === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg">Verificando enlace...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={72} />
+        <p className="text-sm text-muted-foreground">Verificando enlace...</p>
       </div>
     );
   }
@@ -250,9 +251,9 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg">Cargando...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={72} />
+        <p className="text-sm text-muted-foreground">Cargando...</p>
       </div>
     }>
       <ResetPasswordContent />

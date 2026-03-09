@@ -22,6 +22,7 @@ import {
 import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useDictionary } from '@/hooks/useDictionary';
 import { format, differenceInHours, addHours } from 'date-fns';
@@ -177,9 +178,9 @@ export default function UserOrdersPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          {t?.loading ?? "Cargando tus pedidos..."}
+        <div className="flex flex-col items-center justify-center h-64 gap-3">
+          <AnimatedSwan size={64} />
+          <p className="text-sm text-muted-foreground">{t?.loading ?? "Cargando tus pedidos..."}</p>
         </div>
       </div>
     );

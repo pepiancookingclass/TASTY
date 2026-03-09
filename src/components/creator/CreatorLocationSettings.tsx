@@ -21,6 +21,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -291,9 +292,9 @@ export function CreatorLocationSettings() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          {dict.creatorLocation.loading}
+        <CardContent className="flex flex-col items-center justify-center py-8 gap-3">
+          <AnimatedSwan size={48} />
+          <p className="text-sm text-muted-foreground">{dict.creatorLocation.loading}</p>
         </CardContent>
       </Card>
     );

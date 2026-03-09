@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -27,9 +27,9 @@ function VerifyEmailContent() {
   }, [searchParams, router, toast]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      <p className="mt-4 text-lg">Verificando tu correo electrónico...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+      <AnimatedSwan size={72} />
+      <p className="text-sm text-muted-foreground">Verificando tu correo electrónico...</p>
     </div>
   );
 }
@@ -37,9 +37,9 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg">Cargando...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <AnimatedSwan size={72} />
+        <p className="text-sm text-muted-foreground">Cargando...</p>
       </div>
     }>
       <VerifyEmailContent />

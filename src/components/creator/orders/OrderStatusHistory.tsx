@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { History, Loader2, Clock, User } from 'lucide-react';
+import { History, Clock, User } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -92,9 +93,9 @@ export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
         
         <div className="space-y-4">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              Cargando historial...
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <AnimatedSwan size={48} />
+              <p className="text-sm text-muted-foreground">Cargando historial...</p>
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

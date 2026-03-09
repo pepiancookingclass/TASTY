@@ -21,6 +21,7 @@ import {
   Loader2,
   ChefHat
 } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -220,9 +221,9 @@ export default function AdminAnalyticsPage() {
   if (permissionsLoading || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          Cargando analytics...
+        <div className="flex flex-col items-center justify-center h-64 gap-3">
+          <AnimatedSwan size={64} />
+          <p className="text-sm text-muted-foreground">Cargando analytics...</p>
         </div>
       </div>
     );

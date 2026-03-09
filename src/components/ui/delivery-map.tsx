@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calculator, Loader2 } from 'lucide-react';
+import { MapPin, Calculator } from 'lucide-react';
+import { AnimatedSwan } from '@/components/AnimatedSwan';
 
 // Importar Leaflet dinámicamente para evitar errores de SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -144,9 +145,9 @@ export function DeliveryMap({
   if (!isLoaded) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Cargando mapa...</span>
+        <CardContent className="flex flex-col items-center justify-center py-8 gap-3 h-64">
+          <AnimatedSwan size={48} />
+          <p className="text-sm text-muted-foreground">Cargando mapa...</p>
         </CardContent>
       </Card>
     );
